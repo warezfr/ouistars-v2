@@ -102,7 +102,7 @@ export default function AdminLayout() {
       </nav>
 
       {/* Sidebar */}
-      <aside className="app-sidebar shadow" data-bs-theme="dark">
+      <aside className="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
         <div className="sidebar-brand">
           <a href="/admin" className="brand-link">
             <span className="brand-text">OUI<b className="text-warning">STARS</b></span>

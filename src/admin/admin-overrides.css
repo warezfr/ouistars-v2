@@ -2,6 +2,10 @@
    Toutes les couleurs utilisent les variables Bootstrap → compatibles clair/sombre. */
 
 /* Marque de la barre latérale */
+/* AdminLTE 4 ne peint aucun fond sur .app-sidebar (le gabarit officiel ajoute
+   bg-body-secondary sur l'aside) : on force un fond opaque, sinon le tiroir
+   mobile laisse transparaître le contenu. */
+.app-sidebar { background-color: var(--bs-secondary-bg, #1d2125) !important; }
 .app-sidebar .sidebar-brand { padding: 14px 16px; }
 .app-sidebar .brand-text { font-weight: 700; letter-spacing: .12em; font-size: 1.15rem; }
 
