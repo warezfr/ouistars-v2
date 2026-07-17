@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useI18n } from '@/i18n';
 import { MAIN_NAV } from '@/data/services';
+import { useSingleton } from '@/lib/cms';
 import './nav.css';
 
 interface Props { onBook: () => void; }
@@ -10,6 +11,8 @@ const NAV_LINKS = MAIN_NAV.filter((n) => n.id !== 'fashion');
 
 export default function Nav({ onBook }: Props) {
   const { lang, t, setLang } = useI18n();
+  const settings = useSingleton('settings', { logo: '/logo-ouistars.png', brandName: 'OUISTARS' });
+  const brand = (settings.brandName as string) || 'OUISTARS';
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -30,8 +33,8 @@ export default function Nav({ onBook }: Props) {
     <header className={`os-nav${scrolled ? ' is-scrolled' : ''}${open ? ' is-menu-open' : ''}`}>
       <div className="os-nav__inner os-container">
         <a href="#top" className="os-nav__brand" onClick={() => setOpen(false)}>
-          <img className="os-nav__logo" src="/logo-ouistars.png" alt="" width={38} height={38} />
-          OUI<span>STARS</span>
+          <img className="os-nav__logo" src={(settings.logo as string) || '/logo-ouistars.png'} alt="" width={38} height={38} />
+          {brand.slice(0, 3)}<span>{brand.slice(3)}</span>
         </a>
 
         <nav className={`os-nav__links${open ? ' is-open' : ''}`} aria-label="Navigation principale">

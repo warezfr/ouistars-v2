@@ -10,9 +10,8 @@ import Bookings from './pages/Bookings';
 import Quotes from './pages/Quotes';
 import Pricing from './pages/Pricing';
 import Documents from './pages/Documents';
-import Drivers from './pages/Drivers';
 import Applications from './pages/Applications';
-import Vehicles from './pages/Vehicles';
+import Users from './pages/Users';
 import Placeholder from './pages/Placeholder';
 
 import CollectionList from './cms/CollectionList';
@@ -39,9 +38,8 @@ export default function AdminApp() {
             <Route path="quotes" element={<Quotes />} />
             <Route path="pricing" element={<Pricing />} />
             <Route path="documents" element={<Documents />} />
-            <Route path="drivers" element={<Drivers />} />
             <Route path="applications" element={<Applications />} />
-            <Route path="vehicles" element={<Vehicles />} />
+            <Route path="users" element={<Users />} />
 
             <Route path="content/:collection" element={<CollectionList />} />
             <Route path="content/:collection/:id" element={<CollectionEditor />} />

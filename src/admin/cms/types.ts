@@ -1,6 +1,7 @@
 /** Modèle générique de contenu piloté par configuration (CMS). */
 export type FieldType =
-  | 'text' | 'textarea' | 'richtext' | 'number' | 'boolean' | 'image' | 'select' | 'repeater';
+  | 'text' | 'textarea' | 'richtext' | 'number' | 'boolean' | 'image' | 'select'
+  | 'repeater' | 'ref' | 'date';
 
 export interface Field {
   name: string;
@@ -14,6 +15,9 @@ export interface Field {
   subfields?: Field[];
   /** Champ des sous-objets servant de libellé de ligne (repeater). */
   itemLabel?: string;
+  /** Pour le type « ref » : collection cible et champ affiché comme libellé. */
+  refCollection?: string;
+  refLabelField?: string;
 }
 
 export interface Collection {

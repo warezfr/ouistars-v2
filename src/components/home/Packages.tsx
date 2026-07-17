@@ -1,6 +1,7 @@
 import { useI18n } from '@/i18n';
 import { ROUTE_RATES, VEHICLE_CLASSES } from '@/data/pricing';
 import { formatEUR } from '@/lib/pricing';
+import { usePricingSync } from '@/lib/livePricing';
 import Reveal from '@/components/ui/Reveal';
 import './sections.css';
 
@@ -33,6 +34,7 @@ const ROUTE_IMAGES: Record<string, string> = {
 const FALLBACK_IMAGE = '/dest-paris.webp';
 
 export default function Packages({ onBook }: Props) {
+  usePricingSync();
   const { t } = useI18n();
   const routes = ROUTE_RATES.filter((r) => FEATURED.includes(r.id));
   return (

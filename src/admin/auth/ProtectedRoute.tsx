@@ -23,8 +23,10 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
             <h5 className="mt-2">Accès en attente</h5>
             <p className="text-muted">
               Votre compte est connecté mais n’est pas encore autorisé pour le back-office.
-              Un administrateur doit vous ajouter à <code>admin_profiles</code>.
+              Transmettez votre identifiant ci-dessous à un administrateur
+              (Utilisateurs &amp; rôles → « Autoriser un nouvel utilisateur »).
             </p>
+            <p className="user-select-all bg-body-tertiary border rounded p-2 small font-monospace">{profile?.id}</p>
             <LogoutLink />
           </div>
         </div>

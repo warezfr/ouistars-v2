@@ -172,33 +172,117 @@ export const COLLECTIONS: Record<string, Collection> = {
       { name: 'thumb', label: 'Vignette', type: 'image' },
     ],
   },
+  /* ————— Forfaits (grille transparente) ————— */
   package: {
     key: 'package', label: 'Forfaits', singular: 'Forfait', titleField: 'name', thumbField: 'image',
     fields: [
       { name: 'name', label: 'Nom', type: 'text', required: true },
-      { name: 'desc', label: 'Description', type: 'textarea' },
-      { name: 'price', label: 'Prix (€)', type: 'number' },
+      { name: 'category', label: 'Catégorie', type: 'ref', refCollection: 'package_category', refLabelField: 'name' },
+      { name: 'price', label: 'Prix (€ TTC)', type: 'number' },
+      { name: 'priceNote', label: 'Mention prix (ex. « à partir de »)', type: 'text' },
       { name: 'image', label: 'Image', type: 'image' },
-      { name: 'category', label: 'Catégorie', type: 'text' },
+      { name: 'desc', label: 'Description', type: 'richtext' },
+      { name: 'features', label: 'Inclusions', type: 'repeater', itemLabel: 'label',
+        subfields: [{ name: 'label', label: 'Inclusion', type: 'text' }] },
+      { name: 'routeId', label: 'Trajet lié (id technique)', type: 'text', help: 'Optionnel — relie le forfait à un trajet de la grille.' },
     ],
   },
+  package_category: {
+    key: 'package_category', label: 'Catégories de forfaits', singular: 'Catégorie', titleField: 'name',
+    fields: [
+      { name: 'name', label: 'Nom', type: 'text', required: true },
+      { name: 'desc', label: 'Description', type: 'textarea' },
+    ],
+  },
+
+  /* ————— Destinations / Trajets ————— */
   destination: {
     key: 'destination', label: 'Destinations', singular: 'Destination', titleField: 'name', thumbField: 'image',
     fields: [
       { name: 'name', label: 'Nom', type: 'text', required: true },
       { name: 'region', label: 'Région', type: 'text' },
+      { name: 'category', label: 'Catégorie', type: 'ref', refCollection: 'destination_category', refLabelField: 'name' },
       { name: 'image', label: 'Image', type: 'image' },
+      { name: 'desc', label: 'Description', type: 'richtext' },
     ],
   },
+  destination_category: {
+    key: 'destination_category', label: 'Catégories de destinations', singular: 'Catégorie', titleField: 'name',
+    fields: [{ name: 'name', label: 'Nom', type: 'text', required: true }],
+  },
   route: {
-    key: 'route', label: 'Trajets', singular: 'Trajet', titleField: 'label',
+    key: 'route', label: 'Trajets & tarifs', singular: 'Trajet', titleField: 'label',
     fields: [
-      { name: 'label', label: 'Libellé', type: 'text', required: true },
-      { name: 'from', label: 'Départ', type: 'text' },
-      { name: 'to', label: 'Arrivée', type: 'text' },
-      { name: 'priceE', label: 'Prix Business (E)', type: 'number' },
-      { name: 'priceV', label: 'Prix Van (V)', type: 'number' },
-      { name: 'priceS', label: 'Prix First (S)', type: 'number' },
+      { name: 'label', label: 'Libellé', type: 'text', required: true, placeholder: 'Aéroports Paris ⇄ Paris' },
+      { name: 'routeId', label: 'Id technique', type: 'text', required: true,
+        help: 'Relie ce trajet au calculateur du site et à l’API (ne pas modifier sans raison).' },
+      { name: 'category', label: 'Catégorie', type: 'select', options: [
+        { value: 'airport', label: 'Aéroports' }, { value: 'city', label: 'Ville' },
+        { value: 'station', label: 'Gares' }, { value: 'tour', label: 'Excursions' },
+        { value: 'riviera', label: 'Côte d’Azur' }, { value: 'city-to-city', label: 'City-to-city' },
+      ] },
+      { name: 'priceE', label: 'Prix E-Class (€)', type: 'number', required: true },
+      { name: 'priceV', label: 'Prix V-Class (€)', type: 'number', required: true },
+      { name: 'priceS', label: 'Prix S-Class (€)', type: 'number', required: true },
+      { name: 'note', label: 'Note', type: 'text' },
+    ],
+  },
+
+  /* ————— Chauffeurs ————— */
+  driver: {
+    key: 'driver', label: 'Chauffeurs', singular: 'Chauffeur', titleField: 'name', thumbField: 'image',
+    fields: [
+      { name: 'name', label: 'Nom complet', type: 'text', required: true },
+      { name: 'title', label: 'Titre (ex. Chauffeur VTC senior)', type: 'text' },
+      { name: 'gender', label: 'Genre', type: 'select', options: [
+        { value: 'not_specified', label: 'Non précisé' }, { value: 'male', label: 'Homme' }, { value: 'female', label: 'Femme' },
+      ] },
+      { name: 'birthdate', label: 'Date de naissance', type: 'date' },
+      { name: 'nationality', label: 'Nationalité', type: 'text' },
+      { name: 'country', label: 'Pays', type: 'ref', refCollection: 'country', refLabelField: 'name' },
+      { name: 'state', label: 'Région / département', type: 'text' },
+      { name: 'address', label: 'Adresse', type: 'textarea' },
+      { name: 'phone', label: 'Téléphone', type: 'text' },
+      { name: 'whatsapp', label: 'WhatsApp', type: 'text' },
+      { name: 'email', label: 'E-mail', type: 'text' },
+      { name: 'languages', label: 'Langues (ex. FR, EN)', type: 'text' },
+      { name: 'airports', label: 'Aéroports (Europe Chauffeurs)', type: 'boolean',
+        help: 'Habilité aux prises en charge aéroport.' },
+      { name: 'image', label: 'Photo', type: 'image' },
+      { name: 'vtc_badge', label: 'Carte VTC (image)', type: 'image' },
+      { name: 'driving_license', label: 'Permis de conduire (image)', type: 'image' },
+      { name: 'notes', label: 'Notes internes', type: 'richtext' },
+    ],
+  },
+
+  /* ————— Flotte ————— */
+  vehicle: {
+    key: 'vehicle', label: 'Flotte', singular: 'Véhicule', titleField: 'name', thumbField: 'image',
+    fields: [
+      { name: 'name', label: 'Nom', type: 'text', required: true, placeholder: 'Mercedes Classe S' },
+      { name: 'brand', label: 'Marque', type: 'ref', refCollection: 'vehicle_brand', refLabelField: 'name' },
+      { name: 'type', label: 'Type', type: 'ref', refCollection: 'vehicle_type', refLabelField: 'name' },
+      { name: 'className', label: 'Classe tarifaire', type: 'select', options: [
+        { value: 'E-Class', label: 'E-Class' }, { value: 'V-Class', label: 'V-Class' },
+        { value: 'S-Class', label: 'S-Class' }, { value: 'EQE', label: 'EQE (électrique)' },
+        { value: 'Sprinter', label: 'Sprinter (minibus)' },
+      ] },
+      { name: 'seats', label: 'Places passagers', type: 'number' },
+      { name: 'luggage', label: 'Bagages', type: 'number' },
+      { name: 'image', label: 'Image', type: 'image' },
+      { name: 'descFr', label: 'Description', type: 'textarea' },
+      { name: 'show_on_site', label: 'Afficher sur le site (Notre flotte)', type: 'boolean' },
+    ],
+  },
+  vehicle_type: {
+    key: 'vehicle_type', label: 'Types de véhicule', singular: 'Type', titleField: 'name',
+    fields: [{ name: 'name', label: 'Nom', type: 'text', required: true }],
+  },
+  vehicle_brand: {
+    key: 'vehicle_brand', label: 'Marques de véhicule', singular: 'Marque', titleField: 'name', thumbField: 'logo',
+    fields: [
+      { name: 'name', label: 'Nom', type: 'text', required: true },
+      { name: 'logo', label: 'Logo', type: 'image' },
     ],
   },
 };

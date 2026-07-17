@@ -1,18 +1,24 @@
 import { useI18n } from '@/i18n';
 import { MAIN_NAV } from '@/data/services';
+import { useSingleton } from '@/lib/cms';
 import './footer.css';
 
 interface Props { onJoin: () => void; }
 
 export default function Footer({ onJoin }: Props) {
   const { lang, t } = useI18n();
+  const st = useSingleton('settings', {
+    email: 'info@ouistars.com', whatsapp: '33651030306', phone: '+33 6 51 03 03 06',
+    address: '', tagline: '', brandName: 'OUISTARS',
+  });
+  const brand = (st.brandName as string) || 'OUISTARS';
   const year = 2026;
   return (
     <footer className="os-footer" id="contact">
       <div className="os-container os-footer__grid">
         <div>
-          <div className="os-footer__brand">OUI<span>STARS</span></div>
-          <p className="os-footer__tag">{t.footer.tagline}</p>
+          <div className="os-footer__brand">{brand.slice(0, 3)}<span>{brand.slice(3)}</span></div>
+          <p className="os-footer__tag">{(st.tagline as string) || t.footer.tagline}</p>
           <button className="os-btn os-btn--ghost" onClick={onJoin}>{t.nav.join}</button>
         </div>
 
@@ -30,9 +36,9 @@ export default function Footer({ onJoin }: Props) {
         <div>
           <h4>{t.footer.contact}</h4>
           <ul>
-            <li>{t.footer.address}</li>
-            <li><a href="mailto:info@ouistars.com">info@ouistars.com</a></li>
-            <li><a href="https://wa.me/33651030306">WhatsApp · +33 6 51 03 03 06</a></li>
+            <li>{(st.address as string) || t.footer.address}</li>
+            <li><a href={`mailto:${st.email}`}>{st.email as string}</a></li>
+            <li><a href={`https://wa.me/${st.whatsapp}`}>WhatsApp · {st.phone as string}</a></li>
           </ul>
         </div>
       </div>

@@ -1,13 +1,36 @@
 import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/i18n';
 import { FLEET, type FleetVehicle } from '@/data/fleet';
+import { usePublished } from '@/lib/cms';
 import Reveal from '@/components/ui/Reveal';
 import './sections.css';
 
-/** Flotte — cartes cliquables + modal détaillée (verre fumé doré). */
+/** Ligne « véhicule » telle qu'éditée dans le back-office (collection vehicle). */
+interface CmsVehicle {
+  name?: string; brand?: string; type?: string; className?: string;
+  seats?: number; luggage?: number; image?: string; descFr?: string; show_on_site?: boolean;
+}
+
+/** Flotte — cartes cliquables + modal détaillée. Contenu piloté par le back-office. */
 export default function Fleet() {
   const { t } = useI18n();
   const [selected, setSelected] = useState<FleetVehicle | null>(null);
+
+  const cmsVehicles = usePublished<CmsVehicle>('vehicle', []);
+  const list: FleetVehicle[] = cmsVehicles.length
+    ? cmsVehicles
+        .filter((v) => v.show_on_site !== false && v.name && v.image)
+        .map((v, i) => ({
+          id: `cms-${i}`,
+          name: v.name!,
+          category: 'business',
+          className: (v.className as FleetVehicle['className']) ?? 'E-Class',
+          image: v.image!,
+          seats: v.seats ?? 3,
+          luggage: v.luggage ?? 3,
+          descFr: v.descFr ?? '',
+        }))
+    : FLEET;
 
   return (
     <section className="os-section" id="fleet">
@@ -17,7 +40,7 @@ export default function Fleet() {
           <h2>{t.fleet.title}</h2>
         </Reveal>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {FLEET.map((v) => (
+          {list.map((v) => (
             <Reveal key={v.id}>
               <button
                 type="button"

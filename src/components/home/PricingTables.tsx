@@ -11,6 +11,7 @@ import {
   type VehicleClass,
 } from '@/data/pricing';
 import { formatEUR } from '@/lib/pricing';
+import { usePricingSync } from '@/lib/livePricing';
 import Reveal from '@/components/ui/Reveal';
 import './pricing-tables.css';
 
@@ -26,6 +27,7 @@ const formatPerKm = (n: number) =>
   }).format(n);
 
 export default function PricingTables({ onBook }: Props) {
+  usePricingSync(); // re-rend la grille quand le back-office a été synchronisé
   const { t } = useI18n();
   const pt = t.pricingTables;
 

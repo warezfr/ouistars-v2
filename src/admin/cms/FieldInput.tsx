@@ -1,7 +1,43 @@
+import { useEffect, useState } from 'react';
 import type { Field } from './types';
 import RichText from './RichText';
 import MediaUpload from './MediaUpload';
 import Repeater from './Repeater';
+import { listEntries } from './api';
+
+/** Sélecteur alimenté par une autre collection (ex. marque, catégorie). */
+function RefSelect({ field, value, onChange, disabled }: {
+  field: Field; value: unknown; onChange: (name: string, v: unknown) => void; disabled?: boolean;
+}) {
+  const [options, setOptions] = useState<{ value: string; label: string }[]>([]);
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        const rows = await listEntries(field.refCollection!);
+        if (cancel) return;
+        const lf = field.refLabelField ?? 'name';
+        setOptions(rows.map((r) => {
+          const label = (r.data?.[lf] as string) || r.title || r.slug || r.id.slice(0, 8);
+          return { value: label, label };
+        }));
+      } catch { /* liste vide */ }
+    })();
+    return () => { cancel = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [field.refCollection]);
+
+  const current = (value as string) ?? '';
+  const known = options.some((o) => o.value === current);
+  return (
+    <select id={field.name} className="form-select" disabled={disabled} value={current}
+      onChange={(e) => onChange(field.name, e.target.value)}>
+      <option value="">—</option>
+      {!known && current && <option value={current}>{current}</option>}
+      {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  );
+}
 
 interface Props {
   field: Field;
@@ -54,6 +90,15 @@ export default function FieldInput({ field, value, onChange, disabled }: Props) 
           <option value="">—</option>
           {field.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
+      )}
+
+      {field.type === 'ref' && (
+        <RefSelect field={field} value={value} onChange={onChange} disabled={disabled} />
+      )}
+
+      {field.type === 'date' && (
+        <input id={field.name} type="date" className="form-control" disabled={disabled}
+          value={(value as string) ?? ''} onChange={(e) => onChange(field.name, e.target.value)} />
       )}
 
       {field.type === 'number' && (

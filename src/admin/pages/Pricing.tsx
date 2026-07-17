@@ -30,9 +30,19 @@ export default function Pricing() {
 
   return (
     <>
-      <div className="alert alert-light border">
-        <strong>Grille officielle {PRICE_LIST_VERSION}</strong> — source du calculateur & des devis.
-        Prix TTC, par transfert (aller ou retour).
+      <div className="alert alert-light border d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div>
+          <strong>Grille officielle {PRICE_LIST_VERSION}</strong> — source du calculateur, du site et de l’API.
+          Prix TTC, par transfert (aller ou retour).
+        </div>
+        <div className="d-flex gap-2">
+          <a className="btn btn-sm btn-warning" href="/admin/content/route">
+            <i className="bi bi-pencil me-1" />Éditer les trajets & prix
+          </a>
+          <a className="btn btn-sm btn-outline-secondary" href="/admin/singleton/rates">
+            <i className="bi bi-clock-history me-1" />Tarifs horaires / km
+          </a>
+        </div>
       </div>
 
       {Object.entries(grouped).map(([cat, rows]) => (
