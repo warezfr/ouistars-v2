@@ -1,48 +1,119 @@
-import { newDoc, header, field, footer, renderToBuffer, INK, MUT } from './pdfBase.js';
+import {
+  newDoc, bandHeader, waveFooter, renderToBuffer,
+  GOLD, NIGHT, INK, MUT, PAPER, type BrandContact, DEFAULT_CONTACT,
+} from './pdfBase.js';
 
-export interface InvoiceData {
-  number: string;          // FA-XXXXXX
-  reference: string;       // réf. réservation
-  date: string;            // date d'émission
-  clientName: string;
-  clientEmail?: string;
-  route: string;
-  serviceDate: string;
-  vehicle: string;
-  amount: number;          // TTC
-  currency?: string;
+export interface DocLine {
+  label: string;
+  sub?: string;
+  qty: number;
+  unit: number;
 }
 
-/** TVA transport de personnes (France) : 10 %. */
-const VAT_RATE = 0.10;
+export interface InvoiceData {
+  number: string;
+  reference: string;
+  date: string;
+  clientName: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  lines: DocLine[];
+  currency?: string;
+  logo?: Buffer | null;
+  contact?: BrandContact;
+  /** 'FACTURE' | 'DEVIS' | 'BON DE COMMANDE' */
+  title?: string;
+  vatRate?: number;       // 0.10 transport
+  footNote?: string;
+}
 
-/** Facture client (PDF). */
+/** Facture / devis / bon de commande — mise en page inspirée du template fourni. */
 export async function buildInvoice(d: InvoiceData): Promise<Buffer> {
   const doc = newDoc();
-  header(doc, 'Facture', `${d.number} · ${d.date}`);
-
-  let y = 175;
-  field(doc, 'Client', d.clientName + (d.clientEmail ? ` — ${d.clientEmail}` : ''), y); y += 44;
-  field(doc, 'Référence réservation', d.reference, y); y += 44;
-  field(doc, 'Prestation', `Transport avec chauffeur — ${d.route}`, y); y += 44;
-  field(doc, 'Date de la prestation', d.serviceDate, y); y += 44;
-  field(doc, 'Véhicule', d.vehicle, y); y += 44;
-
-  const ttc = d.amount;
-  const ht = Math.round((ttc / (1 + VAT_RATE)) * 100) / 100;
-  const tva = Math.round((ttc - ht) * 100) / 100;
   const cur = d.currency ?? '€';
+  const vat = d.vatRate ?? 0.10;
+  const title = d.title ?? 'FACTURE';
 
-  doc.moveTo(48, y + 8).lineTo(547, y + 8).strokeColor('#ddd').lineWidth(1).stroke();
-  doc.fillColor(MUT).fontSize(10).font('Helvetica')
-    .text(`Total HT : ${ht.toFixed(2)} ${cur}`, 48, y + 20)
-    .text(`TVA (10 %) : ${tva.toFixed(2)} ${cur}`, 48, y + 36);
-  doc.fillColor(INK).fontSize(20).font('Helvetica-Bold')
-    .text(`Total TTC : ${ttc.toFixed(2)} ${cur}`, 48, y + 56);
+  bandHeader(doc, d.logo ?? null, d.contact ?? DEFAULT_CONTACT);
 
-  doc.fillColor(MUT).fontSize(8.5).font('Helvetica')
-    .text('TVA sur le transport de personnes : 10 %. Facture acquittée sauf mention contraire.', 48, y + 92);
+  // Bloc client (À) — gauche
+  let y = 128;
+  doc.fillColor(MUT).fontSize(8).font('Helvetica-Bold').text('À', 48, y);
+  doc.moveTo(48, y + 11).lineTo(200, y + 11).strokeColor('#dddddd').lineWidth(1).stroke();
+  doc.fillColor(INK).fontSize(13).font('Helvetica-Bold').text(d.clientName, 48, y + 18, { width: 250 });
+  doc.fillColor(MUT).fontSize(9).font('Helvetica');
+  let cy = y + 36;
+  if (d.clientPhone) { doc.text(`T. ${d.clientPhone}`, 48, cy); cy += 13; }
+  if (d.clientEmail) { doc.text(`E. ${d.clientEmail}`, 48, cy); cy += 13; }
 
-  footer(doc);
+  // Titre + méta — droite
+  doc.fillColor(GOLD).fontSize(30).font('Helvetica-Bold').text(title, 320, y - 4, { width: 227, align: 'right' });
+  const meta: [string, string][] = [
+    ['Date', d.date],
+    ['N° document', d.number],
+    ['Réf. réservation', d.reference],
+  ];
+  let my = y + 34;
+  for (const [k, v] of meta) {
+    doc.fillColor(MUT).fontSize(8.5).font('Helvetica').text(k, 330, my, { width: 110, align: 'right' });
+    doc.fillColor(INK).fontSize(8.5).font('Helvetica-Bold').text(`:  ${v}`, 445, my, { width: 102 });
+    my += 14;
+  }
+
+  // Tableau des lignes
+  y = Math.max(cy, my) + 26;
+  const cols = { desc: 48, unit: 320, qty: 420, total: 480, right: 547 };
+  doc.rect(48, y, cols.right - 48, 24).fill(NIGHT);
+  doc.fillColor('#ffffff').fontSize(8.5).font('Helvetica-Bold');
+  doc.text('DÉSIGNATION', cols.desc + 10, y + 8);
+  doc.text('PRIX UNIT.', cols.unit, y + 8, { width: 90, align: 'right' });
+  doc.text('QTÉ', cols.qty, y + 8, { width: 50, align: 'right' });
+  doc.text('TOTAL', cols.total, y + 8, { width: 60, align: 'right' });
+  y += 24;
+
+  let subtotal = 0;
+  d.lines.forEach((l, i) => {
+    const rowH = l.sub ? 34 : 24;
+    if (i % 2 === 0) doc.rect(48, y, cols.right - 48, rowH).fill(PAPER);
+    doc.fillColor(INK).fontSize(9.5).font('Helvetica-Bold').text(l.label, cols.desc + 10, y + 7, { width: 255 });
+    if (l.sub) doc.fillColor(MUT).fontSize(7.5).font('Helvetica').text(l.sub, cols.desc + 10, y + 20, { width: 255 });
+    const lineTotal = l.qty * l.unit;
+    subtotal += lineTotal;
+    doc.fillColor(INK).fontSize(9.5).font('Helvetica');
+    doc.text(`${l.unit.toFixed(2)} ${cur}`, cols.unit, y + 7, { width: 90, align: 'right' });
+    doc.text(String(l.qty), cols.qty, y + 7, { width: 50, align: 'right' });
+    doc.font('Helvetica-Bold').text(`${lineTotal.toFixed(2)} ${cur}`, cols.total, y + 7, { width: 60, align: 'right' });
+    y += rowH;
+  });
+  doc.moveTo(48, y).lineTo(cols.right, y).strokeColor('#dddddd').lineWidth(1).stroke();
+
+  // Totaux — droite
+  const ttc = subtotal;
+  const ht = ttc / (1 + vat);
+  const tva = ttc - ht;
+  let ty = y + 16;
+  const totalRow = (label: string, value: string, bold = false) => {
+    doc.fillColor(bold ? INK : MUT).fontSize(9.5).font(bold ? 'Helvetica-Bold' : 'Helvetica')
+      .text(label, 330, ty, { width: 130, align: 'right' });
+    doc.fillColor(INK).fontSize(9.5).font('Helvetica-Bold').text(value, 465, ty, { width: 82, align: 'right' });
+    ty += 17;
+  };
+  totalRow('Sous-total HT', `${ht.toFixed(2)} ${cur}`);
+  totalRow(`TVA (${Math.round(vat * 100)} %)`, `${tva.toFixed(2)} ${cur}`);
+  ty += 4;
+  doc.rect(320, ty, 227, 30).fill(GOLD);
+  doc.fillColor(NIGHT).fontSize(11.5).font('Helvetica-Bold').text('TOTAL TTC :', 332, ty + 9);
+  doc.fontSize(13).text(`${ttc.toFixed(2)} ${cur}`, 415, ty + 8, { width: 122, align: 'right' });
+
+  // Paiement + conditions — gauche
+  let py = y + 16;
+  doc.fillColor(INK).fontSize(9).font('Helvetica-Bold').text('Règlement', 48, py); py += 13;
+  doc.fillColor(GOLD).fontSize(8.5).font('Helvetica-Bold').text('Virement · Carte bancaire · Lien de paiement', 48, py); py += 18;
+  doc.fillColor(GOLD).fontSize(8.5).font('Helvetica-Bold').text('Conditions & notes', 48, py); py += 12;
+  doc.fillColor(MUT).fontSize(8).font('Helvetica')
+    .text(d.footNote ?? `TVA sur le transport de personnes : ${Math.round(vat * 100)} %. Document généré électroniquement — valable sans signature.`,
+      48, py, { width: 250 });
+
+  waveFooter(doc, title === 'DEVIS' ? 'Merci pour votre demande' : 'Merci de votre confiance');
   return renderToBuffer(doc);
 }

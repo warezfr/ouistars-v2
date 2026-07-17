@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import DocumentModal, { type DocData } from '../documents/DocumentModal';
 
 /**
  * Factures — générées à la volée depuis les réservations facturables
@@ -24,6 +25,7 @@ export default function Invoices() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [view, setView] = useState<DocData | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -84,6 +86,15 @@ export default function Invoices() {
 
   const total = rows.reduce((s, r) => s + r.amount, 0);
 
+  const toDoc = (r: Row): DocData => ({
+    kind: 'invoice',
+    reference: r.reference,
+    number: `FA-${r.reference.replace(/^OS-?/, '')}`,
+    date: new Date().toISOString().slice(0, 10),
+    client: { name: r.client, email: r.email },
+    items: [{ label: `Transport avec chauffeur — ${r.route}`, sub: r.date, qty: 1, unit: r.amount }],
+  });
+
   return (
     <div className="card card-outline card-warning">
       <div className="card-header d-flex justify-content-between align-items-center">
@@ -114,8 +125,11 @@ export default function Invoices() {
                     <td>{r.date || '—'}</td>
                     <td>{r.amount.toFixed(0)} €</td>
                     <td><span className={`badge ${r.status === 'completed' ? 'text-bg-success' : 'text-bg-warning'}`}>{r.status}</span></td>
-                    <td className="text-end pe-3">
-                      <button className="btn btn-sm btn-outline-secondary" onClick={() => download(r)} disabled={busy === r.key}>
+                    <td className="text-end pe-3 text-nowrap">
+                      <button className="btn btn-sm btn-warning me-1" title="Voir la facture" onClick={() => setView(toDoc(r))}>
+                        <i className="bi bi-eye" />
+                      </button>
+                      <button className="btn btn-sm btn-outline-secondary" title="PDF direct" onClick={() => download(r)} disabled={busy === r.key}>
                         <i className={`bi ${busy === r.key ? 'bi-hourglass-split' : 'bi-file-earmark-pdf'}`} />
                       </button>
                     </td>
@@ -126,6 +140,7 @@ export default function Invoices() {
           </div>
         )}
       </div>
+      {view && <DocumentModal doc={view} onClose={() => setView(null)} />}
     </div>
   );
 }

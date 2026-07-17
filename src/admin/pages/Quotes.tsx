@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import DocumentModal, { type DocData } from '../documents/DocumentModal';
 import { QUOTES as DEMO } from '../mockData';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
 
@@ -24,6 +25,7 @@ export default function Quotes() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<DocData | null>(null);
 
   async function load() {
     setLoading(true); setError(null);
@@ -52,6 +54,20 @@ export default function Quotes() {
   }
   useEffect(() => { load(); }, []);
 
+  const toDoc = (q: Row): DocData => ({
+    kind: 'quote',
+    reference: q.reference,
+    number: `DE-${q.reference.replace(/^OS-?/, '')}`,
+    date: new Date().toISOString().slice(0, 10),
+    client: { name: q.company, email: q.email, phone: q.phone },
+    items: [{
+      label: `Prestation événementielle — ${q.event}`,
+      sub: `${q.dates} · ${q.vehicles} véhicule(s)${q.details ? ' · ' + q.details.slice(0, 80) : ''}`,
+      qty: 1, unit: q.amount ?? 0,
+    }],
+    footNote: 'Devis valable 30 jours. Estimation susceptible d’ajustement selon le programme définitif.',
+  });
+
   async function setStatus(r: Row, status: string) {
     setRows((rs) => rs.map((x) => (x.id === r.id ? { ...x, status } : x)));
     if (!supabase || r.demo) return;
@@ -78,7 +94,9 @@ export default function Quotes() {
               <tbody>
                 {rows.map((q) => (
                   <tr key={q.id}>
-                    <td className="fw-semibold">{q.reference}</td>
+                    <td className="fw-semibold">
+                      <button className="btn btn-link p-0 fw-semibold" onClick={() => setView(toDoc(q))}>{q.reference}</button>
+                    </td>
                     <td>{q.company}{q.email && <div className="small text-muted">{q.email}</div>}</td>
                     <td>{q.event}</td><td>{q.dates}</td><td>{q.vehicles}</td>
                     <td>{q.amount != null ? `${q.amount.toFixed(0)} €` : '—'}</td>
@@ -99,6 +117,7 @@ export default function Quotes() {
           </div>
         )}
       </div>
+      {view && <DocumentModal doc={view} onClose={() => setView(null)} />}
     </div>
   );
 }

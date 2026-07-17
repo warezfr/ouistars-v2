@@ -1,4 +1,4 @@
-import { newDoc, header, field, footer, renderToBuffer, INK, MUT } from './pdfBase.js';
+import { newDoc, header, field, footer, renderToBuffer, INK, MUT, GOLD, NIGHT } from './pdfBase.js';
 
 export interface MissionData {
   reference: string;
@@ -21,7 +21,7 @@ export interface MissionData {
 }
 
 /** Fiche de mission chauffeur (PDF nominatif — consigne). */
-export async function buildMissionSheet(d: MissionData): Promise<Buffer> {
+export async function buildMissionSheet(d: MissionData, logo?: Buffer | null): Promise<Buffer> {
   const doc = newDoc();
   header(doc, 'Fiche de Mission', `Réf. ${d.reference} · Chauffeur : ${d.driverName}`);
 
@@ -45,5 +45,49 @@ export async function buildMissionSheet(d: MissionData): Promise<Buffer> {
   }
 
   footer(doc);
+
+  /* ————— Page 2 : écran d'accueil nominatif (paysage, pour tablette aéroport) ————— */
+  doc.addPage({ size: 'A4', layout: 'landscape', margin: 0 });
+  const W = 842, H = 595;
+  doc.rect(0, 0, W, H).fill(NIGHT);
+  // filets or haut/bas
+  doc.rect(0, 0, W, 6).fill(GOLD);
+  doc.rect(0, H - 6, W, 6).fill(GOLD);
+  // coins décoratifs
+  doc.save().strokeColor(GOLD).lineWidth(1.2);
+  doc.moveTo(36, 66).lineTo(36, 36).lineTo(66, 36).stroke();
+  doc.moveTo(W - 66, 36).lineTo(W - 36, 36).lineTo(W - 36, 66).stroke();
+  doc.moveTo(36, H - 66).lineTo(36, H - 36).lineTo(66, H - 36).stroke();
+  doc.moveTo(W - 66, H - 36).lineTo(W - 36, H - 36).lineTo(W - 36, H - 66).stroke();
+  doc.restore();
+
+  // logo + marque
+  if (logo) {
+    try { doc.image(logo, W / 2 - 32, 56, { height: 64 }); } catch { /* texte seul */ }
+  }
+  doc.fillColor('#ffffff').fontSize(24).font('Helvetica-Bold')
+    .text('OUI', 0, logo ? 128 : 88, { width: W / 2 + 24, align: 'right', continued: true })
+    .fillColor(GOLD).text('STARS');
+
+  // WELCOME / BIENVENUE
+  doc.fillColor(GOLD).fontSize(13).font('Helvetica')
+    .text('W E L C O M E   ·   B I E N V E N U E', 0, 210, { width: W, align: 'center' });
+
+  // Nom du client en pleine page (taille auto-ajustée)
+  const name = (d.clientName || 'Notre invité').toUpperCase();
+  let size = 84;
+  doc.font('Helvetica-Bold');
+  while (size > 30 && doc.fontSize(size).widthOfString(name) > W - 120) size -= 4;
+  doc.fillColor('#ffffff').fontSize(size).text(name, 60, 268, { width: W - 120, align: 'center' });
+
+  // filet + pied
+  doc.moveTo(W / 2 - 90, 400).lineTo(W / 2 + 90, 400).strokeColor(GOLD).lineWidth(1.4).stroke();
+  doc.fillColor('#9aa0aa').fontSize(11).font('Helvetica')
+    .text('Votre chauffeur vous attend  ·  Your chauffeur is waiting', 0, 424, { width: W, align: 'center' });
+  doc.fillColor(GOLD).fontSize(9)
+    .text(`Réf. ${d.reference}${d.flight && d.flight !== 'No flight' ? '   ·   Vol ' + d.flight : ''}`, 0, 448, { width: W, align: 'center' });
+  doc.fillColor('#6a6f7a').fontSize(8.5)
+    .text('PREMIUM MOBILITY · DESTINATION MANAGEMENT · EVENT SOLUTIONS', 0, H - 40, { width: W, align: 'center' });
+
   return renderToBuffer(doc);
 }

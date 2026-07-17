@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { buildMissionSheet } from '../../server/pdf/missionSheet.js';
-import { buildPurchaseOrder } from '../../server/pdf/purchaseOrder.js';
 import { buildInvoice } from '../../server/pdf/invoice.js';
+import { fetchLogo } from '../../server/pdf/pdfBase.js';
 
 /**
  * Génère un document PDF lié à une réservation.
@@ -93,26 +93,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!reference || !type) return res.status(400).json({ error: 'reference et type requis' });
 
   const booking = (await loadBooking(reference)) ?? { ...DEMO, reference };
+  const logo = await fetchLogo();
+  const serviceDate = [booking.date, booking.time].filter(Boolean).join(' ');
+  const line = {
+    label: `Transport avec chauffeur — ${booking.route}`,
+    sub: [serviceDate, booking.vehicle].filter(Boolean).join('  ·  '),
+    qty: 1,
+    unit: booking.amount,
+  };
 
   let pdf: Buffer;
   if (type === 'purchase_order') {
-    pdf = await buildPurchaseOrder({
-      reference: booking.reference, clientName: booking.clientName, route: booking.route,
-      date: [booking.date, booking.time].filter(Boolean).join(' '), vehicle: booking.vehicle,
-      amount: booking.amount, driverName: booking.driverName || undefined,
+    pdf = await buildInvoice({
+      title: 'BON DE COMMANDE',
+      number: `BC-${booking.reference.replace(/^OS-?/, '')}`,
+      reference: booking.reference,
+      date: new Date().toISOString().slice(0, 10),
+      clientName: booking.clientName, clientEmail: booking.clientEmail, clientPhone: booking.clientPhone,
+      lines: [line], logo,
+      footNote: booking.driverName ? `Chauffeur assigné : ${booking.driverName}.` : undefined,
     });
   } else if (type === 'invoice') {
     pdf = await buildInvoice({
       number: `FA-${booking.reference.replace(/^OS-?/, '')}`,
       reference: booking.reference,
       date: new Date().toISOString().slice(0, 10),
-      clientName: booking.clientName, clientEmail: booking.clientEmail,
-      route: booking.route,
-      serviceDate: [booking.date, booking.time].filter(Boolean).join(' '),
-      vehicle: booking.vehicle, amount: booking.amount,
+      clientName: booking.clientName, clientEmail: booking.clientEmail, clientPhone: booking.clientPhone,
+      lines: [line], logo,
+    });
+  } else if (type === 'quote') {
+    pdf = await buildInvoice({
+      title: 'DEVIS',
+      number: `DE-${booking.reference.replace(/^OS-?/, '')}`,
+      reference: booking.reference,
+      date: new Date().toISOString().slice(0, 10),
+      clientName: booking.clientName, clientEmail: booking.clientEmail, clientPhone: booking.clientPhone,
+      lines: [line], logo,
+      footNote: 'Devis valable 30 jours. Prix TTC, TVA transport de personnes 10 % incluse.',
     });
   } else {
-    pdf = await buildMissionSheet(booking);
+    pdf = await buildMissionSheet(booking, logo);
   }
 
   res.setHeader('Content-Type', 'application/pdf');

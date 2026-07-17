@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase';
 import { listEntries } from '../cms/api';
 import { BOOKINGS as DEMO } from '../mockData';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
+import DocumentModal, { type DocData } from '../documents/DocumentModal';
 
 type Status = 'pending' | 'confirmed' | 'assigned' | 'completed' | 'cancelled';
 
@@ -47,6 +48,7 @@ export default function Bookings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | Status>('all');
+  const [view, setView] = useState<DocData | null>(null);
 
   async function load() {
     setLoading(true); setError(null);
@@ -111,6 +113,26 @@ export default function Bookings() {
   const shown = filter === 'all' ? rows : rows.filter((r) => r.status === filter);
   const patchLocal = (key: string, changes: Partial<Row>) =>
     setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...changes } : r)));
+
+  const toDoc = (r: Row, kind: 'mission' | 'order'): DocData => {
+    const [datePart, ...timeParts] = (r.date ?? '').split(' ');
+    const [pickup, destination] = r.route.includes('→')
+      ? r.route.split('→').map((x) => x.trim())
+      : [r.route, ''];
+    const isEmail = (r.contact ?? '').includes('@');
+    return {
+      kind,
+      reference: r.reference,
+      number: `${kind === 'mission' ? 'OM' : 'BC'}-${r.reference.replace(/^OS-?/, '')}`,
+      date: new Date().toISOString().slice(0, 10),
+      client: { name: r.client, phone: isEmail ? undefined : r.contact, email: isEmail ? r.contact : undefined },
+      items: [{ label: `Transport avec chauffeur — ${r.route}`, sub: r.date, qty: 1, unit: r.amount ?? 0 }],
+      mission: {
+        date: datePart || '—', time: timeParts.join(' ') || undefined,
+        pickup, destination, vehicle: r.vehicle, driver: r.driver, notes: r.notes,
+      },
+    };
+  };
 
   async function setStatus(row: Row, status: Status) {
     patchLocal(row.key, { status });
@@ -218,6 +240,21 @@ export default function Bookings() {
                 </>
               )}
 
+              <div className="card bg-body-tertiary mb-3">
+                <div className="card-body py-2">
+                  <h6 className="card-title mb-1">Documents</h6>
+                  <p className="text-muted small mb-2">Ordre de mission (avec écran d'accueil tablette) et bon de commande.</p>
+                  <div className="d-flex gap-2 flex-wrap">
+                    <button className="btn btn-sm btn-warning" onClick={() => setView(toDoc(selected, 'mission'))}>
+                      <i className="bi bi-card-heading me-1" />Ordre de mission
+                    </button>
+                    <button className="btn btn-sm btn-outline-secondary" onClick={() => setView(toDoc(selected, 'order'))}>
+                      <i className="bi bi-receipt-cutoff me-1" />Bon de commande
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {selected.source === 'demo' && (
                 <div className="alert alert-warning small">
                   Donnée de démonstration — les vraies réservations du site et de l’API ETG
@@ -228,6 +265,7 @@ export default function Bookings() {
           </div>
         </>
       )}
+      {view && <DocumentModal doc={view} onClose={() => setView(null)} />}
     </>
   );
 }
