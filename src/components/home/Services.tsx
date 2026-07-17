@@ -1,15 +1,18 @@
 import { useI18n } from '@/i18n';
-import { SERVICES } from '@/data/services';
+import { SERVICES, type ServiceItem } from '@/data/services';
+import { usePublished } from '@/lib/cms';
 import Icon from '@/components/ui/Icon';
 import Reveal from '@/components/ui/Reveal';
 import './sections.css';
 
 /**
  * Services — grille dense de cartes à image de fond (overlay noir dégradé,
- * titre or, description révélée au survol). Hauteur maîtrisée.
+ * titre or, description révélée au survol). Contenu piloté par le CMS
+ * (collection « service ») avec repli sur le catalogue statique.
  */
 export default function Services() {
   const { lang, t } = useI18n();
+  const services = usePublished<ServiceItem>('service', SERVICES);
   return (
     <section className="os-section os-svc" id="dmc">
       <div className="os-container">
@@ -18,8 +21,8 @@ export default function Services() {
           <h2 className="os-svc__title">{t.services.title}</h2>
         </Reveal>
         <div className="os-svc__grid">
-          {SERVICES.map((s) => (
-            <Reveal key={s.id}>
+          {services.map((s, i) => (
+            <Reveal key={s.id ?? i}>
               <article
                 className="os-svc__card"
                 style={{ backgroundImage: `url('${s.image}')` }}

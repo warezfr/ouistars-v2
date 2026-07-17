@@ -1,13 +1,17 @@
 import { useI18n } from '@/i18n';
 import { PRESTIGIOUS_ADDRESSES as P } from '@/data/services';
+import { usePublished } from '@/lib/cms';
 import Reveal from '@/components/ui/Reveal';
 import './sections.css';
 
 /** Adresses prestigieuses + bande défilante (marquee) de logos partenaires. */
 export default function PrestigiousAddresses() {
   const { lang } = useI18n();
+  // Contenu CMS (collections « partner » et « address ») avec repli statique.
+  const logos = usePublished<{ name: string; src: string }>('partner', P.logos);
+  const addresses = usePublished<{ label: string }>('address', P.places.map((label) => ({ label })));
   // Duplication de la liste pour une boucle CSS sans couture.
-  const loop = [...P.logos, ...P.logos];
+  const loop = [...logos, ...logos];
 
   return (
     <section className="os-section os-addresses">
@@ -16,8 +20,8 @@ export default function PrestigiousAddresses() {
           <p className="os-eyebrow">{lang === 'fr' ? P.eyebrowFr : P.eyebrowEn}</p>
           <h2>{lang === 'fr' ? P.titleFr : P.titleEn}</h2>
           <div className="os-addresses__list">
-            {P.places.map((place) => (
-              <span key={place} className="os-addresses__item">{place}</span>
+            {addresses.map((place, i) => (
+              <span key={place.label ?? i} className="os-addresses__item">{place.label}</span>
             ))}
           </div>
         </Reveal>

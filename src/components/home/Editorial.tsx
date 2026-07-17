@@ -1,5 +1,6 @@
 import { useI18n } from '@/i18n';
 import Reveal from '@/components/ui/Reveal';
+import { usePublished } from '@/lib/cms';
 import './sections.css';
 
 /** Bandeau Événements — image de fond fixe + voile noir, aside "verre fumé". */
@@ -216,6 +217,7 @@ const FAQ_ITEMS = [
 
 export function Faq() {
   const { lang } = useI18n();
+  const items = usePublished<{ q: string; a: string }>('faq', FAQ_ITEMS);
   return (
     <section className="os-section" id="faq">
       <div className="os-container">
@@ -224,7 +226,7 @@ export function Faq() {
           <h2>{lang === 'fr' ? 'Questions fréquentes' : 'Frequently asked'}</h2>
         </Reveal>
         <div style={{ marginTop: 30, maxWidth: 760 }}>
-          {FAQ_ITEMS.map((f) => (
+          {items.map((f) => (
             <details key={f.q} className="os-faq__item">
               <summary className="os-faq__q">{f.q}<span>+</span></summary>
               <p className="os-faq__a">{f.a}</p>

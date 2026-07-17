@@ -1,51 +1,77 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NAV_GROUPS, type NavEntry } from '@/admin/nav';
+import { useAuth } from '@/admin/auth/AuthContext';
 
-const NAV = [
-  { to: '/admin', label: 'Tableau de bord', end: true, icon: '◧' },
-  { to: '/admin/bookings', label: 'Réservations', icon: '⇄' },
-  { to: '/admin/quotes', label: 'Devis & Événements', icon: '✎' },
-  { to: '/admin/pricing', label: 'Tarifs 2026-2027', icon: '€' },
-  { to: '/admin/documents', label: 'Documents chauffeurs', icon: '⧉' },
-  { to: '/admin/drivers', label: 'Chauffeurs', icon: '☺' },
-  { to: '/admin/applications', label: 'Candidatures', icon: '✦' },
-  { to: '/admin/vehicles', label: 'Flotte', icon: '⛛' },
-];
+function hrefOf(item: NavEntry): string {
+  if (item.to) return item.to;
+  if (item.collection) return `/admin/content/${item.collection}`;
+  return '/admin/soon/' + encodeURIComponent(item.label);
+}
 
 export default function AdminLayout() {
   const loc = useLocation();
-  const [query, setQuery] = useState('');
-  const current = NAV.find((n) => (n.end ? loc.pathname === n.to : loc.pathname.startsWith(n.to)));
+  const { email, profile, signOut } = useAuth();
+  const [q, setQ] = useState('');
+
+  const currentLabel = useMemo(() => {
+    for (const g of NAV_GROUPS) {
+      for (const it of g.items) {
+        const href = hrefOf(it);
+        const active = href === '/admin' ? loc.pathname === '/admin' : loc.pathname.startsWith(href);
+        if (active) return it.label;
+      }
+    }
+    if (loc.pathname.includes('/singleton/')) return 'Contenu';
+    return 'Back-office';
+  }, [loc.pathname]);
+
+  const filtered = (items: NavEntry[]) =>
+    q.trim() ? items.filter((i) => i.label.toLowerCase().includes(q.toLowerCase())) : items;
+
   return (
     <div className="adm">
       <aside className="adm__side">
-        <div className="adm__brand">OUI<span>STARS</span><small>Ops</small></div>
+        <div className="adm__brand">OUI<span>STARS</span><small>Back-office</small></div>
+
+        <div className="adm__navsearch">
+          <input placeholder="Filtrer le menu…" value={q} onChange={(e) => setQ(e.target.value)} />
+        </div>
+
         <nav className="adm__nav">
-          {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.end}
-              className={({ isActive }) => `adm__link${isActive ? ' is-active' : ''}`}>
-              <span className="adm__link-ic">{n.icon}</span>{n.label}
-            </NavLink>
-          ))}
+          {NAV_GROUPS.map((g) => {
+            const items = filtered(g.items);
+            if (!items.length) return null;
+            return (
+              <div className="adm__group" key={g.section}>
+                <p className="adm__group-title">{g.section}</p>
+                {items.map((it) => {
+                  const href = hrefOf(it);
+                  return (
+                    <NavLink key={it.label} to={href}
+                      end={href === '/admin'}
+                      className={({ isActive }) => `adm__link${isActive ? ' is-active' : ''}${it.soon ? ' is-soon' : ''}`}>
+                      {it.label}{it.soon && <span className="adm__soon-dot" title="Bientôt" />}
+                    </NavLink>
+                  );
+                })}
+              </div>
+            );
+          })}
         </nav>
+
         <a className="adm__back" href="/">← Retour au site</a>
       </aside>
+
       <div className="adm__main">
         <header className="adm__header">
-          <h1>{current?.label ?? 'Back-office'}</h1>
+          <h1>{currentLabel}</h1>
           <div className="adm__tools">
-            <input
-              className="adm__search"
-              type="search"
-              placeholder="Rechercher (réf., client…)"
-              aria-label="Rechercher"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <button className="adm__bell" type="button" aria-label="Notifications : 3 non lues">
-              ◷<span className="adm__bell-badge">3</span>
-            </button>
-            <div className="adm__user">Ops · Oui Stars</div>
+            <div className="adm__user">
+              <b>{profile?.displayName ?? email ?? 'Admin'}</b>
+              <span>{profile?.role ?? ''}</span>
+            </div>
+            <button className="adm__logout" onClick={signOut}>Déconnexion</button>
           </div>
         </header>
         <div className="adm__content"><Outlet /></div>
