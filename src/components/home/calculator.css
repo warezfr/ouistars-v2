@@ -26,3 +26,70 @@
 .os-calc__result-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--os-mut); }
 .os-calc__price { font-family: var(--os-font-display); font-size: 2.1rem; color: var(--os-gold-soft); display: block; line-height: 1; }
 .os-calc__result small { color: var(--os-mut-2); font-size: 0.72rem; }
+
+/* ————— Onglets (One Way / Hourly) ————— */
+.os-calc__tabs { display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--os-line); }
+.os-calc__tab {
+  position: relative; background: none; border: 0; cursor: pointer;
+  padding: 10px 4px 12px; margin-right: 20px;
+  font: 600 0.88rem/1 var(--os-font-sans); color: var(--os-mut);
+  transition: color 0.25s var(--os-ease);
+}
+.os-calc__tab::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  background: linear-gradient(90deg, var(--os-gold), var(--os-gold-soft));
+  transform: scaleX(0); transform-origin: left; transition: transform 0.3s var(--os-ease);
+}
+.os-calc__tab:hover { color: var(--os-ivory); }
+.os-calc__tab.is-active { color: var(--os-gold-soft); }
+.os-calc__tab.is-active::after { transform: scaleX(1); }
+
+.os-calc__row--dt { grid-template-columns: 1fr 1fr; }
+
+/* ————— Autocomplétion ————— */
+.os-ac { position: relative; }
+.os-ac__control { position: relative; display: flex; align-items: center; }
+.os-ac__lead {
+  position: absolute; left: 13px; color: var(--os-gold-soft); pointer-events: none;
+}
+.os-ac__control input.os-ac__input--sel { padding-left: 40px; }
+.os-ac__list {
+  position: absolute; z-index: 40; top: calc(100% + 6px); left: 0; right: 0;
+  list-style: none; margin: 0; padding: 6px;
+  background: var(--os-coal, #111318); background: linear-gradient(180deg, rgba(23,26,33,0.98), rgba(11,12,16,0.98));
+  border: 1px solid rgba(201, 162, 75, 0.4); border-radius: var(--os-radius-sm);
+  box-shadow: var(--os-shadow); max-height: 288px; overflow-y: auto;
+  animation: os-ac-in 0.18s var(--os-ease);
+}
+@keyframes os-ac-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.os-ac__item {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  background: none; border: 0; cursor: pointer; color: var(--os-ivory);
+  padding: 10px 12px; border-radius: 8px; transition: background 0.15s var(--os-ease);
+}
+.os-ac__item.is-hl, .os-ac__item:hover { background: rgba(201, 162, 75, 0.08); }
+.os-ac__icon { color: var(--os-gold); flex: 0 0 18px; }
+.os-ac__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.os-ac__text strong { font-size: 0.9rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.os-ac__text small { font-size: 0.74rem; color: var(--os-mut); }
+.os-ac__empty { padding: 12px; font-size: 0.85rem; color: var(--os-mut); text-align: center; }
+
+/* ————— Mini-récap prix ————— */
+.os-calc__quote {
+  margin: 4px 0 16px; padding-top: 16px; border-top: 1px solid rgba(201, 162, 75, 0.18);
+  display: grid; gap: 12px; animation: os-ac-in 0.2s var(--os-ease);
+}
+.os-calc__quote-dist { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.os-calc__quote-dist span { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--os-mut); }
+.os-calc__quote-dist strong { font-family: var(--os-font-display); font-size: 1.05rem; color: var(--os-ivory); }
+.os-calc__prices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.os-calc__price-card {
+  display: flex; flex-direction: column; gap: 2px; padding: 10px 8px; text-align: center;
+  background: rgba(11, 12, 16, 0.5); border: 1px solid var(--os-line); border-radius: var(--os-radius-sm);
+}
+.os-calc__price-name { font-size: 0.72rem; color: var(--os-mut); }
+.os-calc__price-from { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--os-mut-2); }
+.os-calc__price-val { font-family: var(--os-font-display); font-size: 1.15rem; color: var(--os-gold-soft); line-height: 1.2; }
+.os-calc__hint { font-size: 0.8rem; color: var(--os-mut); margin: 8px 0 16px; }
+.os-calc__search { width: 100%; justify-content: center; }
+.os-calc__search:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }

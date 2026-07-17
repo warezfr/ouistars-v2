@@ -44,7 +44,7 @@ export default function Hero({ onBook, onQuote }: Props) {
         </div>
 
         {/* Calculateur en carte « verre fumé » (voir calculator.css) */}
-        <FareCalculator onBook={onBook} />
+        <FareCalculator />
       </div>
     </section>
   );
