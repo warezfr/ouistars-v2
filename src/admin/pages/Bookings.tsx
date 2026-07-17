@@ -58,7 +58,7 @@ export default function Bookings() {
   async function logAction(reference: string, action: string, detail?: string) {
     try {
       await createEntry({
-        collection: 'booking_log', title: reference, status: 'published', position: 0,
+        collection: 'booking_log', title: reference, status: 'draft', position: 0, // draft = admins seulement (RLS)
         data: { reference, action, detail: detail ?? '', by: profile?.email ?? '—', at: new Date().toISOString() },
       });
     } catch { /* le journal ne doit jamais bloquer l'action */ }

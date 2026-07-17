@@ -43,7 +43,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
   /** Journal des documents émis (collection doc_log). */
   const logDoc = (action: string, detail?: string) => {
     createEntry({
-      collection: 'doc_log', title: doc.number, status: 'published', position: 0,
+      collection: 'doc_log', title: doc.number, status: 'draft', position: 0, // draft = admins seulement (RLS)
       data: { number: doc.number, kind: doc.kind, reference: doc.reference,
         client: doc.client.name, action, detail: detail ?? '',
         by: profile?.email ?? '—', at: new Date().toISOString() },
