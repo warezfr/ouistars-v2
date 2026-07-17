@@ -1,0 +1,110 @@
+/* ————————————————————————————————————————————————
+   Grille tarifaire officielle 2026-2027 — tableaux luxe
+   ———————————————————————————————————————————————— */
+
+.os-pt {
+  background: linear-gradient(180deg, var(--os-black), var(--os-night) 45%, var(--os-black));
+  border-block: 1px solid var(--os-line);
+}
+
+.os-pt__head { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.os-pt__head h2 { margin: 0; }
+.os-pt__badge {
+  font-family: var(--os-font-sans);
+  font-size: 0.68rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--os-gold);
+  border: 1px solid var(--os-gold-deep); border-radius: 999px;
+  padding: 6px 16px;
+  background: rgba(201, 162, 75, 0.08);
+  box-shadow: var(--os-shadow-gold);
+  white-space: nowrap;
+}
+.os-pt__sub { margin-top: 12px; max-width: 62ch; }
+
+/* Groupes par catégorie */
+.os-pt__group { margin-top: 46px; }
+.os-pt__cat {
+  font-family: var(--os-font-display);
+  font-size: 1.5rem; font-weight: 600; color: var(--os-ivory);
+  margin: 0 0 16px;
+  display: flex; align-items: center; gap: 16px;
+}
+.os-pt__cat::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--os-gold-deep), transparent);
+  opacity: 0.55;
+}
+
+/* Tableau — wrapper scrollable en mobile */
+.os-pt__scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--os-line);
+  border-radius: var(--os-radius);
+  background: linear-gradient(180deg, rgba(30, 34, 43, 0.6), rgba(23, 26, 33, 0.85));
+  box-shadow: var(--os-shadow);
+}
+.os-pt__table { width: 100%; border-collapse: collapse; min-width: 680px; }
+.os-pt__table th {
+  font-family: var(--os-font-sans);
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--os-gold);
+  text-align: left; padding: 15px 20px;
+  border-bottom: 1px solid var(--os-gold-deep);
+  background: rgba(201, 162, 75, 0.05);
+  white-space: nowrap;
+}
+.os-pt__table th.os-pt__num { text-align: right; }
+.os-pt__table td { padding: 14px 20px; border-bottom: 1px solid var(--os-line); font-size: 0.92rem; color: var(--os-mut); }
+.os-pt__table tbody tr:last-child td { border-bottom: none; }
+.os-pt__table tbody tr { transition: background 0.25s var(--os-ease); }
+.os-pt__table tbody tr:hover { background: rgba(201, 162, 75, 0.045); }
+
+.os-pt__route { color: var(--os-ivory); font-weight: 500; }
+.os-pt__price {
+  text-align: right;
+  font-family: var(--os-font-display);
+  font-size: 1.08rem; font-weight: 600;
+  color: var(--os-gold-soft);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.os-pt__actioncol { width: 1%; }
+.os-pt__action { text-align: right; }
+.os-pt__book { padding: 7px 18px; font-size: 0.76rem; white-space: nowrap; }
+
+/* Horaire & kilomètre */
+.os-pt__duo { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; margin-top: 48px; }
+.os-pt__aux h3 { font-size: 1.35rem; margin-bottom: 4px; }
+.os-pt__auxnote { color: var(--os-mut); font-size: 0.88rem; margin: 6px 0 18px; }
+.os-pt__rates { display: grid; }
+.os-pt__rate {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+  padding: 12px 0; border-bottom: 1px solid var(--os-line);
+}
+.os-pt__rate:last-child { border-bottom: none; padding-bottom: 0; }
+.os-pt__rate > span { color: var(--os-ivory); font-size: 0.9rem; }
+.os-pt__rate b {
+  font-family: var(--os-font-display); font-size: 1.3rem; font-weight: 600;
+  color: var(--os-gold-soft); white-space: nowrap;
+}
+.os-pt__rate small {
+  font-family: var(--os-font-sans); font-size: 0.7rem;
+  color: var(--os-mut); letter-spacing: 0.05em;
+}
+
+/* Mentions */
+.os-pt__notes { margin-top: 44px; padding-top: 24px; border-top: 1px solid var(--os-line); }
+.os-pt__notes h4 {
+  font-family: var(--os-font-sans);
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.22em;
+  color: var(--os-gold); margin: 0 0 14px;
+}
+.os-pt__notes ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; }
+.os-pt__notes li { position: relative; padding-left: 16px; font-size: 0.79rem; color: var(--os-mut-2); }
+.os-pt__notes li::before { content: '✦'; position: absolute; left: 0; top: 1px; font-size: 0.55rem; color: var(--os-gold-deep); }
+
+@media (max-width: 820px) {
+  .os-pt__duo { grid-template-columns: 1fr; }
+  .os-pt__cat { font-size: 1.3rem; }
+}

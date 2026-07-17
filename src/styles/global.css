@@ -1,0 +1,63 @@
+@import './tokens.css';
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--os-black);
+  color: var(--os-ivory);
+  font-family: var(--os-font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+h1, h2, h3, h4 { font-family: var(--os-font-display); font-weight: 600; line-height: 1.1; margin: 0 0 0.4em; letter-spacing: -0.01em; }
+h1 { font-size: clamp(2.4rem, 6vw, 4.2rem); }
+h2 { font-size: clamp(1.9rem, 4vw, 3rem); }
+h3 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); }
+p { margin: 0 0 1em; color: var(--os-mut); }
+
+.os-container { max-width: var(--os-container); margin: 0 auto; padding-inline: var(--os-gutter); }
+.os-section { padding-block: clamp(56px, 9vw, 120px); }
+.os-eyebrow {
+  font-family: var(--os-font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.28em;
+  font-size: 0.72rem;
+  color: var(--os-gold);
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.os-lead { color: var(--os-ivory); opacity: 0.86; max-width: 60ch; }
+
+/* Boutons */
+.os-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  font: 600 0.92rem/1 var(--os-font-sans);
+  padding: 15px 28px; border-radius: 999px; cursor: pointer;
+  border: 1px solid transparent; transition: all 0.3s var(--os-ease);
+}
+.os-btn--gold { background: linear-gradient(120deg, var(--os-gold), var(--os-gold-soft)); color: #1a1405; }
+.os-btn--gold:hover { transform: translateY(-2px); box-shadow: var(--os-shadow-gold); }
+.os-btn--ghost { border-color: var(--os-line); color: var(--os-ivory); background: transparent; }
+.os-btn--ghost:hover { border-color: var(--os-gold); color: var(--os-gold-soft); }
+
+/* Cartes */
+.os-card {
+  background: linear-gradient(180deg, var(--os-surface), var(--os-night));
+  border: 1px solid var(--os-line); border-radius: var(--os-radius);
+  padding: 26px; transition: border-color 0.3s var(--os-ease), transform 0.3s var(--os-ease);
+}
+.os-card:hover { border-color: var(--os-gold-deep); transform: translateY(-4px); }
+
+/* Reveal au scroll */
+.os-reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s var(--os-ease), transform 0.7s var(--os-ease); }
+.os-reveal.is-visible { opacity: 1; transform: none; }
+
+/* Divider doré */
+.os-rule { height: 1px; background: linear-gradient(90deg, transparent, var(--os-gold-deep), transparent); border: 0; margin: 0; }
+
+/* Focus accessible */
+:focus-visible { outline: 2px solid var(--os-gold); outline-offset: 2px; }

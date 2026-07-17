@@ -1,0 +1,63 @@
+.os-grid { display: grid; gap: 22px; margin-top: 42px; }
+.os-grid--services { grid-template-columns: repeat(3, 1fr); }
+.os-grid--fleet { grid-template-columns: repeat(3, 1fr); }
+.os-grid--packages { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) { .os-grid--services, .os-grid--fleet, .os-grid--packages { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 620px) { .os-grid--services, .os-grid--fleet, .os-grid--packages { grid-template-columns: 1fr; } }
+
+.os-service__icon { display: inline-grid; place-items: center; width: 52px; height: 52px; border-radius: 14px;
+  background: rgba(201,162,75,0.10); color: var(--os-gold-soft); margin-bottom: 16px; }
+.os-service h3 { font-size: 1.15rem; }
+
+.os-fleet__badge { display: inline-block; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--os-gold); border: 1px solid var(--os-gold-deep); border-radius: 999px; padding: 4px 12px; margin-bottom: 14px; }
+.os-fleet__meta { display: flex; gap: 8px; color: var(--os-mut-2); font-size: 0.82rem; margin-top: 8px; }
+
+/* Meet & Greeter */
+.os-mg { background: linear-gradient(180deg, var(--os-night), var(--os-black)); }
+.os-mg__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; margin-top: 42px; align-items: start; }
+.os-mg__rates { display: grid; gap: 16px; }
+.os-mg__rate { display: grid; gap: 6px; }
+.os-mg__airport { font-weight: 600; color: var(--os-ivory); }
+.os-mg__price { font-family: var(--os-font-display); font-size: 2rem; color: var(--os-gold-soft); }
+.os-mg__meta { font-size: 0.85rem; color: var(--os-mut); }
+.os-mg__includes ul { list-style: none; padding: 0; margin: 14px 0 18px; display: grid; gap: 10px; }
+.os-mg__includes li { position: relative; padding-left: 24px; color: var(--os-mut); font-size: 0.92rem; }
+.os-mg__includes li::before { content: '✓'; position: absolute; left: 0; color: var(--os-gold); }
+.os-mg__disclaimer { font-size: 0.82rem; color: var(--os-warning); background: rgba(245,177,61,0.08);
+  border: 1px solid rgba(245,177,61,0.25); border-radius: 10px; padding: 12px 14px; margin: 0; }
+@media (max-width: 820px) { .os-mg__grid { grid-template-columns: 1fr; } }
+
+/* Prestigious addresses */
+.os-addresses { text-align: center; background: linear-gradient(180deg, var(--os-black), var(--os-night)); }
+.os-addresses__list { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 28px; margin-top: 34px; }
+.os-addresses__item { font-family: var(--os-font-display); font-size: 1.2rem; color: var(--os-mut); letter-spacing: 0.02em; }
+.os-addresses__item::after { content: '✦'; color: var(--os-gold-deep); margin-left: 28px; font-size: 0.7rem; vertical-align: middle; }
+.os-addresses__item:last-child::after { content: ''; }
+
+/* Packages */
+.os-pkg { display: grid; gap: 6px; }
+.os-pkg__cat { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.16em; color: var(--os-gold); }
+.os-pkg__route { font-family: var(--os-font-display); font-size: 1.2rem; color: var(--os-ivory); }
+.os-pkg__prices { display: flex; gap: 16px; margin-top: 8px; }
+.os-pkg__prices span { font-size: 0.85rem; color: var(--os-mut); }
+.os-pkg__prices b { color: var(--os-gold-soft); }
+
+/* Generic feature band */
+.os-band { background: linear-gradient(120deg, var(--os-surface), var(--os-night)); border-block: 1px solid var(--os-line); }
+.os-band__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+@media (max-width: 820px) { .os-band__grid { grid-template-columns: 1fr; } }
+
+/* DMC band (Destination Management + Aviation & Conciergerie) */
+.os-dmcband { background: linear-gradient(120deg, var(--os-night), var(--os-black)); }
+.os-dmcband__list { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 10px; }
+.os-dmcband__list li { position: relative; padding-left: 24px; color: var(--os-mut); font-size: 0.92rem; }
+.os-dmcband__list li::before { content: '✓'; position: absolute; left: 0; color: var(--os-gold); }
+.os-dmcband__cards { display: grid; gap: 18px; }
+.os-dmcband__card h3 { font-size: 1.15rem; }
+
+/* FAQ */
+.os-faq__item { border-bottom: 1px solid var(--os-line); padding: 18px 0; }
+.os-faq__q { font-weight: 600; color: var(--os-ivory); cursor: pointer; list-style: none; display: flex; justify-content: space-between; }
+.os-faq__q::-webkit-details-marker { display: none; }
+.os-faq__a { color: var(--os-mut); margin-top: 10px; }
