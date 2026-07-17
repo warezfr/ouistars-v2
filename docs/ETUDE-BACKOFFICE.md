@@ -109,3 +109,25 @@ Agences, Entreprises, Réservations véhicules, Avis, Popups, Leads, CTA, SEO, S
 ---
 
 *Document généré dans le repo : `docs/ETUDE-BACKOFFICE.md`*
+
+---
+
+## 5. LIVRÉ & TESTÉ (mise à jour post-implémentation)
+
+### P0 — fiabilité (fait, testé en production)
+- ✅ **Prix calculé côté serveur** depuis la grille officielle — testé : CDG→Paris = **120 €**, mise à disposition 4 h V = **360 €** (le montant du navigateur n'est plus jamais utilisé).
+- ✅ **`/api/intake` durci** : schémas Zod (liste blanche), limite 20 req/min/IP, **honeypot anti-bot** (testé : bot → faux succès sans écriture), rejet des données invalides (testé : HTTP 400).
+- ✅ **Insertion résiliente au schéma** : l'API s'adapte aux colonnes réellement présentes (retire et réessaie) — robustesse sans migration manuelle.
+- ✅ **Notifications e-mail** (Resend) : confirmation client + alerte ops sur réservation / devis / candidature. *Activation : clé `RESEND_API_KEY` sur Vercel.*
+
+### P1 — chaîne complète & conforme (fait, testé)
+- ✅ **Registre de factures légal** : table `invoices` + émission atomique `issue_invoice()` → numérotation **continue** testée : `FA-2026-0001`, `FA-2026-0002` (aucun trou possible).
+- ✅ **Statut payé / impayé** testé (bascule → « Payée »), **PDF archivé** dans le Storage, **mentions légales** (SIREN, TVA intra, siège, pénalités de retard) éditables dans Paramètres du site et imprimées sur la facture.
+- ✅ **Devis → réservation** (bouton de conversion) ; **création manuelle** de réservation (vente au comptoir / téléphone).
+- ✅ **Fiche de mission auto-envoyée au chauffeur** à l'assignation (si e-mail + Resend).
+- ✅ **Synchronisation grille site → rate cards ETG** (bouton dans Tarifs) — un seul prix vendu partout.
+
+### Reste à la charge du client (gestes non automatisables)
+1. Ajouter sur Vercel : `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`.
+2. Renseigner SIREN / forme juridique / TVA intra / adresse du siège dans **Paramètres du site**.
+3. Révoquer le token GitHub et les clés Supabase de test.
