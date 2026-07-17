@@ -3,9 +3,12 @@ import { PRESTIGIOUS_ADDRESSES as P } from '@/data/services';
 import Reveal from '@/components/ui/Reveal';
 import './sections.css';
 
-/** Remplace la section "marques prestigieuses" (consigne). */
+/** Adresses prestigieuses + bande défilante (marquee) de logos partenaires. */
 export default function PrestigiousAddresses() {
   const { lang } = useI18n();
+  // Duplication de la liste pour une boucle CSS sans couture.
+  const loop = [...P.logos, ...P.logos];
+
   return (
     <section className="os-section os-addresses">
       <div className="os-container">
@@ -19,6 +22,19 @@ export default function PrestigiousAddresses() {
           </div>
         </Reveal>
       </div>
+
+      <Reveal>
+        <p className="os-marquee__label">{lang === 'fr' ? P.trustFr : P.trustEn}</p>
+        <div className="os-marquee" aria-hidden>
+          <div className="os-marquee__track">
+            {loop.map((logo, i) => (
+              <span className="os-marquee__item" key={`${logo.name}-${i}`}>
+                <img src={logo.src} alt={logo.name} loading="lazy" />
+              </span>
+            ))}
+          </div>
+        </div>
+      </Reveal>
     </section>
   );
 }

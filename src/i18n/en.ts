@@ -34,7 +34,19 @@ export const en: typeof fr = {
     upTo: 'Up to',
     paxBags: 'passengers and bags',
   },
-  fleet: { eyebrow: 'Our fleet', title: 'Mercedes-Benz, exclusively', passengers: 'passengers', luggage: 'bags' },
+  fleet: {
+    eyebrow: 'Our fleet', title: 'Mercedes-Benz, exclusively',
+    passengers: 'passengers', luggage: 'bags',
+    classLabel: 'Class',
+    hint: 'Discover the vehicle',
+    highlights: 'On board, every time',
+    perks: [
+      'Suited chauffeur, protocol-trained and bilingual',
+      'Fresh water, daily press and onboard Wi-Fi',
+      'Leather interior, multi-zone climate, heated seats',
+      'Flight tracking, punctuality and guaranteed discretion',
+    ],
+  },
   packages: { eyebrow: 'Packages', title: 'Our signature itineraries' },
   experience: {
     eyebrow: 'The Oui Stars Experience',
@@ -84,6 +96,41 @@ export const en: typeof fr = {
     from: 'from',
     perKm: '/ km',
     notesTitle: 'Terms & conditions',
+  },
+  events: {
+    eyebrow: 'Events & Congresses',
+    title: 'Coordinated mobility for your largest gatherings',
+    lead: 'Summits, congresses, gala dinners and shows: dedicated fleets, briefed chauffeurs and real-time coordination, from the first arrival to the last departure.',
+    cta: 'Corporate & Event Solutions',
+    coordinateTitle: 'What we coordinate',
+    coordinate: [
+      'International summits & congresses',
+      'Gala dinners & private evenings',
+      'Brand launches & road-shows',
+      'Official delegations & VIP guests',
+    ],
+  },
+  fashion: {
+    eyebrow: 'Fashion Weeks',
+    title: 'In step with the runways',
+    lead: 'During Paris Fashion Weeks, Oui Stars orchestrates the logistics of fashion houses, models, press and guests: vehicles on standby, discreet chauffeurs and minute-by-minute coordination between showrooms, shows and after-parties.',
+    points: [
+      'Fashion houses & showrooms',
+      'Models & production teams',
+      'Press, influencers & VIP guests',
+      'Showrooms ↔ shows ↔ after-parties link',
+    ],
+  },
+  about: {
+    eyebrow: 'The house',
+    name: 'Oui Stars',
+    body: 'Oui Stars orchestrates premium mobility, destination management and event solutions across France — from airports to palaces, from congresses to private tours. One house, one point of contact, an uncompromising standard.',
+    stats: [
+      { value: 'France', label: 'Nationwide operations' },
+      { value: 'Mercedes', label: 'Exclusive fleet' },
+      { value: '24/7', label: 'Concierge & assistance' },
+      { value: '100%', label: 'Guaranteed discretion' },
+    ],
   },
   cta: { book: 'Book', quote: 'Request a quote' },
   footer: {

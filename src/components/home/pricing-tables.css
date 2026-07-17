@@ -116,3 +116,58 @@
 .os-pt__scroll { border-color: rgba(201, 162, 75, 0.18); }
 .os-pt__rate { border-bottom-color: rgba(201, 162, 75, 0.12); }
 .os-pt__notes { border-top-color: rgba(201, 162, 75, 0.14); }
+
+/* ————————————————————————————————————————————————
+   Grille tarifaire « en toute transparence » — refonte 2026
+   Plus aérée, colonnes E/V/S alignées, lignes zébrées, ancres.
+   ———————————————————————————————————————————————— */
+
+/* Barre d'ancres par catégorie */
+.os-pt__anchors {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin-top: 26px;
+}
+.os-pt__anchor {
+  font-family: var(--os-font-sans);
+  font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--os-mut);
+  border: 1px solid rgba(201, 162, 75, 0.22); border-radius: 999px;
+  padding: 8px 16px;
+  transition: color 0.25s var(--os-ease), border-color 0.25s var(--os-ease), background 0.25s var(--os-ease);
+}
+.os-pt__anchor:hover {
+  color: var(--os-night);
+  background: linear-gradient(120deg, var(--os-gold), var(--os-gold-soft));
+  border-color: transparent;
+}
+
+/* Groupes : plus d'air + décalage d'ancre (nav fixe) */
+.os-pt__group { margin-top: 58px; scroll-margin-top: 96px; }
+
+/* En-têtes dorés plus marqués, cellules plus aérées */
+.os-pt__table th {
+  padding: 16px 24px;
+  background: linear-gradient(180deg, rgba(201, 162, 75, 0.12), rgba(201, 162, 75, 0.04));
+  border-bottom-width: 1px;
+}
+.os-pt__table td { padding: 16px 24px; }
+
+/* Colonnes prix E/V/S : alignées, tabulaires */
+.os-pt__table th.os-pt__num,
+.os-pt__price { text-align: right; font-variant-numeric: tabular-nums; }
+.os-pt__num, .os-pt__price { width: 128px; }
+
+/* Lignes zébrées subtiles + survol doré */
+.os-pt__table tbody tr:nth-child(even) { background: rgba(201, 162, 75, 0.032); }
+.os-pt__table tbody tr:hover { background: rgba(201, 162, 75, 0.08); }
+
+/* Séparation verticale douce avant la colonne action */
+.os-pt__action { border-left: 1px solid rgba(201, 162, 75, 0.08); }
+
+/* Cartes horaire / km : un peu plus premium */
+.os-pt__duo { gap: 26px; margin-top: 60px; }
+.os-pt__aux { background: linear-gradient(180deg, rgba(30, 34, 43, 0.55), rgba(17, 19, 24, 0.85)); }
+
+@media (max-width: 640px) {
+  .os-pt__table th, .os-pt__table td { padding: 13px 16px; }
+}

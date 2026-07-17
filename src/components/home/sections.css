@@ -84,3 +84,215 @@
 
 /* Adresses prestigieuses : fond allégé pour laisser filtrer les ondes */
 .os-addresses { background: transparent; }
+
+/* ————————————————————————————————————————————————
+   Services — grille dense, cartes à image de fond (refonte)
+   ———————————————————————————————————————————————— */
+.os-svc__title { max-width: 18ch; }
+.os-svc__grid {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.os-svc__card {
+  position: relative; isolation: isolate;
+  min-height: 236px;
+  display: flex; align-items: flex-end;
+  overflow: hidden;
+  border-radius: 2px 20px 2px 20px; /* coins asymétriques, anti-uniformité */
+  border: 1px solid rgba(201, 162, 75, 0.16);
+  background-size: cover; background-position: center;
+  transition: transform 0.5s var(--os-ease), border-color 0.5s var(--os-ease), background-size 0.9s var(--os-ease);
+}
+.os-svc__card:hover { border-color: rgba(201, 162, 75, 0.5); transform: translateY(-4px); background-size: 114%; }
+.os-svc__scrim {
+  position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(11, 12, 16, 0.94) 8%, rgba(11, 12, 16, 0.5) 48%, rgba(11, 12, 16, 0.18) 100%);
+  transition: background 0.4s var(--os-ease);
+}
+.os-svc__card:hover .os-svc__scrim {
+  background: linear-gradient(0deg, rgba(11, 12, 16, 0.96) 14%, rgba(11, 12, 16, 0.66) 60%, rgba(11, 12, 16, 0.3) 100%);
+}
+.os-svc__body { position: relative; padding: 20px 20px 22px; width: 100%; }
+.os-svc__icon {
+  display: inline-grid; place-items: center; width: 40px; height: 40px;
+  border-radius: 10px; margin-bottom: 12px;
+  color: var(--os-gold-soft);
+  background: rgba(11, 12, 16, 0.5);
+  border: 1px solid rgba(201, 162, 75, 0.3);
+  backdrop-filter: blur(4px);
+}
+.os-svc__name {
+  font-family: var(--os-font-display); font-weight: 600;
+  font-size: 1.24rem; line-height: 1.12; color: var(--os-ivory);
+  margin: 0;
+}
+.os-svc__desc {
+  margin: 0; color: var(--os-mut); font-size: 0.82rem; line-height: 1.45;
+  max-height: 0; opacity: 0; overflow: hidden;
+  transform: translateY(6px);
+  transition: max-height 0.45s var(--os-ease), opacity 0.35s var(--os-ease), transform 0.45s var(--os-ease), margin 0.45s var(--os-ease);
+}
+.os-svc__card:hover .os-svc__desc,
+.os-svc__card:focus-within .os-svc__desc {
+  max-height: 6em; opacity: 1; transform: none; margin-top: 10px;
+}
+@media (max-width: 1200px) { .os-svc__grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 820px) { .os-svc__grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .os-svc__grid { grid-template-columns: 1fr; } .os-svc__desc { max-height: 6em; opacity: 1; transform: none; margin-top: 10px; } }
+
+/* ————————————————————————————————————————————————
+   Flotte — indice cliquable + modal (verre fumé doré)
+   ———————————————————————————————————————————————— */
+.os-fleet__hint {
+  display: inline-block; margin-top: 14px;
+  font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--os-gold); opacity: 0.75;
+  transition: opacity 0.25s var(--os-ease);
+}
+.group:hover .os-fleet__hint { opacity: 1; }
+
+.os-fleetmodal {
+  position: fixed; inset: 0; z-index: 200;
+  display: grid; place-items: center; padding: 20px;
+  background: rgba(6, 7, 10, 0.74);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  animation: os-fade 0.25s var(--os-ease);
+}
+.os-fleetmodal__panel {
+  position: relative; width: min(620px, 100%); max-height: 90vh; overflow: auto;
+  border-radius: 4px 28px 4px 28px;
+  border: 1px solid rgba(201, 162, 75, 0.42);
+  background:
+    radial-gradient(120% 80% at 100% 0%, rgba(201, 162, 75, 0.14), transparent 60%),
+    linear-gradient(180deg, rgba(30, 34, 43, 0.9), rgba(11, 12, 16, 0.96));
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6), var(--os-shadow-gold);
+  animation: os-modal-rise 0.35s var(--os-ease);
+}
+@keyframes os-modal-rise { from { transform: translateY(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+.os-fleetmodal__close {
+  position: absolute; top: 14px; right: 16px; z-index: 2;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(11, 12, 16, 0.6); border: 1px solid rgba(201, 162, 75, 0.35);
+  color: var(--os-ivory); font-size: 1.5rem; line-height: 1; cursor: pointer;
+  transition: border-color 0.25s, color 0.25s;
+}
+.os-fleetmodal__close:hover { border-color: var(--os-gold); color: var(--os-gold-soft); }
+.os-fleetmodal__media { position: relative; }
+.os-fleetmodal__media img {
+  width: 100%; aspect-ratio: 16 / 9; object-fit: cover;
+  border-bottom: 1px solid rgba(201, 162, 75, 0.2);
+}
+.os-fleetmodal__badge {
+  position: absolute; left: 22px; bottom: 16px;
+  font-family: var(--os-font-sans); font-size: 0.66rem;
+  text-transform: uppercase; letter-spacing: 0.18em; color: var(--os-gold);
+  border: 1px solid var(--os-gold-deep); border-radius: 999px;
+  padding: 6px 14px; background: rgba(11, 12, 16, 0.6); backdrop-filter: blur(6px);
+}
+.os-fleetmodal__body { padding: 26px 30px 32px; }
+.os-fleetmodal__name { font-size: clamp(1.7rem, 3vw, 2.3rem); color: var(--os-ivory); margin: 0 0 8px; }
+.os-fleetmodal__meta { display: flex; gap: 10px; color: var(--os-gold-soft); font-size: 0.88rem; margin-bottom: 16px; }
+.os-fleetmodal__desc { color: var(--os-mut); font-size: 1rem; margin: 0 0 22px; }
+.os-fleetmodal__perkstitle {
+  font-family: var(--os-font-sans); font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.2em; color: var(--os-gold);
+  margin: 0 0 12px;
+}
+.os-fleetmodal__perks { list-style: none; padding: 0; margin: 0; display: grid; gap: 11px; }
+.os-fleetmodal__perks li { position: relative; padding-left: 26px; color: var(--os-ivory); opacity: 0.9; font-size: 0.94rem; }
+.os-fleetmodal__perks li::before { content: '✦'; position: absolute; left: 0; top: 1px; color: var(--os-gold); font-size: 0.72rem; }
+
+/* ————————————————————————————————————————————————
+   Marquee — logos partenaires (défilement infini fluide)
+   ———————————————————————————————————————————————— */
+.os-marquee__label {
+  text-align: center; margin: 6px 0 0;
+  font-family: var(--os-font-sans); font-size: 0.68rem;
+  text-transform: uppercase; letter-spacing: 0.24em; color: var(--os-mut-2);
+}
+.os-marquee {
+  margin-top: 26px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.os-marquee__track {
+  display: flex; align-items: center; width: max-content;
+  gap: clamp(40px, 6vw, 80px);
+  animation: os-marquee 42s linear infinite;
+}
+.os-marquee:hover .os-marquee__track { animation-play-state: paused; }
+.os-marquee__item { flex: none; }
+.os-marquee__item img {
+  height: 34px; width: auto; max-width: 150px; object-fit: contain;
+  filter: brightness(0) invert(0.92) sepia(0.25) saturate(2) hue-rotate(5deg);
+  opacity: 0.55;
+  transition: opacity 0.35s var(--os-ease), filter 0.35s var(--os-ease);
+}
+.os-marquee__item img:hover { opacity: 1; filter: none; }
+@keyframes os-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .os-marquee__track { animation: none; flex-wrap: wrap; justify-content: center; } }
+
+/* ————————————————————————————————————————————————
+   Événements — aside "verre fumé"
+   ———————————————————————————————————————————————— */
+.os-events__aside {
+  border: 1px solid rgba(201, 162, 75, 0.4);
+  background: rgba(11, 12, 16, 0.5);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-radius: 2px 24px 2px 24px;
+  padding: 30px 32px;
+}
+.os-events__asidetitle {
+  font-family: var(--os-font-sans); font-size: 0.7rem;
+  text-transform: uppercase; letter-spacing: 0.2em; color: var(--os-gold);
+  margin: 0 0 16px;
+}
+.os-events__list { list-style: none; padding: 0; margin: 0; display: grid; gap: 13px; }
+.os-events__list li {
+  position: relative; padding-left: 24px; color: var(--os-ivory); opacity: 0.9;
+  font-family: var(--os-font-display); font-size: 1.12rem;
+}
+.os-events__list li::before { content: '✦'; position: absolute; left: 0; top: 4px; color: var(--os-gold); font-size: 0.68rem; }
+
+/* ————————————————————————————————————————————————
+   Fashion Weeks — section dédiée éditoriale
+   ———————————————————————————————————————————————— */
+.os-fashion { border-block: 1px solid rgba(201, 162, 75, 0.18); }
+.os-fashion__inner { max-width: 680px; }
+.os-fashion__title { font-size: clamp(2.2rem, 4.5vw, 3.6rem); font-style: italic; }
+.os-fashion__lead { margin-top: 18px; }
+.os-fashion__points {
+  list-style: none; padding: 0; margin: 30px 0 0;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px 28px;
+}
+.os-fashion__points li {
+  position: relative; padding-left: 24px; color: var(--os-ivory); opacity: 0.88; font-size: 0.94rem;
+}
+.os-fashion__points li::before { content: '✓'; position: absolute; left: 0; color: var(--os-gold); }
+@media (max-width: 560px) { .os-fashion__points { grid-template-columns: 1fr; } }
+
+/* ————————————————————————————————————————————————
+   La maison — About éditorial deux colonnes
+   ———————————————————————————————————————————————— */
+.os-about__grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(28px, 5vw, 64px); align-items: center; }
+.os-about__media { margin: 0; overflow: hidden; border-radius: 3px 60px 3px 60px; border: 1px solid rgba(201, 162, 75, 0.2); }
+.os-about__media img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
+.os-about__name { font-size: clamp(2.6rem, 5vw, 4.2rem); line-height: 1; color: var(--os-ivory); margin: 4px 0 0; }
+.os-about__rule { display: block; width: 64px; height: 2px; margin: 20px 0 22px; background: linear-gradient(90deg, var(--os-gold), transparent); }
+.os-about__stats { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 30px; }
+.os-about__stat {
+  border-left: 1px solid rgba(201, 162, 75, 0.35);
+  padding: 4px 0 4px 16px;
+}
+.os-about__stat b {
+  display: block; font-family: var(--os-font-display); font-weight: 600;
+  font-size: 1.7rem; color: var(--os-gold-soft); line-height: 1.1;
+}
+.os-about__stat span { font-size: 0.78rem; letter-spacing: 0.06em; color: var(--os-mut); }
+@media (max-width: 820px) {
+  .os-about__grid { grid-template-columns: 1fr; }
+  .os-about__media { order: -1; }
+  .os-about__media img { aspect-ratio: 16 / 10; }
+}

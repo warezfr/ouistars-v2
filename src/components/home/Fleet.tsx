@@ -1,11 +1,14 @@
+import { useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/i18n';
-import { FLEET } from '@/data/fleet';
+import { FLEET, type FleetVehicle } from '@/data/fleet';
 import Reveal from '@/components/ui/Reveal';
 import './sections.css';
 
-/** Flotte — cartes larges avec photo du véhicule, badge de classe doré. */
+/** Flotte — cartes cliquables + modal détaillée (verre fumé doré). */
 export default function Fleet() {
   const { t } = useI18n();
+  const [selected, setSelected] = useState<FleetVehicle | null>(null);
+
   return (
     <section className="os-section" id="fleet">
       <div className="os-container">
@@ -16,7 +19,11 @@ export default function Fleet() {
         <div className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {FLEET.map((v) => (
             <Reveal key={v.id}>
-              <article className="group relative overflow-hidden rounded-2xl border border-gold-deep/20 bg-surface/60 transition-colors duration-500 hover:border-gold-deep/60">
+              <button
+                type="button"
+                onClick={() => setSelected(v)}
+                className="group relative block w-full overflow-hidden rounded-2xl border border-gold-deep/20 bg-surface/60 text-left transition-colors duration-500 hover:border-gold-deep/60"
+              >
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <img
                     src={v.image}
@@ -37,12 +44,69 @@ export default function Fleet() {
                     <span aria-hidden>·</span>
                     <span>{v.luggage} {t.fleet.luggage}</span>
                   </div>
+                  <span className="os-fleet__hint">{t.fleet.hint} →</span>
                 </div>
-              </article>
+              </button>
             </Reveal>
           ))}
         </div>
       </div>
+
+      <FleetModal vehicle={selected} onClose={() => setSelected(null)} />
     </section>
+  );
+}
+
+/** Modal accessible : fermeture Échap + clic overlay, focus sur le bouton fermer. */
+function FleetModal({ vehicle, onClose }: { vehicle: FleetVehicle | null; onClose: () => void }) {
+  const { t } = useI18n();
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!vehicle) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [vehicle, onClose]);
+
+  if (!vehicle) return null;
+
+  return (
+    <div className="os-fleetmodal" onClick={onClose}>
+      <div
+        className="os-fleetmodal__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="fleetmodal-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button ref={closeRef} className="os-fleetmodal__close" aria-label={t.common.close} onClick={onClose}>×</button>
+
+        <div className="os-fleetmodal__media">
+          <img src={vehicle.image} alt={vehicle.name} />
+          <span className="os-fleetmodal__badge">{t.fleet.classLabel} · {vehicle.className}</span>
+        </div>
+
+        <div className="os-fleetmodal__body">
+          <h3 id="fleetmodal-title" className="os-fleetmodal__name">{vehicle.name}</h3>
+          <div className="os-fleetmodal__meta">
+            <span>{vehicle.seats} {t.fleet.passengers}</span>
+            <span aria-hidden>·</span>
+            <span>{vehicle.luggage} {t.fleet.luggage}</span>
+          </div>
+          <p className="os-fleetmodal__desc">{vehicle.descFr}</p>
+
+          <p className="os-fleetmodal__perkstitle">{t.fleet.highlights}</p>
+          <ul className="os-fleetmodal__perks">
+            {t.fleet.perks.map((p) => <li key={p}>{p}</li>)}
+          </ul>
+        </div>
+      </div>
+    </div>
   );
 }

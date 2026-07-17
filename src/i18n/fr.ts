@@ -32,7 +32,19 @@ export const fr = {
     upTo: 'Jusqu’à',
     paxBags: 'passagers et bagages',
   },
-  fleet: { eyebrow: 'Notre flotte', title: 'Mercedes-Benz, exclusivement', passengers: 'passagers', luggage: 'bagages' },
+  fleet: {
+    eyebrow: 'Notre flotte', title: 'Mercedes-Benz, exclusivement',
+    passengers: 'passagers', luggage: 'bagages',
+    classLabel: 'Classe',
+    hint: 'Découvrir le véhicule',
+    highlights: 'À bord, systématiquement',
+    perks: [
+      'Chauffeur en costume, formé au protocole et bilingue',
+      'Eau fraîche, presse du jour et Wi-Fi embarqué',
+      'Intérieur cuir, climatisation multizone, sièges chauffants',
+      'Suivi des vols, ponctualité et confidentialité garanties',
+    ],
+  },
   packages: { eyebrow: 'Forfaits', title: 'Nos itinéraires signature' },
   experience: {
     eyebrow: 'L’expérience Oui Stars',
@@ -82,6 +94,41 @@ export const fr = {
     from: 'à partir de',
     perKm: '/ km',
     notesTitle: 'Mentions & conditions',
+  },
+  events: {
+    eyebrow: 'Événements & Congrès',
+    title: 'Mobilité coordonnée pour vos plus grands rendez-vous',
+    lead: 'Sommets, congrès, dîners de gala et défilés : flottes dédiées, chauffeurs briefés et coordination en temps réel, du premier arrivant au dernier départ.',
+    cta: 'Solutions Entreprises & Événements',
+    coordinateTitle: 'Ce que nous coordonnons',
+    coordinate: [
+      'Sommets & congrès internationaux',
+      'Dîners de gala & soirées privées',
+      'Lancements de marque & road-shows',
+      'Délégations officielles & invités VIP',
+    ],
+  },
+  fashion: {
+    eyebrow: 'Fashion Weeks',
+    title: 'Au rythme des défilés',
+    lead: 'Durant les Fashion Weeks parisiennes, Oui Stars orchestre la logistique des maisons de couture, des mannequins, de la presse et des invités : véhicules en attente, chauffeurs discrets et coordination minute par minute entre showrooms, défilés et soirées.',
+    points: [
+      'Maisons de couture & showrooms',
+      'Mannequins & équipes de production',
+      'Presse, influenceurs & invités VIP',
+      'Liaison showrooms ↔ défilés ↔ after-parties',
+    ],
+  },
+  about: {
+    eyebrow: 'La maison',
+    name: 'Oui Stars',
+    body: 'Oui Stars orchestre la mobilité premium, le Destination Management et les solutions événementielles à travers la France — des aéroports aux palaces, des congrès aux tournées privées. Une seule maison, un seul interlocuteur, un standard sans compromis.',
+    stats: [
+      { value: 'France', label: 'Opérations nationales' },
+      { value: 'Mercedes', label: 'Flotte exclusive' },
+      { value: '24/7', label: 'Conciergerie & assistance' },
+      { value: '100%', label: 'Discrétion garantie' },
+    ],
   },
   cta: { book: 'Réserver', quote: 'Demander un devis' },
   footer: {

@@ -2,9 +2,9 @@ import { useI18n } from '@/i18n';
 import Reveal from '@/components/ui/Reveal';
 import './sections.css';
 
-/** Bandeau Événements — image de fond parallax-like (bg-fixed) + voile noir. */
+/** Bandeau Événements — image de fond fixe + voile noir, aside "verre fumé". */
 export function Events({ onQuote }: { onQuote: () => void }) {
-  const { lang } = useI18n();
+  const { t } = useI18n();
   return (
     <>
       <section
@@ -12,38 +12,56 @@ export function Events({ onQuote }: { onQuote: () => void }) {
         style={{ backgroundImage: "url('/why-paris-night.webp')" }}
         id="events"
       >
-        <div className="absolute inset-0 bg-night/80" aria-hidden />
-        <div className="absolute inset-0 bg-gradient-to-r from-night/80 to-transparent" aria-hidden />
+        <div className="absolute inset-0 bg-night/82" aria-hidden />
+        <div className="absolute inset-0 bg-gradient-to-r from-night via-night/70 to-transparent" aria-hidden />
         <div className="os-container os-band__grid relative">
           <Reveal>
-            <p className="os-eyebrow">{lang === 'fr' ? 'Événements & Congrès' : 'Events & Congresses'}</p>
-            <h2>{lang === 'fr' ? 'Mobilité coordonnée pour vos plus grands rendez-vous' : 'Coordinated mobility for your largest gatherings'}</h2>
-            <p className="os-lead">
-              {lang === 'fr'
-                ? 'Sommets, congrès, dîners de gala et défilés : flottes dédiées, chauffeurs briefés et coordination temps réel.'
-                : 'Summits, congresses, gala dinners and shows: dedicated fleets, briefed chauffeurs and real-time coordination.'}
-            </p>
-            <button className="os-btn os-btn--gold" onClick={onQuote}>
-              {lang === 'fr' ? 'Solutions Entreprises & Événements' : 'Corporate & Event Solutions'}
-            </button>
+            <p className="os-eyebrow">{t.events.eyebrow}</p>
+            <h2>{t.events.title}</h2>
+            <p className="os-lead">{t.events.lead}</p>
+            <button className="os-btn os-btn--gold" onClick={onQuote}>{t.events.cta}</button>
           </Reveal>
           <Reveal>
-            <div
-              className="rounded-2xl border border-gold-deep/40 bg-night/55 p-7 backdrop-blur-md"
-              id="fashion"
-            >
-              <h3 className="os-card-title font-display text-ivory">Fashion Weeks</h3>
-              <p className="os-flush">
-                {lang === 'fr'
-                  ? 'Logistique dédiée aux maisons de couture, mannequins, presse et invités durant les Fashion Weeks parisiennes.'
-                  : 'Dedicated logistics for fashion houses, models, press and guests during Paris Fashion Weeks.'}
-              </p>
+            <div className="os-events__aside">
+              <p className="os-events__asidetitle">{t.events.coordinateTitle}</p>
+              <ul className="os-events__list">
+                {t.events.coordinate.map((c) => <li key={c}>{c}</li>)}
+              </ul>
             </div>
           </Reveal>
         </div>
       </section>
+
+      <FashionWeeks />
       <DmcBand />
     </>
+  );
+}
+
+/** Section dédiée Fashion Weeks (retirée du menu) — image de fond + éditorial. */
+function FashionWeeks() {
+  const { t } = useI18n();
+  return (
+    <section
+      className="os-section os-fashion relative overflow-hidden bg-cover bg-center"
+      style={{ backgroundImage: "url('/why-vip.webp')" }}
+      id="fashion"
+    >
+      <div className="absolute inset-0 bg-night/78" aria-hidden />
+      <div className="absolute inset-0 bg-gradient-to-t from-night via-night/55 to-night/85" aria-hidden />
+      <div className="os-container relative">
+        <div className="os-fashion__inner">
+          <Reveal>
+            <p className="os-eyebrow">{t.fashion.eyebrow}</p>
+            <h2 className="os-fashion__title">{t.fashion.title}</h2>
+            <p className="os-lead os-fashion__lead">{t.fashion.lead}</p>
+            <ul className="os-fashion__points">
+              {t.fashion.points.map((p) => <li key={p}>{p}</li>)}
+            </ul>
+          </Reveal>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -153,22 +171,35 @@ function ImageCard({ src, title, text }: { src: string; title: string; text: str
   );
 }
 
+/** La maison — éditorial deux colonnes : image + texte, filet doré, chiffres-clés. */
 export function About() {
-  const { lang } = useI18n();
+  const { t } = useI18n();
   return (
-    <section className="os-section" id="about">
-      <div className="os-container os-band__grid">
-        <Reveal>
-          <p className="os-eyebrow">{lang === 'fr' ? 'La maison' : 'The house'}</p>
-          <h2>Oui Stars</h2>
-        </Reveal>
-        <Reveal>
-          <p className="os-lead">
-            {lang === 'fr'
-              ? 'Oui Stars orchestre la mobilité premium, le Destination Management et les solutions événementielles à travers la France — des aéroports aux palaces, des congrès aux tournées privées.'
-              : 'Oui Stars orchestrates premium mobility, destination management and event solutions across France — from airports to palaces, from congresses to private tours.'}
-          </p>
-        </Reveal>
+    <section className="os-section os-about" id="about">
+      <div className="os-container">
+        <div className="os-about__grid">
+          <Reveal>
+            <figure className="os-about__media">
+              <img src="/why-interior.webp" alt="Oui Stars" loading="lazy" />
+            </figure>
+          </Reveal>
+          <Reveal>
+            <div className="os-about__content">
+              <p className="os-eyebrow">{t.about.eyebrow}</p>
+              <h2 className="os-about__name">{t.about.name}</h2>
+              <span className="os-about__rule" aria-hidden />
+              <p className="os-lead">{t.about.body}</p>
+              <div className="os-about__stats">
+                {t.about.stats.map((s) => (
+                  <div className="os-about__stat" key={s.label}>
+                    <b>{s.value}</b>
+                    <span>{s.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Reveal>
+        </div>
       </div>
     </section>
   );

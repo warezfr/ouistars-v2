@@ -29,6 +29,9 @@ export default function PricingTables({ onBook }: Props) {
   const { t } = useI18n();
   const pt = t.pricingTables;
 
+  // Catégories réellement présentes (dans l'ordre) pour les ancres de navigation.
+  const activeCats = CATEGORY_ORDER.filter((cat) => ROUTE_RATES.some((r) => r.category === cat));
+
   return (
     <section className="os-section os-pt" id="tarifs">
       <div className="os-container">
@@ -39,14 +42,18 @@ export default function PricingTables({ onBook }: Props) {
             <span className="os-pt__badge">{pt.badge} {PRICE_LIST_VERSION}</span>
           </div>
           <p className="os-lead os-pt__sub">{pt.subtitle}</p>
+          <nav className="os-pt__anchors" aria-label={pt.title}>
+            {activeCats.map((cat) => (
+              <a key={cat} href={`#tarifs-${cat}`} className="os-pt__anchor">{pt.categories[cat]}</a>
+            ))}
+          </nav>
         </Reveal>
 
-        {CATEGORY_ORDER.map((cat) => {
+        {activeCats.map((cat) => {
           const routes = ROUTE_RATES.filter((r) => r.category === cat);
-          if (routes.length === 0) return null;
           return (
             <Reveal key={cat}>
-              <div className="os-pt__group">
+              <div className="os-pt__group" id={`tarifs-${cat}`}>
                 <h3 className="os-pt__cat">{pt.categories[cat]}</h3>
                 <div className="os-pt__scroll">
                   <table className="os-pt__table">

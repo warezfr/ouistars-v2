@@ -113,7 +113,8 @@ p { margin: 0 0 1em; color: var(--os-mut); }
 
 /* Micro-utilitaires maison — hors layer Tailwind, pour primer
    sur les règles éléments (h1, h3, p…) définies plus haut. */
-.os-title-hero { font-size: clamp(2.6rem, 5.6vw, 5.5rem); line-height: 1.04; }
+/* Titre hero mesuré (consigne : nettement réduit, élégant serif) */
+.os-title-hero { font-size: clamp(2rem, 4vw, 3.4rem); line-height: 1.08; letter-spacing: -0.005em; max-width: 20ch; }
 .os-card-title { font-size: 1.3rem; }
 .os-small { font-size: 0.92rem; }
 .os-flush { margin-bottom: 0; }
