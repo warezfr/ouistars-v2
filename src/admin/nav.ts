@@ -22,8 +22,6 @@ export const NAV_GROUPS: NavGroup[] = [
     section: 'Principal',
     items: [
       { label: 'Tableau de bord', icon: 'bi-speedometer2', to: '/admin' },
-      { label: 'Agences', icon: 'bi-building', soon: true },
-      { label: 'Entreprises', icon: 'bi-briefcase', soon: true },
       { label: 'Chauffeurs', icon: 'bi-person-badge', collection: 'driver' },
       { label: 'Flotte', icon: 'bi-truck-front', collection: 'vehicle' },
       { label: 'Types de véhicule', icon: 'bi-diagram-3', collection: 'vehicle_type' },
@@ -44,19 +42,12 @@ export const NAV_GROUPS: NavGroup[] = [
     section: 'Réservations',
     items: [
       { label: 'Réservations', icon: 'bi-calendar-check', to: '/admin/bookings' },
-      { label: 'Réservations véhicules', icon: 'bi-car-front', soon: true },
-      { label: 'Avis', icon: 'bi-star', soon: true },
       { label: 'Demandes de réservation', icon: 'bi-envelope-paper', to: '/admin/quotes' },
     ],
   },
   {
-    section: 'Marketing',
-    items: [{ label: 'Popups', icon: 'bi-megaphone', soon: true }],
-  },
-  {
     section: 'Espace client',
     items: [
-      { label: 'Leads', icon: 'bi-funnel', soon: true },
       { label: 'Clients', icon: 'bi-person-lines-fill', soon: true },
       { label: 'Factures', icon: 'bi-receipt', soon: true },
       { label: 'Candidatures', icon: 'bi-file-earmark-person', to: '/admin/applications' },
@@ -85,7 +76,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Pages statiques', icon: 'bi-file-earmark', collection: 'static_page' },
       { label: 'Politiques', icon: 'bi-shield-check', collection: 'policy' },
       { label: 'À propos', icon: 'bi-info-circle', to: '/admin/singleton/about' },
-      { label: 'Call to Action', icon: 'bi-megaphone-fill', to: '/admin/singleton/cta' },
     ],
   },
   {
@@ -107,10 +97,6 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { label: 'Paramètres du site', icon: 'bi-gear', to: '/admin/singleton/settings' },
       { label: 'Tarifs horaires / km', icon: 'bi-clock-history', to: '/admin/singleton/rates' },
-      { label: 'SEO', icon: 'bi-search', to: '/admin/singleton/seo' },
-      { label: 'Staff & Rôles', icon: 'bi-person-gear', soon: true },
-      { label: 'Langues', icon: 'bi-translate', soon: true },
-      { label: 'Corbeille', icon: 'bi-trash', soon: true },
     ],
   },
 ];

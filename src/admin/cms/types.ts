@@ -1,7 +1,14 @@
 /** Modèle générique de contenu piloté par configuration (CMS). */
 export type FieldType =
   | 'text' | 'textarea' | 'richtext' | 'number' | 'boolean' | 'image' | 'select'
-  | 'repeater' | 'ref' | 'date';
+  | 'repeater' | 'ref' | 'date' | 'tags';
+
+/**
+ * Source de saisie assistée :
+ * - string[]                        → liste statique (langues, pays…)
+ * - { collection, field }          → valeurs distinctes déjà en base
+ */
+export type SuggestSource = string[] | { collection: string; field: string };
 
 export interface Field {
   name: string;
@@ -18,6 +25,8 @@ export interface Field {
   /** Pour le type « ref » : collection cible et champ affiché comme libellé. */
   refCollection?: string;
   refLabelField?: string;
+  /** Saisie assistée (text / tags) : liste statique ou valeurs déjà en base. */
+  suggest?: SuggestSource;
 }
 
 export interface Collection {

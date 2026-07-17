@@ -1,4 +1,5 @@
 import type { Collection } from './types';
+import { LANGUAGES, COUNTRIES, NATIONALITIES, PRICE_NOTES } from './suggest';
 
 /**
  * Registre des collections de contenu du site.
@@ -45,6 +46,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     fields: [
       { name: 'q', label: 'Question', type: 'text', required: true },
       { name: 'a', label: 'Réponse', type: 'textarea', required: true },
+      { name: 'category', label: 'Catégorie', type: 'ref', refCollection: 'faq_category', refLabelField: 'name' },
     ],
   },
   faq_category: {
@@ -55,7 +57,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     key: 'testimonial', label: 'Témoignages', singular: 'Témoignage', titleField: 'author', thumbField: 'avatar',
     fields: [
       { name: 'author', label: 'Auteur', type: 'text', required: true },
-      { name: 'role', label: 'Fonction / société', type: 'text' },
+      { name: 'role', label: 'Fonction / société', type: 'text', suggest: { collection: 'testimonial', field: 'role' } },
       { name: 'quote', label: 'Citation', type: 'textarea', required: true },
       { name: 'avatar', label: 'Photo', type: 'image' },
     ],
@@ -64,7 +66,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     key: 'team', label: 'Équipe', singular: 'Membre', titleField: 'name', thumbField: 'photo',
     fields: [
       { name: 'name', label: 'Nom', type: 'text', required: true },
-      { name: 'role', label: 'Rôle', type: 'text' },
+      { name: 'role', label: 'Rôle', type: 'text', suggest: { collection: 'team', field: 'role' } },
       { name: 'photo', label: 'Photo', type: 'image' },
       { name: 'bio', label: 'Bio', type: 'textarea' },
     ],
@@ -117,7 +119,7 @@ export const COLLECTIONS: Record<string, Collection> = {
       { name: 'excerpt', label: 'Extrait', type: 'textarea' },
       { name: 'body', label: 'Contenu', type: 'textarea' },
       { name: 'cover', label: 'Image', type: 'image' },
-      { name: 'category', label: 'Catégorie', type: 'text' },
+      { name: 'category', label: 'Catégorie', type: 'ref', refCollection: 'blog_category', refLabelField: 'name' },
     ],
   },
   blog_category: {
@@ -152,7 +154,7 @@ export const COLLECTIONS: Record<string, Collection> = {
   country: {
     key: 'country', label: 'Pays', singular: 'Pays', titleField: 'name',
     fields: [
-      { name: 'name', label: 'Nom', type: 'text', required: true },
+      { name: 'name', label: 'Nom', type: 'text', required: true, suggest: COUNTRIES },
       { name: 'code', label: 'Code ISO', type: 'text' },
     ],
   },
@@ -161,7 +163,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     fields: [
       { name: 'title', label: 'Titre', type: 'text' },
       { name: 'image', label: 'Image', type: 'image', required: true },
-      { name: 'category', label: 'Catégorie', type: 'text' },
+      { name: 'category', label: 'Catégorie', type: 'text', suggest: { collection: 'photo', field: 'category' } },
     ],
   },
   video: {
@@ -179,7 +181,7 @@ export const COLLECTIONS: Record<string, Collection> = {
       { name: 'name', label: 'Nom', type: 'text', required: true },
       { name: 'category', label: 'Catégorie', type: 'ref', refCollection: 'package_category', refLabelField: 'name' },
       { name: 'price', label: 'Prix (€ TTC)', type: 'number' },
-      { name: 'priceNote', label: 'Mention prix (ex. « à partir de »)', type: 'text' },
+      { name: 'priceNote', label: 'Mention prix', type: 'text', suggest: PRICE_NOTES },
       { name: 'image', label: 'Image', type: 'image' },
       { name: 'desc', label: 'Description', type: 'richtext' },
       { name: 'features', label: 'Inclusions', type: 'repeater', itemLabel: 'label',
@@ -200,7 +202,7 @@ export const COLLECTIONS: Record<string, Collection> = {
     key: 'destination', label: 'Destinations', singular: 'Destination', titleField: 'name', thumbField: 'image',
     fields: [
       { name: 'name', label: 'Nom', type: 'text', required: true },
-      { name: 'region', label: 'Région', type: 'text' },
+      { name: 'region', label: 'Région', type: 'text', suggest: { collection: 'destination', field: 'region' } },
       { name: 'category', label: 'Catégorie', type: 'ref', refCollection: 'destination_category', refLabelField: 'name' },
       { name: 'image', label: 'Image', type: 'image' },
       { name: 'desc', label: 'Description', type: 'richtext' },
@@ -238,14 +240,14 @@ export const COLLECTIONS: Record<string, Collection> = {
         { value: 'not_specified', label: 'Non précisé' }, { value: 'male', label: 'Homme' }, { value: 'female', label: 'Femme' },
       ] },
       { name: 'birthdate', label: 'Date de naissance', type: 'date' },
-      { name: 'nationality', label: 'Nationalité', type: 'text' },
+      { name: 'nationality', label: 'Nationalité', type: 'text', suggest: NATIONALITIES },
       { name: 'country', label: 'Pays', type: 'ref', refCollection: 'country', refLabelField: 'name' },
-      { name: 'state', label: 'Région / département', type: 'text' },
+      { name: 'state', label: 'Région / département', type: 'text', suggest: { collection: 'driver', field: 'state' } },
       { name: 'address', label: 'Adresse', type: 'textarea' },
       { name: 'phone', label: 'Téléphone', type: 'text' },
       { name: 'whatsapp', label: 'WhatsApp', type: 'text' },
       { name: 'email', label: 'E-mail', type: 'text' },
-      { name: 'languages', label: 'Langues (ex. FR, EN)', type: 'text' },
+      { name: 'languages', label: 'Langues', type: 'tags', suggest: LANGUAGES, placeholder: 'FR, EN…' },
       { name: 'airports', label: 'Aéroports (Europe Chauffeurs)', type: 'boolean',
         help: 'Habilité aux prises en charge aéroport.' },
       { name: 'image', label: 'Photo', type: 'image' },
