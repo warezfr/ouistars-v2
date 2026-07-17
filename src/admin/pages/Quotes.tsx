@@ -1,26 +1,103 @@
-import { QUOTES, badgeClass } from '../mockData';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { QUOTES as DEMO } from '../mockData';
+import { useAuth, canWrite } from '@/admin/auth/AuthContext';
+
+interface Row {
+  id: string; reference: string; company: string; contact?: string; email?: string; phone?: string;
+  event: string; dates: string; vehicles: number; status: string; amount?: number; details?: string;
+  demo?: boolean;
+}
+
+const STATUSES = ['new', 'in_progress', 'sent', 'accepted', 'rejected', 'invoiced', 'lost'];
+const LABELS: Record<string, string> = {
+  new: 'Nouveau', in_progress: 'En cours', sent: 'Envoyé', accepted: 'Accepté',
+  rejected: 'Refusé', invoiced: 'Facturé', lost: 'Perdu',
+};
+const badge = (s: string) =>
+  s === 'accepted' || s === 'invoiced' ? 'text-bg-success'
+  : s === 'rejected' || s === 'lost' ? 'text-bg-secondary' : 'text-bg-warning';
 
 export default function Quotes() {
+  const { profile } = useAuth();
+  const writable = canWrite(profile?.role);
+  const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  async function load() {
+    setLoading(true); setError(null);
+    if (supabase) {
+      const { data, error } = await supabase.from('quotes').select('*').order('created_at', { ascending: false }).limit(200);
+      if (!error && data && data.length > 0) {
+        setRows(data.map((q) => ({
+          id: q.id, reference: q.reference, company: q.company ?? q.contact_name ?? '—',
+          contact: q.contact_name ?? undefined, email: q.email ?? undefined, phone: q.phone ?? undefined,
+          event: q.event_type ?? '—',
+          dates: [q.start_date, q.end_date].filter(Boolean).join(' → ') || '—',
+          vehicles: q.vehicles_count ?? 1, status: q.status,
+          amount: q.amount_estimated != null ? Number(q.amount_estimated) : undefined,
+          details: q.details ?? undefined,
+        })));
+        setLoading(false);
+        return;
+      }
+      if (error) setError(error.message);
+    }
+    setRows(DEMO.map((q, i) => ({
+      id: String(i), reference: q.reference, company: q.company, event: q.event,
+      dates: q.dates, vehicles: q.vehicles, status: q.status, demo: true,
+    })));
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  async function setStatus(r: Row, status: string) {
+    setRows((rs) => rs.map((x) => (x.id === r.id ? { ...x, status } : x)));
+    if (!supabase || r.demo) return;
+    const { error } = await supabase.from('quotes').update({ status }).eq('id', r.id);
+    if (error) setError(error.message);
+  }
+
   return (
     <div className="card card-outline card-warning">
-      <div className="card-header"><h3 className="card-title mb-0">Devis & Événements</h3></div>
+      <div className="card-header d-flex justify-content-between align-items-center">
+        <h3 className="card-title mb-0">Devis & Événements
+          <span className="badge text-bg-secondary ms-2">{rows.length}</span>
+          {rows[0]?.demo && <span className="badge text-bg-warning ms-2">démo</span>}
+        </h3>
+        <button className="btn btn-sm btn-outline-secondary" onClick={load}><i className="bi bi-arrow-clockwise" /></button>
+      </div>
       <div className="card-body p-0">
-        <div className="table-responsive">
-          <table className="table table-hover align-middle mb-0">
-            <thead>
-              <tr><th>Réf.</th><th>Société</th><th>Événement</th><th>Dates</th><th>Véhicules</th><th>Statut</th></tr>
-            </thead>
-            <tbody>
-              {QUOTES.map((q) => (
-                <tr key={q.reference}>
-                  <td className="fw-semibold">{q.reference}</td><td>{q.company}</td><td>{q.event}</td>
-                  <td>{q.dates}</td><td>{q.vehicles}</td>
-                  <td><span className={`badge ${badgeClass(q.status)}`}>{q.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {loading && <div className="p-3 text-muted">Chargement…</div>}
+        {error && <div className="alert alert-danger m-3">{error}</div>}
+        {!loading && (
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead><tr><th>Réf.</th><th>Société / contact</th><th>Événement</th><th>Dates</th><th>Véh.</th><th>Estimation</th><th style={{ width: 150 }}>Statut</th></tr></thead>
+              <tbody>
+                {rows.map((q) => (
+                  <tr key={q.id}>
+                    <td className="fw-semibold">{q.reference}</td>
+                    <td>{q.company}{q.email && <div className="small text-muted">{q.email}</div>}</td>
+                    <td>{q.event}</td><td>{q.dates}</td><td>{q.vehicles}</td>
+                    <td>{q.amount != null ? `${q.amount.toFixed(0)} €` : '—'}</td>
+                    <td>
+                      {writable && !q.demo ? (
+                        <select className={`form-select form-select-sm badge-select`} value={q.status}
+                          onChange={(e) => setStatus(q, e.target.value)}>
+                          {STATUSES.map((s) => <option key={s} value={s}>{LABELS[s]}</option>)}
+                        </select>
+                      ) : (
+                        <span className={`badge ${badge(q.status)}`}>{LABELS[q.status] ?? q.status}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

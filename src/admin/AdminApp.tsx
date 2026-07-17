@@ -12,6 +12,8 @@ import Pricing from './pages/Pricing';
 import Documents from './pages/Documents';
 import Applications from './pages/Applications';
 import Users from './pages/Users';
+import Clients from './pages/Clients';
+import Invoices from './pages/Invoices';
 import Placeholder from './pages/Placeholder';
 
 import CollectionList from './cms/CollectionList';
@@ -40,6 +42,8 @@ export default function AdminApp() {
             <Route path="documents" element={<Documents />} />
             <Route path="applications" element={<Applications />} />
             <Route path="users" element={<Users />} />
+            <Route path="clients" element={<Clients />} />
+            <Route path="invoices" element={<Invoices />} />
 
             <Route path="content/:collection" element={<CollectionList />} />
             <Route path="content/:collection/:id" element={<CollectionEditor />} />
