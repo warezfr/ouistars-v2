@@ -11,15 +11,27 @@ interface Props {
 }
 
 export default function FieldInput({ field, value, onChange, disabled }: Props) {
-  const common = { id: field.name, disabled, required: field.required };
+  const label = <label htmlFor={field.name} className="form-label">{field.label}{field.required && ' *'}</label>;
+
+  if (field.type === 'boolean') {
+    return (
+      <div className="form-check mt-2">
+        <input className="form-check-input" type="checkbox" id={field.name}
+          checked={Boolean(value)} disabled={disabled}
+          onChange={(e) => onChange(field.name, e.target.checked)} />
+        <label className="form-check-label" htmlFor={field.name}>{field.label}</label>
+      </div>
+    );
+  }
 
   return (
-    <label className="adm-field">
-      <span>{field.label}{field.required && ' *'}</span>
+    <div>
+      {label}
 
       {field.type === 'textarea' && (
-        <textarea {...common} rows={4} placeholder={field.placeholder}
-          value={(value as string) ?? ''} onChange={(e) => onChange(field.name, e.target.value)} />
+        <textarea id={field.name} className="form-control" rows={4} disabled={disabled}
+          placeholder={field.placeholder} value={(value as string) ?? ''}
+          onChange={(e) => onChange(field.name, e.target.value)} />
       )}
 
       {field.type === 'richtext' && (
@@ -37,29 +49,27 @@ export default function FieldInput({ field, value, onChange, disabled }: Props) 
       )}
 
       {field.type === 'select' && (
-        <select {...common} value={(value as string) ?? ''} onChange={(e) => onChange(field.name, e.target.value)}>
+        <select id={field.name} className="form-select" disabled={disabled}
+          value={(value as string) ?? ''} onChange={(e) => onChange(field.name, e.target.value)}>
           <option value="">—</option>
           {field.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       )}
 
-      {field.type === 'boolean' && (
-        <input type="checkbox" checked={Boolean(value)} disabled={disabled}
-          onChange={(e) => onChange(field.name, e.target.checked)} />
-      )}
-
       {field.type === 'number' && (
-        <input {...common} type="number" placeholder={field.placeholder}
+        <input id={field.name} type="number" className="form-control" disabled={disabled}
+          placeholder={field.placeholder}
           value={value === undefined || value === null ? '' : String(value)}
           onChange={(e) => onChange(field.name, e.target.value === '' ? null : Number(e.target.value))} />
       )}
 
       {field.type === 'text' && (
-        <input {...common} type="text" placeholder={field.placeholder}
-          value={(value as string) ?? ''} onChange={(e) => onChange(field.name, e.target.value)} />
+        <input id={field.name} type="text" className="form-control" disabled={disabled}
+          placeholder={field.placeholder} value={(value as string) ?? ''}
+          onChange={(e) => onChange(field.name, e.target.value)} />
       )}
 
-      {field.help && <small className="adm-field__help">{field.help}</small>}
-    </label>
+      {field.help && <small className="text-muted d-block mt-1">{field.help}</small>}
+    </div>
   );
 }
