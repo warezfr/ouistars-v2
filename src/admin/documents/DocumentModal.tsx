@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useSingleton } from '@/lib/cms';
 import { supabase } from '@/lib/supabase';
+import { createEntry } from '@/admin/cms/api';
+import { useAuth } from '@/admin/auth/AuthContext';
 import { DOC_CSS } from './docStyles';
 
 /** Données normalisées d'un document affichable/imprimable. */
@@ -35,7 +37,18 @@ export default function DocumentModal({ doc, onClose }: Props) {
     logo: '/logo-ouistars.png', brandName: 'OUISTARS', phone: '+33 6 51 03 03 06',
     email: 'info@ouistars.com', whatsapp: '33651030306',
   });
+  const { profile } = useAuth();
   const areaRef = useRef<HTMLDivElement>(null);
+
+  /** Journal des documents émis (collection doc_log). */
+  const logDoc = (action: string, detail?: string) => {
+    createEntry({
+      collection: 'doc_log', title: doc.number, status: 'published', position: 0,
+      data: { number: doc.number, kind: doc.kind, reference: doc.reference,
+        client: doc.client.name, action, detail: detail ?? '',
+        by: profile?.email ?? '—', at: new Date().toISOString() },
+    }).catch(() => { /* silencieux */ });
+  };
   const [busy, setBusy] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [welcome, setWelcome] = useState(false);
@@ -58,6 +71,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = `${doc.number}.pdf`; a.click();
+      logDoc('PDF téléchargé');
       URL.revokeObjectURL(url);
     } catch { setNotice('Génération PDF impossible.'); }
     finally { setBusy(null); }
@@ -71,6 +85,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
       <body>${areaRef.current.outerHTML}</body></html>`);
     w.document.close();
     w.focus();
+    logDoc('Impression');
     setTimeout(() => { w.print(); }, 350);
   }
 
@@ -83,7 +98,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
         body: JSON.stringify({ reference: doc.reference, type: API_TYPES[doc.kind], to: doc.client.email }),
       });
       const j = await res.json().catch(() => ({}));
-      if (res.ok) setNotice(`✓ Envoyé à ${doc.client.email}`);
+      if (res.ok) { setNotice(`✓ Envoyé à ${doc.client.email}`); logDoc('E-mail envoyé', doc.client.email); }
       else if (res.status === 501) {
         // Pas de clé e-mail serveur → repli client mail
         window.location.href = mailto();
@@ -111,7 +126,8 @@ export default function DocumentModal({ doc, onClose }: Props) {
       });
       if (res.ok && supabase) {
         const blob = await res.blob();
-        const path = `docs/${doc.number}.pdf`;
+        const rand = [...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, '0')).join('');
+        const path = `docs/${doc.number}-${rand}.pdf`;
         const { error } = await supabase.storage.from('cms').upload(path, blob, {
           upsert: true, contentType: 'application/pdf', cacheControl: '60',
         });
@@ -123,6 +139,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
       (link ? `\n\nDocument PDF : ${link}` : ''),
     );
     window.open(`https://wa.me/${waDigits}?text=${text}`, '_blank');
+    logDoc('WhatsApp', doc.client.phone);
     if (!link) setNotice('PDF non joint (lien indisponible) — message texte envoyé.');
     setBusy(null);
   }

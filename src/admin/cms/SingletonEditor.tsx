@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { SINGLETONS } from './singletons';
 import { getSingleton, saveSingleton } from './api';
 import FieldInput from './FieldInput';
@@ -41,7 +41,15 @@ export default function SingletonEditor() {
 
   return (
     <div className="card card-outline card-warning">
-      <div className="card-header"><h3 className="card-title mb-0">{def.label}</h3></div>
+      <div className="card-header">
+        <nav aria-label="breadcrumb">
+          <ol className="breadcrumb mb-1 small">
+            <li className="breadcrumb-item"><Link to="/admin">Command Center</Link></li>
+            <li className="breadcrumb-item active">{def.label}</li>
+          </ol>
+        </nav>
+        <h3 className="card-title mb-0">{def.label}</h3>
+      </div>
       <div className="card-body">
         {!writable && <div className="alert alert-warning">Lecture seule.</div>}
         {error && <div className="alert alert-danger">Erreur : {error}</div>}

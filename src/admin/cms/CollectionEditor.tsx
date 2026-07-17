@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { getCollection } from './collections';
 import { createEntry, getEntry, updateEntry } from './api';
 import FieldInput from './FieldInput';
@@ -19,6 +19,43 @@ export default function CollectionEditor() {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [draftAvailable, setDraftAvailable] = useState(false);
+  const draftKey = `cms-draft-${collection}-${id ?? 'new'}`;
+
+  // Auto-sauvegarde du brouillon (toutes modifications, débouncée).
+  useEffect(() => {
+    if (loading) return;
+    const t = window.setTimeout(() => {
+      try {
+        localStorage.setItem(draftKey, JSON.stringify({ data, status, position, at: Date.now() }));
+      } catch { /* stockage plein */ }
+    }, 600);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, status, position, loading]);
+
+  // Propose la restauration d'un brouillon non enregistré.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const d = JSON.parse(raw) as { at: number };
+        if (Date.now() - d.at < 48 * 3600 * 1000) setDraftAvailable(true);
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftKey]);
+
+  const restoreDraft = () => {
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return;
+      const d = JSON.parse(raw) as { data: Record<string, unknown>; status: 'draft' | 'published'; position: number };
+      setData(d.data ?? {}); setStatus(d.status ?? 'published'); setPosition(d.position ?? 0);
+      setDraftAvailable(false);
+    } catch { /* ignore */ }
+  };
+  const dropDraft = () => { try { localStorage.removeItem(draftKey); } catch { /* */ } setDraftAvailable(false); };
 
   useEffect(() => {
     if (isNew || !def) return;
@@ -44,6 +81,7 @@ export default function CollectionEditor() {
       const payload = { collection: def.key, data, status, position, title: title ?? null };
       if (isNew) await createEntry(payload);
       else await updateEntry(id!, payload);
+      try { localStorage.removeItem(draftKey); } catch { /* */ }
       nav(`/admin/content/${def.key}`);
     } catch (e) { setError((e as Error).message); setSaving(false); }
   }
@@ -52,6 +90,21 @@ export default function CollectionEditor() {
 
   return (
     <>
+      <nav aria-label="breadcrumb" className="mb-2">
+        <ol className="breadcrumb mb-0 small">
+          <li className="breadcrumb-item"><Link to="/admin">Command Center</Link></li>
+          <li className="breadcrumb-item"><Link to={`/admin/content/${def.key}`}>{def.label}</Link></li>
+          <li className="breadcrumb-item active">{isNew ? 'Nouveau' : (title || 'Édition')}</li>
+        </ol>
+      </nav>
+      {draftAvailable && (
+        <div className="alert alert-info d-flex flex-wrap align-items-center gap-2 py-2">
+          <i className="bi bi-cloud-arrow-down" />
+          Un brouillon non enregistré existe pour cette fiche.
+          <button className="btn btn-sm btn-info" onClick={restoreDraft}>Restaurer</button>
+          <button className="btn btn-sm btn-outline-secondary" onClick={dropDraft}>Ignorer</button>
+        </div>
+      )}
       <div className="d-flex align-items-center justify-content-between mb-3">
         <h5 className="mb-0">{isNew ? `Nouveau — ${def.singular}` : `Éditer — ${def.singular}`}</h5>
         <button className="btn btn-sm btn-outline-secondary" onClick={() => nav(`/admin/content/${def.key}`)}>

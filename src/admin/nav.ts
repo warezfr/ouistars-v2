@@ -31,7 +31,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Devis & événements', icon: 'bi-envelope-paper', to: '/admin/quotes' },
       { label: 'Factures', icon: 'bi-receipt', to: '/admin/invoices' },
       { label: 'Clients', icon: 'bi-person-lines-fill', to: '/admin/clients' },
-      { label: 'Documents & PDF', icon: 'bi-file-earmark-text', to: '/admin/documents' },
+      { label: 'Journal des documents', icon: 'bi-file-earmark-text', to: '/admin/documents' },
     ],
   },
   {

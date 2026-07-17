@@ -100,7 +100,8 @@ export default function Invoices() {
         });
         if (res.ok) {
           const blob = await res.blob();
-          const path = `invoices/${row.number}.pdf`;
+          const rand = [...crypto.getRandomValues(new Uint8Array(4))].map((b) => b.toString(16).padStart(2, '0')).join('');
+          const path = `invoices/${row.number}-${rand}.pdf`;
           const up = await supabase.storage.from('cms').upload(path, blob, {
             upsert: true, contentType: 'application/pdf',
           });

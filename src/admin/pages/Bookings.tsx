@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { listEntries } from '../cms/api';
+import { listEntries, createEntry } from '../cms/api';
 import { BOOKINGS as DEMO } from '../mockData';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
 import DocumentModal, { type DocData } from '../documents/DocumentModal';
@@ -54,6 +54,32 @@ export default function Bookings() {
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<DocData | null>(null);
 
+  /** Journal d'audit (collection booking_log) : qui a fait quoi, quand. */
+  async function logAction(reference: string, action: string, detail?: string) {
+    try {
+      await createEntry({
+        collection: 'booking_log', title: reference, status: 'published', position: 0,
+        data: { reference, action, detail: detail ?? '', by: profile?.email ?? '—', at: new Date().toISOString() },
+      });
+    } catch { /* le journal ne doit jamais bloquer l'action */ }
+  }
+
+  const [history, setHistory] = useState<{ action: string; detail?: string; by: string; at: string }[]>([]);
+  useEffect(() => {
+    const ref = rows.find((r) => r.key === selectedKey)?.reference;
+    if (!ref) { setHistory([]); return; }
+    let cancel = false;
+    listEntries('booking_log').then((all) => {
+      if (cancel) return;
+      setHistory(all
+        .map((e) => e.data as { reference?: string; action: string; detail?: string; by: string; at: string })
+        .filter((e) => e.reference === ref)
+        .sort((a, b) => (b.at ?? '').localeCompare(a.at ?? '')));
+    }).catch(() => setHistory([]));
+    return () => { cancel = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKey, rows]);
+
   async function load() {
     setLoading(true); setError(null);
     const out: Row[] = [];
@@ -80,7 +106,7 @@ export default function Bookings() {
             route: b.prefill || [b.pickup, b.destination].filter(Boolean).join(' → ') || '—',
             date: [b.travel_date, b.travel_time].filter(Boolean).join(' ') || '—',
             vehicle: b.vehicle_class ?? '—',
-            driver: b.notes?.match(/\[chauffeur:(.+?)\]/)?.[1],
+            driver: b.driver_name ?? b.notes?.match(/\[chauffeur:(.+?)\]/)?.[1],
             amount: b.price_amount != null ? Number(b.price_amount) : undefined,
             status: (STATUSES.includes(b.status) ? b.status : 'pending') as Status,
             notes: b.notes ?? undefined,
@@ -148,6 +174,7 @@ export default function Bookings() {
   async function setStatus(row: Row, status: Status) {
     patchLocal(row.key, { status });
     if (!supabase || row.source === 'demo') return;
+    logAction(row.reference, 'Statut', `${STATUS_LABELS[row.status]} → ${STATUS_LABELS[status]}`);
     if (row.source === 'site') {
       const { error } = await supabase.from('website_bookings')
         .update({ status, updated_at: new Date().toISOString() }).eq('id', row.id);
@@ -165,9 +192,15 @@ export default function Bookings() {
     if (!supabase || row.source !== 'site') return;
     const base = (row.notes ?? '').replace(/\s*\[chauffeur:.+?\]/, '');
     const notes = driver ? `${base} [chauffeur:${driver}]`.trim() : base || null;
-    const { error } = await supabase.from('website_bookings')
-      .update({ notes, updated_at: new Date().toISOString() }).eq('id', row.id);
+    // Colonne dédiée si présente (migration 0008), balise notes en compat.
+    let { error } = await supabase.from('website_bookings')
+      .update({ driver_name: driver || null, notes, updated_at: new Date().toISOString() }).eq('id', row.id);
+    if (error && error.message.includes('driver_name')) {
+      ({ error } = await supabase.from('website_bookings')
+        .update({ notes, updated_at: new Date().toISOString() }).eq('id', row.id));
+    }
     if (error) { setError(error.message); return; }
+    logAction(row.reference, 'Chauffeur', driver ? `Assigné : ${driver}` : 'Désassigné');
 
     // Fiche de mission envoyée automatiquement au chauffeur (si e-mail + Resend).
     const d = drivers.find((x) => x.name === driver);
@@ -206,6 +239,7 @@ export default function Bookings() {
     });
     if (error) { setError(`Création impossible : ${error.message}`); return; }
     setCreating(false);
+    logAction(reference, 'Création', 'Saisie manuelle depuis le back-office');
     setNotice(`Réservation ${reference} créée.`);
     load();
   }
@@ -293,6 +327,23 @@ export default function Bookings() {
                       <option key={d} value={d}>{d}</option>)}
                   </select>
                 </>
+              )}
+
+              {history.length > 0 && (
+                <div className="card bg-body-tertiary mb-3">
+                  <div className="card-body py-2">
+                    <h6 className="card-title mb-2"><i className="bi bi-clock-history me-1" />Historique</h6>
+                    <ul className="list-unstyled small mb-0">
+                      {history.slice(0, 6).map((h, i) => (
+                        <li key={i} className="mb-1">
+                          <span className="text-muted">{(h.at ?? '').replace('T', ' ').slice(0, 16)}</span>
+                          {' — '}<strong>{h.action}</strong>{h.detail ? ` : ${h.detail}` : ''}
+                          <span className="text-muted"> · {h.by}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
               )}
 
               <div className="card bg-body-tertiary mb-3">
