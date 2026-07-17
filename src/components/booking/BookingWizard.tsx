@@ -5,12 +5,14 @@ import { FLEET } from '@/data/fleet';
 import { formatEUR } from '@/lib/pricing';
 import { estimateHourly } from '@/lib/estimate';
 import { estimatePlaces, type Place, type OneWayEstimate } from '@/lib/geocode';
+import { DateField, TimeField } from './pickers';
 import './wizard.css';
 
-/** Le hero ne transmet que le trajet ; le wizard gère le mode, l'horaire et l'estimation. */
+/** Le hero transmet le trajet (+ estimation pré-calculée) ; le wizard gère le mode et l'horaire. */
 export interface BookingContext {
   from: Place;
   to: Place | null;
+  estimate?: OneWayEstimate | null;
 }
 
 interface Props {
@@ -112,13 +114,17 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
   const nameErr = showErrors && !form.fullName.trim();
   const phoneErr = showErrors && !form.phone.trim();
 
-  // Étape 0 → calcule l'estimation puis entre dans le flux.
+  // Étape 0 → réutilise l'estimation du hero (ou la calcule) puis entre dans le flux.
   const startFlow = async () => {
     if (mode === 'oneway') {
       if (!ctx.to) return;
-      setEstimating(true);
-      try { setEstimate(await estimatePlaces(ctx.from, ctx.to)); }
-      finally { setEstimating(false); }
+      if (ctx.estimate) {
+        setEstimate(ctx.estimate);
+      } else {
+        setEstimating(true);
+        try { setEstimate(await estimatePlaces(ctx.from, ctx.to)); }
+        finally { setEstimating(false); }
+      }
     }
     setStep(1);
     setPhase('flow');
@@ -165,8 +171,9 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
   ];
 
   return (
-    <div className="osw" role="dialog" aria-modal aria-label={t.nav.book} onClick={onClose}>
-      <div className="osw__panel" onClick={(e) => e.stopPropagation()}>
+    <div className="osw" role="dialog" aria-modal aria-label={t.nav.book}>
+      <div className="osw__overlay" onClick={onClose} aria-hidden />
+      <div className="osw__panel">
         <button className="osw__close" onClick={onClose} aria-label={t.common.close}>×</button>
 
         {submit === 'ok' ? (
@@ -194,14 +201,8 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
             </div>
 
             <div className="osw__setup-grid">
-              <label className="osw__field">
-                <span>{c.date}</span>
-                <input type="date" value={date} min={todayISO()} onChange={(e) => setDate(e.target.value)} />
-              </label>
-              <label className="osw__field">
-                <span>{c.time}</span>
-                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-              </label>
+              <DateField label={c.date} value={date} min={todayISO()} locale={lang} onChange={setDate} />
+              <TimeField label={c.time} value={time} locale={lang} onChange={setTime} />
               {mode === 'hourly' && (
                 <label className="osw__field">
                   <span>{c.duration}</span>

@@ -205,3 +205,7 @@
 .osw__setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 8px; }
 .osw__setup-grid .osw__field:only-child { grid-column: 1 / -1; }
 @media (max-width: 640px) { .osw__modes, .osw__setup-grid { grid-template-columns: 1fr; } }
+
+/* ——— Overlay séparé (fermeture infaillible : clic hors panneau uniquement) ——— */
+.osw__overlay { position: absolute; inset: 0; z-index: 0; }
+.osw__panel { position: relative; z-index: 1; }

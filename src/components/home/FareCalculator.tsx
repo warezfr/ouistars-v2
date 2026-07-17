@@ -1,13 +1,17 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactElement } from 'react';
 import { useI18n } from '@/i18n';
-import { geocodeSearch, type Place } from '@/lib/geocode';
+import { geocodeSearch, estimatePlaces, type Place, type OneWayEstimate } from '@/lib/geocode';
+import { VEHICLE_CLASSES, type VehicleClass } from '@/data/pricing';
+import { formatEUR } from '@/lib/pricing';
 import type { PoiType } from '@/data/locations';
 import BookingWizard from '@/components/booking/BookingWizard';
 import './calculator.css';
 
+const CLASS_ORDER: VehicleClass[] = ['E', 'V', 'S'];
+
 /**
- * Carte hero — étape 1 : seulement Départ + Destination.
- * Une fois les deux saisis, « Rechercher » ouvre le wizard (choix aller simple / mise à disposition, etc.).
+ * Carte hero — étape 1 : Départ + Destination. Dès les deux saisis, on affiche
+ * l'estimation (distance + prix), puis « Rechercher » ouvre le wizard.
  */
 export default function FareCalculator() {
   const { t } = useI18n();
@@ -15,7 +19,20 @@ export default function FareCalculator() {
 
   const [from, setFrom] = useState<Place | null>(null);
   const [to, setTo] = useState<Place | null>(null);
+  const [estimate, setEstimate] = useState<OneWayEstimate | null>(null);
+  const [estimating, setEstimating] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+
+  // Estimation dès que départ + destination sont choisis.
+  useEffect(() => {
+    if (!from || !to) { setEstimate(null); setEstimating(false); return; }
+    const ctrl = new AbortController();
+    setEstimating(true);
+    estimatePlaces(from, to, ctrl.signal)
+      .then((e) => { setEstimate(e); setEstimating(false); })
+      .catch(() => { if (!ctrl.signal.aborted) setEstimating(false); });
+    return () => ctrl.abort();
+  }, [from, to]);
 
   const ready = Boolean(from && to);
 
@@ -40,12 +57,34 @@ export default function FareCalculator() {
         />
       </div>
 
+      {ready && (
+        estimating ? (
+          <p className="os-calc__hint">{c.calculating}</p>
+        ) : estimate && (
+          <div className="os-calc__quote">
+            <div className="os-calc__quote-dist">
+              <span>{c.estDistance}</span>
+              <strong>≈ {estimate.distanceKm} {c.km}</strong>
+            </div>
+            <div className="os-calc__prices">
+              {CLASS_ORDER.map((cls) => (
+                <div key={cls} className="os-calc__price-card">
+                  <span className="os-calc__price-name">{VEHICLE_CLASSES[cls].name}</span>
+                  <span className="os-calc__price-from">{c.fromPrice}</span>
+                  <strong className="os-calc__price-val">{formatEUR(estimate.prices[cls])}</strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      )}
+
       <button className="os-btn os-btn--gold os-calc__search" onClick={() => ready && setWizardOpen(true)} disabled={!ready}>
         {c.search}
       </button>
 
       {from && to && (
-        <BookingWizard open={wizardOpen} onClose={() => setWizardOpen(false)} ctx={{ from, to }} />
+        <BookingWizard open={wizardOpen} onClose={() => setWizardOpen(false)} ctx={{ from, to, estimate }} />
       )}
     </div>
   );
