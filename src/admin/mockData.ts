@@ -32,6 +32,8 @@ export const KPIS = [
   { label: 'Taux d’assignation', value: '92 %' },
 ];
 
+/** Classe de badge Bootstrap (AdminLTE) selon le statut. */
 export const badgeClass = (s: string) =>
-  s === 'completed' || s === 'accepted' || s === 'invoiced' ? 'adm-badge--ok'
-  : s === 'cancelled' ? 'adm-badge--mut' : 'adm-badge--warn';
+  s === 'completed' || s === 'accepted' || s === 'invoiced' || s === 'active' ? 'text-bg-success'
+  : s === 'cancelled' || s === 'rejected' ? 'text-bg-secondary'
+  : 'text-bg-warning';

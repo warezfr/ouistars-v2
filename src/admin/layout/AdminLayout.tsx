@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { NAV_GROUPS, type NavEntry } from '@/admin/nav';
 import { useAuth } from '@/admin/auth/AuthContext';
+import { getAdminTheme, setAdminTheme, type AdminTheme } from '@/admin/adminlte';
 
 function hrefOf(item: NavEntry): string {
   if (item.to) return item.to;
@@ -14,6 +15,12 @@ export default function AdminLayout() {
   const { email, profile, signOut } = useAuth();
   const [q, setQ] = useState('');
   const [userOpen, setUserOpen] = useState(false);
+  const [theme, setTheme] = useState<AdminTheme>(getAdminTheme());
+
+  const toggleTheme = () => {
+    const next: AdminTheme = theme === 'dark' ? 'light' : 'dark';
+    setAdminTheme(next); setTheme(next);
+  };
 
   // Repli du menu sur mobile après navigation.
   useEffect(() => { document.body.classList.remove('sidebar-open'); }, [loc.pathname]);
@@ -51,6 +58,12 @@ export default function AdminLayout() {
             </li>
           </ul>
           <ul className="navbar-nav ms-auto align-items-center">
+            <li className="nav-item">
+              <button className="nav-link btn btn-link" type="button" onClick={toggleTheme}
+                title={theme === 'dark' ? 'Mode clair' : 'Mode sombre'}>
+                <i className={`bi ${theme === 'dark' ? 'bi-sun' : 'bi-moon-stars'} fs-5`} />
+              </button>
+            </li>
             <li className="nav-item">
               <a className="nav-link" href="/" title="Voir le site"><i className="bi bi-box-arrow-up-right" /></a>
             </li>

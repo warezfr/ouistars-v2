@@ -19,7 +19,6 @@ import CollectionList from './cms/CollectionList';
 import CollectionEditor from './cms/CollectionEditor';
 import SingletonEditor from './cms/SingletonEditor';
 
-import './admin.css';
 import './admin-overrides.css';
 
 /**

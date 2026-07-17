@@ -3,12 +3,7 @@ import { useState } from 'react';
 type AppStatus = 'new' | 'reviewing' | 'approved' | 'rejected';
 
 interface DriverApplication {
-  id: string;
-  name: string;
-  city: string;
-  vtcCard: string;
-  languages: string;
-  status: AppStatus;
+  id: string; name: string; city: string; vtcCard: string; languages: string; status: AppStatus;
 }
 
 const INITIAL: DriverApplication[] = [
@@ -21,53 +16,48 @@ const INITIAL: DriverApplication[] = [
 ];
 
 const STATUS_LABELS: Record<AppStatus, string> = {
-  new: 'Nouvelle',
-  reviewing: 'En examen',
-  approved: 'Approuvée',
-  rejected: 'Refusée',
+  new: 'Nouvelle', reviewing: 'En examen', approved: 'Approuvée', rejected: 'Refusée',
 };
-
 const appBadge = (s: AppStatus) =>
-  s === 'approved' ? 'adm-badge--ok' : s === 'rejected' ? 'adm-badge--mut' : 'adm-badge--warn';
+  s === 'approved' ? 'text-bg-success' : s === 'rejected' ? 'text-bg-secondary' : 'text-bg-warning';
 
 export default function Applications() {
   const [apps, setApps] = useState<DriverApplication[]>(INITIAL);
-
-  function decide(id: string, status: AppStatus) {
+  const decide = (id: string, status: AppStatus) =>
     setApps((list) => list.map((a) => (a.id === id ? { ...a, status } : a)));
-  }
-
   const pending = apps.filter((a) => a.status === 'new' || a.status === 'reviewing').length;
 
   return (
-    <div className="adm-card">
-      <h2>Candidatures chauffeurs</h2>
-      <p style={{ margin: '0 0 14px', fontSize: '0.82rem', color: 'var(--os-mut)' }}>
-        {pending} candidature{pending > 1 ? 's' : ''} en attente de décision.
-      </p>
-      <table className="adm-table">
-        <thead>
-          <tr><th>Réf.</th><th>Nom</th><th>Ville</th><th>Carte VTC</th><th>Langues</th><th>Statut</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
-        </thead>
-        <tbody>
-          {apps.map((a) => (
-            <tr key={a.id}>
-              <td>{a.id}</td><td>{a.name}</td><td>{a.city}</td><td>{a.vtcCard}</td><td>{a.languages}</td>
-              <td><span className={`adm-badge ${appBadge(a.status)}`}>{STATUS_LABELS[a.status]}</span></td>
-              <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                {a.status === 'new' || a.status === 'reviewing' ? (
-                  <span style={{ display: 'inline-flex', gap: 8 }}>
-                    <button className="adm-btn adm-btn--ok" onClick={() => decide(a.id, 'approved')}>Approuver</button>
-                    <button className="adm-btn adm-btn--danger" onClick={() => decide(a.id, 'rejected')}>Refuser</button>
-                  </span>
-                ) : (
-                  <span style={{ color: 'var(--os-mut-2)', fontSize: '0.8rem' }}>Décision prise</span>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="card card-outline card-warning">
+      <div className="card-header d-flex justify-content-between align-items-center">
+        <h3 className="card-title mb-0">Candidatures chauffeurs</h3>
+        <span className="badge text-bg-warning">{pending} en attente</span>
+      </div>
+      <div className="card-body p-0">
+        <div className="table-responsive">
+          <table className="table table-hover align-middle mb-0">
+            <thead>
+              <tr><th>Réf.</th><th>Nom</th><th>Ville</th><th>Carte VTC</th><th>Langues</th><th>Statut</th><th className="text-end pe-3">Actions</th></tr>
+            </thead>
+            <tbody>
+              {apps.map((a) => (
+                <tr key={a.id}>
+                  <td className="fw-semibold">{a.id}</td><td>{a.name}</td><td>{a.city}</td><td>{a.vtcCard}</td><td>{a.languages}</td>
+                  <td><span className={`badge ${appBadge(a.status)}`}>{STATUS_LABELS[a.status]}</span></td>
+                  <td className="text-end pe-3 text-nowrap">
+                    {a.status === 'new' || a.status === 'reviewing' ? (
+                      <>
+                        <button className="btn btn-sm btn-success me-1" onClick={() => decide(a.id, 'approved')}>Approuver</button>
+                        <button className="btn btn-sm btn-outline-danger" onClick={() => decide(a.id, 'rejected')}>Refuser</button>
+                      </>
+                    ) : <span className="text-muted small">Décision prise</span>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

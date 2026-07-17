@@ -6,6 +6,22 @@ const CATS: Record<string, string> = {
   riviera: 'Côte d’Azur', 'city-to-city': 'City-to-city',
 };
 
+function TableCard({ title, head, children }: { title: string; head: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="card card-outline card-warning mb-3">
+      <div className="card-header"><h3 className="card-title mb-0">{title}</h3></div>
+      <div className="card-body p-0">
+        <div className="table-responsive">
+          <table className="table table-hover align-middle mb-0">
+            <thead><tr>{head}</tr></thead>
+            <tbody>{children}</tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Pricing() {
   const grouped = ROUTE_RATES.reduce<Record<string, typeof ROUTE_RATES>>((acc, r) => {
     (acc[r.category] ||= []).push(r);
@@ -14,57 +30,40 @@ export default function Pricing() {
 
   return (
     <>
-      <div className="adm-card">
-        <h2>Grille officielle {PRICE_LIST_VERSION} — source du calculateur & des devis</h2>
-        <p style={{ color: 'var(--os-mut)', fontSize: '0.85rem' }}>
-          Prix TTC, par transfert (aller ou retour). Modifier ici met à jour le calculateur du site et les tarifs proposés.
-        </p>
+      <div className="alert alert-light border">
+        <strong>Grille officielle {PRICE_LIST_VERSION}</strong> — source du calculateur & des devis.
+        Prix TTC, par transfert (aller ou retour).
       </div>
 
       {Object.entries(grouped).map(([cat, rows]) => (
-        <div className="adm-card" key={cat}>
-          <h2>{CATS[cat] ?? cat}</h2>
-          <table className="adm-table">
-            <thead><tr><th>Trajet</th><th>E-Class</th><th>V-Class</th><th>S-Class</th></tr></thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td>{r.label}</td>
-                  <td>{formatEUR(r.prices.E)}</td><td>{formatEUR(r.prices.V)}</td><td>{formatEUR(r.prices.S)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <TableCard key={cat} title={CATS[cat] ?? cat}
+          head={<><th>Trajet</th><th>E-Class</th><th>V-Class</th><th>S-Class</th></>}>
+          {rows.map((r) => (
+            <tr key={r.id}>
+              <td className="fw-semibold">{r.label}</td>
+              <td>{formatEUR(r.prices.E)}</td><td>{formatEUR(r.prices.V)}</td><td>{formatEUR(r.prices.S)}</td>
+            </tr>
+          ))}
+        </TableCard>
       ))}
 
-      <div className="adm-card">
-        <h2>Meet & Greeter (hors véhicule / chauffeur)</h2>
-        <table className="adm-table">
-          <thead><tr><th>Aéroport</th><th>Base</th><th>Inclus</th><th>Suppl. / pax</th></tr></thead>
-          <tbody>
-            {MEET_GREET_RATES.map((m) => (
-              <tr key={m.id}>
-                <td>{m.airport}</td>
-                <td>{m.base != null ? formatEUR(m.base) : '—'}</td>
-                <td>{m.includedPax} pax / {m.includedBags} bags</td>
-                <td>{m.extraPaxSurcharge != null ? formatEUR(m.extraPaxSurcharge) : '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <TableCard title="Meet & Greeter (hors véhicule / chauffeur)"
+        head={<><th>Aéroport</th><th>Base</th><th>Inclus</th><th>Suppl. / pax</th></>}>
+        {MEET_GREET_RATES.map((m) => (
+          <tr key={m.id}>
+            <td className="fw-semibold">{m.airport}</td>
+            <td>{m.base != null ? formatEUR(m.base) : '—'}</td>
+            <td>{m.includedPax} pax / {m.includedBags} bags</td>
+            <td>{m.extraPaxSurcharge != null ? formatEUR(m.extraPaxSurcharge) : '—'}</td>
+          </tr>
+        ))}
+      </TableCard>
 
-      <div className="adm-card">
-        <h2>Horaire (min. 3 h) & au kilomètre</h2>
-        <table className="adm-table">
-          <thead><tr><th>Base</th><th>E-Class</th><th>V-Class</th><th>S-Class</th></tr></thead>
-          <tbody>
-            <tr><td>Horaire</td><td>{HOURLY_RATES.E} €/h</td><td>{HOURLY_RATES.V} €/h</td><td>{HOURLY_RATES.S} €/h</td></tr>
-            <tr><td>Au km (dès)</td><td>{PER_KM_RATES.E} €/km</td><td>{PER_KM_RATES.V} €/km</td><td>{PER_KM_RATES.S} €/km</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <TableCard title="Horaire (min. 3 h) & au kilomètre"
+        head={<><th>Base</th><th>E-Class</th><th>V-Class</th><th>S-Class</th></>}>
+        <tr><td className="fw-semibold">Horaire</td><td>{HOURLY_RATES.E} €/h</td><td>{HOURLY_RATES.V} €/h</td><td>{HOURLY_RATES.S} €/h</td></tr>
+        <tr><td className="fw-semibold">Au km (dès)</td><td>{PER_KM_RATES.E} €/km</td><td>{PER_KM_RATES.V} €/km</td><td>{PER_KM_RATES.S} €/km</td></tr>
+      </TableCard>
     </>
   );
 }

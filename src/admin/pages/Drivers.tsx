@@ -6,19 +6,24 @@ const DRIVERS = [
 
 export default function Drivers() {
   return (
-    <div className="adm-card">
-      <h2>Chauffeurs</h2>
-      <table className="adm-table">
-        <thead><tr><th>Nom</th><th>Téléphone</th><th>Langues</th><th>Carte VTC</th><th>Statut</th></tr></thead>
-        <tbody>
-          {DRIVERS.map((d) => (
-            <tr key={d.vtc}>
-              <td>{d.name}</td><td>{d.phone}</td><td>{d.langs}</td><td>{d.vtc}</td>
-              <td><span className={`adm-badge ${d.status === 'active' ? 'adm-badge--ok' : 'adm-badge--warn'}`}>{d.status}</span></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="card card-outline card-warning">
+      <div className="card-header"><h3 className="card-title mb-0">Chauffeurs</h3></div>
+      <div className="card-body p-0">
+        <div className="table-responsive">
+          <table className="table table-hover align-middle mb-0">
+            <thead><tr><th>Nom</th><th>Téléphone</th><th>Langues</th><th>Carte VTC</th><th>Statut</th></tr></thead>
+            <tbody>
+              {DRIVERS.map((d) => (
+                <tr key={d.vtc}>
+                  <td className="fw-semibold">{d.name}</td><td>{d.phone}</td><td>{d.langs}</td><td>{d.vtc}</td>
+                  <td><span className={`badge ${d.status === 'active' ? 'text-bg-success' : 'text-bg-warning'}`}>
+                    {d.status === 'active' ? 'Actif' : 'En mission'}</span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
