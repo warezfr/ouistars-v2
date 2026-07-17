@@ -34,8 +34,33 @@ export const en: typeof fr = {
     upTo: 'Up to',
     paxBags: 'passengers and bags',
   },
-  fleet: { eyebrow: 'Our fleet', title: 'Mercedes-Benz, exclusively' },
+  fleet: { eyebrow: 'Our fleet', title: 'Mercedes-Benz, exclusively', passengers: 'passengers', luggage: 'bags' },
   packages: { eyebrow: 'Packages', title: 'Our signature itineraries' },
+  experience: {
+    eyebrow: 'The Oui Stars Experience',
+    title: 'The art of the journey, refined in',
+    titleAccent: 'every detail',
+    intro:
+      'Immaculate interiors, suited chauffeurs, fresh water, press and onboard Wi-Fi: the Oui Stars standard, on every kilometre travelled.',
+    bullets: [
+      'Bilingual chauffeurs, trained in protocol',
+      'Flight tracking and complimentary airport waiting time',
+      'Absolute confidentiality, guaranteed discretion',
+      '24/7 assistance & concierge, across France',
+    ],
+    cards: {
+      interior: 'First-class interiors',
+      vip: 'VIP & red-carpet welcome',
+      airport: 'Frictionless airports',
+      map: 'Operations across France',
+    },
+  },
+  corporate: {
+    eyebrow: 'Corporate & Institutions',
+    embassy: 'Embassies & Delegations',
+    accounts: 'Corporate Accounts',
+    travel: 'Travel Agencies & DMC Partners',
+  },
   pricingTables: {
     eyebrow: 'Rates',
     title: 'Our rate card, in full transparency',

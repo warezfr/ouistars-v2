@@ -32,8 +32,33 @@ export const fr = {
     upTo: 'Jusqu’à',
     paxBags: 'passagers et bagages',
   },
-  fleet: { eyebrow: 'Notre flotte', title: 'Mercedes-Benz, exclusivement' },
+  fleet: { eyebrow: 'Notre flotte', title: 'Mercedes-Benz, exclusivement', passengers: 'passagers', luggage: 'bagages' },
   packages: { eyebrow: 'Forfaits', title: 'Nos itinéraires signature' },
+  experience: {
+    eyebrow: 'L’expérience Oui Stars',
+    title: 'L’art du trajet, cultivé dans',
+    titleAccent: 'chaque détail',
+    intro:
+      'Intérieurs impeccables, chauffeurs en costume, eau fraîche, presse et Wi-Fi à bord : le standard Oui Stars, sur chaque kilomètre parcouru.',
+    bullets: [
+      'Chauffeurs bilingues, formés au protocole',
+      'Suivi des vols et attente incluse à l’aéroport',
+      'Confidentialité absolue, discrétion garantie',
+      'Assistance & conciergerie 24/7, partout en France',
+    ],
+    cards: {
+      interior: 'Intérieurs première classe',
+      vip: 'Accueil VIP & tapis rouge',
+      airport: 'Aéroports sans friction',
+      map: 'Opérations dans toute la France',
+    },
+  },
+  corporate: {
+    eyebrow: 'Corporate & Institutions',
+    embassy: 'Ambassades & Délégations',
+    accounts: 'Comptes Entreprises',
+    travel: 'Agences de voyage & DMC partenaires',
+  },
   pricingTables: {
     eyebrow: 'Tarifs',
     title: 'La grille tarifaire, en toute transparence',

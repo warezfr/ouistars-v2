@@ -4,6 +4,8 @@ import Footer from '@/components/layout/Footer';
 import Hero from '@/components/home/Hero';
 import Services from '@/components/home/Services';
 import Fleet from '@/components/home/Fleet';
+import Experience from '@/components/home/Experience';
+import GoldWaves from '@/components/ui/GoldWaves';
 import MeetGreeter from '@/components/home/MeetGreeter';
 import Packages from '@/components/home/Packages';
 import PricingTables from '@/components/home/PricingTables';
@@ -21,12 +23,14 @@ export default function HomePage() {
 
   return (
     <>
+      <GoldWaves />
       <Nav onBook={() => openBooking()} onQuote={() => setQuote(true)} />
       <main>
         <Hero onBook={openBooking} onQuote={() => setQuote(true)} />
         <Services />
         <MeetGreeter />
         <Fleet />
+        <Experience />
         <Packages onBook={openBooking} />
         <PricingTables onBook={openBooking} />
         <Events onQuote={() => setQuote(true)} />

@@ -1,4 +1,19 @@
+@import 'tailwindcss';
 @import './tokens.css';
+
+/* Thème Tailwind 4 (noir / or champagne / ivoire) */
+@theme {
+  --color-night: #0b0c10;
+  --color-coal: #111318;
+  --color-surface: #171a21;
+  --color-linegold: #2a2f3a;
+  --color-ivory: #f4f1ea;
+  --color-gold: #c9a24b;
+  --color-gold-soft: #e3c988;
+  --color-gold-deep: #a17e2f;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Inter', sans-serif;
+}
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -61,3 +76,44 @@ p { margin: 0 0 1em; color: var(--os-mut); }
 
 /* Focus accessible */
 :focus-visible { outline: 2px solid var(--os-gold); outline-offset: 2px; }
+
+/* ————————————————————————————————————————————————
+   Redesign « noir & or » 2026 — ajouts (fin de fichier)
+   ———————————————————————————————————————————————— */
+
+/* Layout élargi : conteneur 1560px, gouttières réduites */
+:root {
+  --os-container: 1560px;
+  --os-gutter: clamp(18px, 3vw, 44px);
+}
+
+/* Cartes : liseré doré subtil harmonisé */
+.os-card { border-color: rgba(201, 162, 75, 0.15); }
+.os-card:hover { border-color: rgba(201, 162, 75, 0.45); }
+
+/* Vagues dorées animées (composant GoldWaves) */
+@keyframes os-wave-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-2.6%, 1.3%, 0); }
+}
+@keyframes os-wave-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(2.2%, -1.5%, 0); }
+}
+@keyframes os-wave-drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-1.7%, -1%, 0); }
+}
+.os-wave-1 { animation: os-wave-drift-a 34s ease-in-out infinite; }
+.os-wave-2 { animation: os-wave-drift-b 26s ease-in-out infinite; }
+.os-wave-3 { animation: os-wave-drift-c 42s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .os-wave-1, .os-wave-2, .os-wave-3 { animation: none; }
+}
+
+/* Micro-utilitaires maison — hors layer Tailwind, pour primer
+   sur les règles éléments (h1, h3, p…) définies plus haut. */
+.os-title-hero { font-size: clamp(2.6rem, 5.6vw, 5.5rem); line-height: 1.04; }
+.os-card-title { font-size: 1.3rem; }
+.os-small { font-size: 0.92rem; }
+.os-flush { margin-bottom: 0; }

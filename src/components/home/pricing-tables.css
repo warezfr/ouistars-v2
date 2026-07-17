@@ -108,3 +108,11 @@
   .os-pt__duo { grid-template-columns: 1fr; }
   .os-pt__cat { font-size: 1.3rem; }
 }
+
+/* ————————————————————————————————————————————————
+   Redesign « noir & or » 2026 — harmonisation (ajouts)
+   ———————————————————————————————————————————————— */
+.os-pt { border-block-color: rgba(201, 162, 75, 0.16); }
+.os-pt__scroll { border-color: rgba(201, 162, 75, 0.18); }
+.os-pt__rate { border-bottom-color: rgba(201, 162, 75, 0.12); }
+.os-pt__notes { border-top-color: rgba(201, 162, 75, 0.14); }

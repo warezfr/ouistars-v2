@@ -10,15 +10,15 @@ export interface NavItem {
   href: string;
 }
 
-/** Nouveau menu principal (consigne). */
+/** Nouveau menu principal (consigne) — libellés compacts, un mot par entrée. */
 export const MAIN_NAV: NavItem[] = [
-  { id: 'mobility', fr: 'Mobilité Premium', en: 'Premium Mobility', href: '#mobility' },
-  { id: 'dmc', fr: 'Destination Management (DMC)', en: 'Destination Management (DMC)', href: '#dmc' },
-  { id: 'fleet', fr: 'Gestion de Flotte', en: 'Fleet Operations', href: '#fleet' },
-  { id: 'meet-greet', fr: 'Aéroports & Meet & Greeter', en: 'Airports & Meet & Greeter', href: '#meet-greet' },
-  { id: 'events', fr: 'Événements & Congrès', en: 'Events & Congresses', href: '#events' },
+  { id: 'mobility', fr: 'Mobilité', en: 'Mobility', href: '#mobility' },
+  { id: 'dmc', fr: 'DMC', en: 'DMC', href: '#dmc' },
+  { id: 'fleet', fr: 'Flotte', en: 'Fleet', href: '#fleet' },
+  { id: 'meet-greet', fr: 'Aéroports', en: 'Airports', href: '#meet-greet' },
+  { id: 'events', fr: 'Événements', en: 'Events', href: '#events' },
   { id: 'fashion', fr: 'Fashion Weeks', en: 'Fashion Weeks', href: '#fashion' },
-  { id: 'tours', fr: 'Circuits & Expériences', en: 'Tours & Experiences', href: '#tours' },
+  { id: 'tours', fr: 'Circuits', en: 'Tours', href: '#tours' },
   { id: 'contact', fr: 'Contact', en: 'Contact', href: '#contact' },
 ];
 

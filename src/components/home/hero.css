@@ -1,15 +1,8 @@
-.os-hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding-top: 120px; overflow: hidden; }
-.os-hero__bg {
-  position: absolute; inset: 0;
-  background: radial-gradient(120% 80% at 20% 0%, #1c2028 0%, var(--os-black) 60%),
-    linear-gradient(180deg, transparent, var(--os-black));
-}
-.os-hero__veil { position: absolute; inset: 0; background:
-  radial-gradient(60% 50% at 80% 20%, rgba(201,162,75,0.10), transparent 70%); }
-.os-hero__grid { position: relative; display: grid; grid-template-columns: 1.2fr 0.9fr; gap: 56px; align-items: center; width: 100%; }
-.os-hero__accent { color: var(--os-gold-soft); font-style: italic; }
+/* Hero vidéo plein écran — le layout vit en Tailwind (Hero.tsx).
+   Ici : détails typographiques réutilisés (lien tarifs, chips services). */
+
+/* Sous-titre du hero */
 .os-hero__sub { margin: 18px 0 30px; font-size: 1.02rem; }
-.os-hero__cta { display: flex; gap: 14px; flex-wrap: wrap; }
 
 /* Lien discret vers la grille tarifaire */
 .os-hero__pricing-link {
@@ -23,12 +16,6 @@
 .os-hero__pricing-link:hover { color: var(--os-gold); border-bottom-color: var(--os-gold); }
 
 /* Chips perlées — les 13 services */
-.os-hero__chips {
-  list-style: none; padding: 0;
-  margin: 26px 0 0;
-  display: flex; flex-wrap: wrap; gap: 8px 10px;
-  max-width: 58ch;
-}
 .os-hero__chip {
   font-family: var(--os-font-sans);
   font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase;
@@ -41,4 +28,3 @@
   transition: border-color 0.25s var(--os-ease), color 0.25s var(--os-ease);
 }
 .os-hero__chip:hover { border-color: var(--os-gold); color: var(--os-ivory); }
-@media (max-width: 980px) { .os-hero__grid { grid-template-columns: 1fr; gap: 40px; } .os-hero { padding-top: 140px; } }

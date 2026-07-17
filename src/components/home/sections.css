@@ -61,3 +61,26 @@
 .os-faq__q { font-weight: 600; color: var(--os-ivory); cursor: pointer; list-style: none; display: flex; justify-content: space-between; }
 .os-faq__q::-webkit-details-marker { display: none; }
 .os-faq__a { color: var(--os-mut); margin-top: 10px; }
+
+/* ————————————————————————————————————————————————
+   Redesign « noir & or » 2026 — harmonisation (ajouts)
+   ———————————————————————————————————————————————— */
+
+/* Services : 4 colonnes sur très grands écrans (conteneur élargi) */
+@media (min-width: 1360px) {
+  .os-grid--services { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* Meet & Greeter : bordures dorées subtiles, fond adouci */
+.os-mg { background: linear-gradient(180deg, rgba(17, 19, 24, 0.6), transparent); }
+.os-mg .os-card { border-color: rgba(201, 162, 75, 0.18); }
+.os-mg__price { color: var(--os-gold-soft); }
+
+/* Bandes : liserés dorés */
+.os-band { border-block-color: rgba(201, 162, 75, 0.16); }
+
+/* FAQ : séparateurs teintés or */
+.os-faq__item { border-bottom-color: rgba(201, 162, 75, 0.14); }
+
+/* Adresses prestigieuses : fond allégé pour laisser filtrer les ondes */
+.os-addresses { background: transparent; }

@@ -9,3 +9,6 @@
 .os-footer a:hover { color: var(--os-gold-soft); }
 .os-footer__bottom { display: flex; justify-content: space-between; padding-block: 22px; font-size: 0.82rem; color: var(--os-mut-2); }
 @media (max-width: 820px) { .os-footer__grid { grid-template-columns: 1fr; } .os-footer__bottom { flex-direction: column; gap: 8px; } }
+
+/* Redesign « noir & or » 2026 — liseré doré */
+.os-footer { border-top-color: rgba(201, 162, 75, 0.18); background: rgba(17, 19, 24, 0.85); }

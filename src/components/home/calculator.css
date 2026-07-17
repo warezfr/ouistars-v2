@@ -1,7 +1,12 @@
+/* Calculateur — carte « verre fumé » posée sur la vidéo du hero. */
 .os-calc {
-  background: linear-gradient(180deg, rgba(30,34,43,0.96), rgba(17,19,24,0.96));
-  border: 1px solid var(--os-line); border-radius: var(--os-radius-lg);
-  padding: 26px; box-shadow: var(--os-shadow); backdrop-filter: blur(6px);
+  background: linear-gradient(165deg, rgba(23, 26, 33, 0.62), rgba(11, 12, 16, 0.72));
+  border: 1px solid rgba(201, 162, 75, 0.26);
+  border-radius: var(--os-radius-lg);
+  padding: 26px;
+  box-shadow: var(--os-shadow);
+  backdrop-filter: blur(18px) saturate(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
 }
 .os-calc__head { display: flex; flex-direction: column; gap: 4px; margin-bottom: 18px; }
 .os-calc__head strong { font-family: var(--os-font-display); font-size: 1.35rem; }
@@ -9,14 +14,14 @@
 .os-calc__field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
 .os-calc__field > span { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--os-mut); }
 .os-calc__field select, .os-calc__field input {
-  background: var(--os-black); border: 1px solid var(--os-line); color: var(--os-ivory);
+  background: rgba(11, 12, 16, 0.72); border: 1px solid var(--os-line); color: var(--os-ivory);
   border-radius: var(--os-radius-sm); padding: 13px 14px; font-size: 0.92rem; width: 100%;
 }
 .os-calc__field select:focus, .os-calc__field input:focus { border-color: var(--os-gold); }
 .os-calc__row { display: grid; grid-template-columns: 1fr 0.5fr; gap: 12px; }
 .os-calc__result {
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  margin-top: 8px; padding-top: 18px; border-top: 1px solid var(--os-line);
+  margin-top: 8px; padding-top: 18px; border-top: 1px solid rgba(201, 162, 75, 0.18);
 }
 .os-calc__result-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--os-mut); }
 .os-calc__price { font-family: var(--os-font-display); font-size: 2.1rem; color: var(--os-gold-soft); display: block; line-height: 1; }
