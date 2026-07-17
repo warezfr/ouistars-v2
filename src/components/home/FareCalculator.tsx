@@ -1,144 +1,52 @@
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactElement } from 'react';
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactElement } from 'react';
 import { useI18n } from '@/i18n';
-import { estimateHourly } from '@/lib/estimate';
-import { geocodeSearch, estimatePlaces, type Place, type OneWayEstimate } from '@/lib/geocode';
-import { HOURLY_MIN_HOURS, VEHICLE_CLASSES, type VehicleClass } from '@/data/pricing';
-import { formatEUR } from '@/lib/pricing';
+import { geocodeSearch, type Place } from '@/lib/geocode';
 import type { PoiType } from '@/data/locations';
-import BookingWizard, { type BookingContext } from '@/components/booking/BookingWizard';
+import BookingWizard from '@/components/booking/BookingWizard';
 import './calculator.css';
 
-type Tab = 'oneway' | 'hourly';
-const CLASS_ORDER: VehicleClass[] = ['E', 'V', 'S'];
-
-/** Formulaire de réservation intelligent — onglets One Way / Hourly + géocodage d'adresses réelles. */
+/**
+ * Carte hero — étape 1 : seulement Départ + Destination.
+ * Une fois les deux saisis, « Rechercher » ouvre le wizard (choix aller simple / mise à disposition, etc.).
+ */
 export default function FareCalculator() {
   const { t } = useI18n();
   const c = t.calculator;
 
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const [tab, setTab] = useState<Tab>('oneway');
-  const [date, setDate] = useState(today);
-  const [time, setTime] = useState('10:00');
-  const [hours, setHours] = useState(HOURLY_MIN_HOURS);
-
   const [from, setFrom] = useState<Place | null>(null);
   const [to, setTo] = useState<Place | null>(null);
-
-  const [estimate, setEstimate] = useState<OneWayEstimate | null>(null);
-  const [estimating, setEstimating] = useState(false);
-
   const [wizardOpen, setWizardOpen] = useState(false);
 
-  const hourly = useMemo(() => estimateHourly(hours), [hours]);
-
-  // Estimation One Way (asynchrone : distance routière réelle).
-  useEffect(() => {
-    if (tab !== 'oneway' || !from || !to) { setEstimate(null); setEstimating(false); return; }
-    const ctrl = new AbortController();
-    setEstimating(true);
-    estimatePlaces(from, to, ctrl.signal)
-      .then((e) => { setEstimate(e); setEstimating(false); })
-      .catch(() => { if (!ctrl.signal.aborted) setEstimating(false); });
-    return () => ctrl.abort();
-  }, [tab, from, to]);
-
-  const ctx: BookingContext | null = useMemo(() => {
-    if (tab === 'oneway') {
-      if (!from || !to || !estimate) return null;
-      return { mode: 'oneway', from, to, date, time, prices: estimate.prices, distanceKm: estimate.distanceKm, routeLabel: estimate.routeLabel };
-    }
-    if (!from) return null;
-    return { mode: 'hourly', from, date, time, hours: hourly.hours, prices: hourly.prices };
-  }, [tab, from, to, estimate, hourly, date, time]);
-
-  const canSearch = Boolean(ctx);
+  const ready = Boolean(from && to);
 
   return (
     <div className="os-calc" id="mobility">
       <div className="os-calc__head">
         <strong>{c.title}</strong>
-        <span>{c.subtitle}</span>
+        <span>{c.subtitleShort}</span>
       </div>
 
-      <div className="os-calc__tabs" role="tablist" aria-label={c.title}>
-        <button role="tab" aria-selected={tab === 'oneway'} className={`os-calc__tab${tab === 'oneway' ? ' is-active' : ''}`} onClick={() => setTab('oneway')}>{c.tabOneWay}</button>
-        <button role="tab" aria-selected={tab === 'hourly'} className={`os-calc__tab${tab === 'hourly' ? ' is-active' : ''}`} onClick={() => setTab('hourly')}>{c.tabHourly}</button>
-      </div>
-
-      <div className="os-calc__row os-calc__row--dt">
-        <label className="os-calc__field">
-          <span>{c.date}</span>
-          <input type="date" value={date} min={today} onChange={(e) => setDate(e.target.value)} />
-        </label>
-        <label className="os-calc__field">
-          <span>{c.time}</span>
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-        </label>
-      </div>
-
-      <Autocomplete
-        label={c.fromLabel} placeholder={c.fromPlaceholder}
-        selected={from} noResults={c.noResults} searching={c.searching}
-        onClear={() => setFrom(null)} onSelect={setFrom}
-      />
-
-      {tab === 'oneway' ? (
+      <div className="os-calc__od">
+        <Autocomplete
+          label={c.fromLabel} placeholder={c.fromPlaceholder}
+          selected={from} noResults={c.noResults} searching={c.searching}
+          onClear={() => setFrom(null)} onSelect={setFrom}
+        />
+        <span className="os-calc__od-arrow" aria-hidden>→</span>
         <Autocomplete
           label={c.toLabel} placeholder={c.toPlaceholder}
           selected={to} noResults={c.noResults} searching={c.searching}
           onClear={() => setTo(null)} onSelect={setTo}
         />
-      ) : (
-        <label className="os-calc__field">
-          <span>{c.duration}</span>
-          <select value={hours} onChange={(e) => setHours(Number(e.target.value))}>
-            {Array.from({ length: 10 }, (_, i) => i + HOURLY_MIN_HOURS).map((h) => (
-              <option key={h} value={h}>{c.hoursOption.replace('{n}', String(h))}</option>
-            ))}
-          </select>
-        </label>
-      )}
+      </div>
 
-      {tab === 'oneway' && from && to && (
-        estimating ? (
-          <p className="os-calc__hint">{c.calculating}</p>
-        ) : estimate && (
-          <div className="os-calc__quote">
-            <div className="os-calc__quote-dist">
-              <span>{c.estDistance}</span>
-              <strong>≈ {estimate.distanceKm} {c.km}</strong>
-            </div>
-            <PriceRow prices={estimate.prices} fromLabel={c.fromPrice} />
-          </div>
-        )
-      )}
-      {tab === 'oneway' && (!from || !to) && <p className="os-calc__hint">{c.fillBoth}</p>}
-      {tab === 'hourly' && (
-        <div className="os-calc__quote">
-          <PriceRow prices={hourly.prices} fromLabel={c.fromPrice} suffix={` ${c.perHour}`} />
-        </div>
-      )}
-
-      <button className="os-btn os-btn--gold os-calc__search" onClick={() => ctx && setWizardOpen(true)} disabled={!canSearch}>
+      <button className="os-btn os-btn--gold os-calc__search" onClick={() => ready && setWizardOpen(true)} disabled={!ready}>
         {c.search}
       </button>
 
-      {ctx && <BookingWizard open={wizardOpen} onClose={() => setWizardOpen(false)} ctx={ctx} />}
-    </div>
-  );
-}
-
-function PriceRow({ prices, fromLabel, suffix }: { prices: Record<VehicleClass, number>; fromLabel: string; suffix?: string }) {
-  return (
-    <div className="os-calc__prices">
-      {CLASS_ORDER.map((cls) => (
-        <div key={cls} className="os-calc__price-card">
-          <span className="os-calc__price-name">{VEHICLE_CLASSES[cls].name}</span>
-          <span className="os-calc__price-from">{fromLabel}</span>
-          <strong className="os-calc__price-val">{formatEUR(prices[cls])}{suffix ?? ''}</strong>
-        </div>
-      ))}
+      {from && to && (
+        <BookingWizard open={wizardOpen} onClose={() => setWizardOpen(false)} ctx={{ from, to }} />
+      )}
     </div>
   );
 }
@@ -163,10 +71,8 @@ function Autocomplete({ label, placeholder, selected, noResults, searching, onCl
   const wrapRef = useRef<HTMLDivElement>(null);
   const listId = useId();
 
-  // Synchronise le champ quand la sélection change de l'extérieur.
   useEffect(() => { if (selected) setQuery(selected.label); }, [selected]);
 
-  // Recherche débouncée + annulable.
   useEffect(() => {
     if (!open) return;
     const q = query.trim();
@@ -180,7 +86,6 @@ function Autocomplete({ label, placeholder, selected, noResults, searching, onCl
     return () => { window.clearTimeout(id); ctrl.abort(); };
   }, [query, open]);
 
-  // Ferme au clic extérieur.
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {

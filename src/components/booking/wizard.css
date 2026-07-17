@@ -188,3 +188,20 @@
   .osw__actions { flex-direction: column-reverse; }
   .osw__actions .os-btn { width: 100%; }
 }
+
+/* ——— Étape 0 : setup (mode + horaire) ——— */
+.osw__setup { padding: 4px 2px 8px; }
+.osw__trip { display: grid; gap: 10px; margin: 18px 0 22px; padding: 16px 18px; border: 1px solid var(--os-line); border-radius: 14px; background: rgba(255,255,255,0.02); }
+.osw__trip-pt { display: flex; gap: 12px; align-items: flex-start; }
+.osw__trip-pt small { display: block; font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--os-mut-2); }
+.osw__trip-pt strong { font-size: 0.98rem; color: var(--os-ivory); }
+.osw__modes { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.osw__mode { text-align: left; display: grid; gap: 4px; padding: 18px 18px; border-radius: 14px; cursor: pointer;
+  background: var(--os-surface); border: 1px solid var(--os-line); color: var(--os-ivory); transition: border-color 0.2s ease, background 0.2s ease; }
+.osw__mode:hover { border-color: var(--os-gold-deep); }
+.osw__mode.is-active { border-color: var(--os-gold); background: rgba(201,162,75,0.08); box-shadow: 0 0 0 1px rgba(201,162,75,0.35) inset; }
+.osw__mode strong { font-family: var(--os-font-display); font-size: 1.2rem; }
+.osw__mode span { font-size: 0.82rem; color: var(--os-mut); }
+.osw__setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 8px; }
+.osw__setup-grid .osw__field:only-child { grid-column: 1 / -1; }
+@media (max-width: 640px) { .osw__modes, .osw__setup-grid { grid-template-columns: 1fr; } }

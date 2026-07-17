@@ -93,3 +93,10 @@
 .os-calc__hint { font-size: 0.8rem; color: var(--os-mut); margin: 8px 0 16px; }
 .os-calc__search { width: 100%; justify-content: center; }
 .os-calc__search:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ——— Étape 1 (hero) : Départ → Destination ——— */
+.os-calc__od { position: relative; display: grid; gap: 14px; margin-bottom: 18px; }
+.os-calc__od-arrow {
+  position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+  color: var(--os-gold-deep); font-size: 1rem; pointer-events: none; opacity: 0.7;
+}

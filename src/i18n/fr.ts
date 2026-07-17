@@ -13,6 +13,7 @@ export const fr = {
   },
   calculator: {
     title: 'Estimation de votre transfert',
+    subtitleShort: 'Où souhaitez-vous aller ?',
     subtitle: 'Tarifs officiels 2026–2027, TTC.',
     route: 'Trajet',
     vehicle: 'Classe de véhicule',
@@ -159,6 +160,12 @@ export const fr = {
     meetGreetLink: 'Meet & Greeter',
   },
   wizard: {
+    setupTitle: 'Votre transfert',
+    setupSub: 'Choisissez la formule et l’horaire de votre course.',
+    modeOneWaySub: 'Un trajet d’un point A à un point B.',
+    modeHourlySub: 'Chauffeur à disposition, à votre rythme.',
+    recapMode: 'Formule',
+
     steps: { vehicle: 'Véhicule', contact: 'Coordonnées', payment: 'Paiement' },
     // Étape 1
     vehicleTitle: 'Choisissez votre véhicule',

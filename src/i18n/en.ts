@@ -15,6 +15,7 @@ export const en: typeof fr = {
   },
   calculator: {
     title: 'Estimate your transfer',
+    subtitleShort: 'Where would you like to go?',
     subtitle: 'Official 2026–2027 rates, incl. tax.',
     route: 'Route',
     vehicle: 'Vehicle class',
@@ -161,6 +162,12 @@ export const en: typeof fr = {
     meetGreetLink: 'Meet & Greeter',
   },
   wizard: {
+    setupTitle: 'Your transfer',
+    setupSub: 'Choose the service and time for your ride.',
+    modeOneWaySub: 'A single trip from A to B.',
+    modeHourlySub: 'Chauffeur at your disposal, at your pace.',
+    recapMode: 'Service',
+
     steps: { vehicle: 'Vehicle', contact: 'Details', payment: 'Payment' },
     // Step 1
     vehicleTitle: 'Choose your vehicle',

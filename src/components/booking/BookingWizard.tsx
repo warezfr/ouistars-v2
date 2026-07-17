@@ -1,22 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '@/i18n';
-import { VEHICLE_CLASSES, type VehicleClass } from '@/data/pricing';
+import { VEHICLE_CLASSES, HOURLY_MIN_HOURS, type VehicleClass } from '@/data/pricing';
 import { FLEET } from '@/data/fleet';
 import { formatEUR } from '@/lib/pricing';
-import type { Place } from '@/lib/geocode';
+import { estimateHourly } from '@/lib/estimate';
+import { estimatePlaces, type Place, type OneWayEstimate } from '@/lib/geocode';
 import './wizard.css';
 
-/** Contexte transmis par le calculateur au wizard de réservation. */
+/** Le hero ne transmet que le trajet ; le wizard gère le mode, l'horaire et l'estimation. */
 export interface BookingContext {
-  mode: 'oneway' | 'hourly';
   from: Place;
-  to?: Place;
-  date: string;
-  time: string;
-  hours?: number;
-  prices: { E: number; V: number; S: number };
-  distanceKm?: number;
-  routeLabel?: string;
+  to: Place | null;
 }
 
 interface Props {
@@ -25,11 +19,12 @@ interface Props {
   ctx: BookingContext;
 }
 
+type Phase = 'setup' | 'flow';
+type Mode = 'oneway' | 'hourly';
 type StepId = 1 | 2 | 3;
 type PayMethod = 'transfer' | 'paypal';
 type Submit = 'idle' | 'sending' | 'ok' | 'error';
 
-/** Les 3 véhicules mappés aux classes tarifaires (image + méta flotte). */
 const WIZARD_VEHICLES: { cls: VehicleClass; image: string }[] = [
   { cls: 'E', image: '/fleet-eclass.png' },
   { cls: 'V', image: '/fleet-vclass.png' },
@@ -37,29 +32,32 @@ const WIZARD_VEHICLES: { cls: VehicleClass; image: string }[] = [
 ];
 
 interface ContactForm {
-  email: string;
-  fullName: string;
-  phone: string;
-  passengers: number;
-  luggage: number;
-  flightNo: string;
-  pickupSign: string;
-  notes: string;
-  pets: boolean;
-  childSeat: boolean;
-  fastExit: boolean;
+  email: string; fullName: string; phone: string;
+  passengers: number; luggage: number;
+  flightNo: string; pickupSign: string; notes: string;
+  pets: boolean; childSeat: boolean; fastExit: boolean;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const todayISO = () => new Date().toISOString().slice(0, 10);
 
 function reference(): string {
   return `OS-${Math.random().toString(36).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6).padEnd(6, '0')}`;
 }
 
-/** Wizard de réservation plein écran — 3 étapes, design luxe noir & or. */
+/** Wizard de réservation plein écran — setup (mode + horaire) puis 3 étapes, design luxe noir & or. */
 export default function BookingWizard({ open, onClose, ctx }: Props) {
   const { t, lang } = useI18n();
   const w = t.wizard;
+  const c = t.calculator;
+
+  const [phase, setPhase] = useState<Phase>('setup');
+  const [mode, setMode] = useState<Mode>('oneway');
+  const [date, setDate] = useState(todayISO);
+  const [time, setTime] = useState('10:00');
+  const [hours, setHours] = useState(HOURLY_MIN_HOURS);
+  const [estimate, setEstimate] = useState<OneWayEstimate | null>(null);
+  const [estimating, setEstimating] = useState(false);
 
   const [step, setStep] = useState<StepId>(1);
   const [vehicle, setVehicle] = useState<VehicleClass | null>(null);
@@ -70,42 +68,40 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
   const [ref, setRef] = useState('');
   const [showErrors, setShowErrors] = useState(false);
   const [form, setForm] = useState<ContactForm>({
-    email: '', fullName: '', phone: '',
-    passengers: 2, luggage: 2,
-    flightNo: '', pickupSign: '', notes: '',
-    pets: false, childSeat: false, fastExit: false,
+    email: '', fullName: '', phone: '', passengers: 2, luggage: 2,
+    flightNo: '', pickupSign: '', notes: '', pets: false, childSeat: false, fastExit: false,
   });
 
-  // onClose dans un ref pour ne pas relancer l'effet (sinon reset intempestif pendant la saisie).
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
   // Réinitialise UNIQUEMENT à l'ouverture + verrouille le scroll.
   useEffect(() => {
     if (!open) return;
-    setStep(1);
-    setVehicle(null);
-    setSubmit('idle');
-    setShowErrors(false);
+    setPhase('setup'); setMode('oneway'); setDate(todayISO()); setTime('10:00'); setHours(HOURLY_MIN_HOURS);
+    setEstimate(null); setEstimating(false);
+    setStep(1); setVehicle(null); setSubmit('idle'); setShowErrors(false);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
     window.addEventListener('keydown', onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener('keydown', onKey);
-    };
+    return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
   }, [open]);
 
-  const amount = vehicle ? ctx.prices[vehicle] : 0;
+  const prices = useMemo(() => {
+    if (mode === 'hourly') return estimateHourly(hours).prices;
+    return estimate?.prices ?? null;
+  }, [mode, hours, estimate]);
+
+  const amount = vehicle && prices ? prices[vehicle] : 0;
   const vehicleName = vehicle ? VEHICLE_CLASSES[vehicle].name : '';
+  const distanceKm = mode === 'oneway' ? estimate?.distanceKm : undefined;
 
   const dateLabel = useMemo(() => {
-    if (!ctx.date) return '—';
-    const d = new Date(`${ctx.date}T00:00:00`);
-    if (Number.isNaN(d.getTime())) return ctx.date;
+    const d = new Date(`${date}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return date;
     return d.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
-  }, [ctx.date, lang]);
+  }, [date, lang]);
 
   if (!open) return null;
 
@@ -116,10 +112,19 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
   const nameErr = showErrors && !form.fullName.trim();
   const phoneErr = showErrors && !form.phone.trim();
 
-  const chooseVehicle = (cls: VehicleClass) => {
-    setVehicle(cls);
-    setStep(2);
+  // Étape 0 → calcule l'estimation puis entre dans le flux.
+  const startFlow = async () => {
+    if (mode === 'oneway') {
+      if (!ctx.to) return;
+      setEstimating(true);
+      try { setEstimate(await estimatePlaces(ctx.from, ctx.to)); }
+      finally { setEstimating(false); }
+    }
+    setStep(1);
+    setPhase('flow');
   };
+
+  const chooseVehicle = (cls: VehicleClass) => { setVehicle(cls); setStep(2); };
 
   const goPayment = () => {
     setShowErrors(true);
@@ -134,40 +139,23 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
     const first_name = parts.shift() ?? '';
     const last_name = parts.join(' ');
     const prefill =
-      `${ctx.routeLabel ?? ''} — ${vehicleName} — ${amount}€${ctx.mode === 'hourly' ? ` — ${ctx.hours}h` : ''}`;
+      `${estimate?.routeLabel ?? ''} — ${vehicleName} — ${amount}€${mode === 'hourly' ? ` — ${hours}h` : ''}`;
     const payload = {
-      type: 'booking',
-      channel: 'siteweb',
+      type: 'booking', channel: 'siteweb',
       data: {
-        first_name,
-        last_name,
-        phone: form.phone,
-        email: form.email,
+        first_name, last_name, phone: form.phone, email: form.email,
         pickup: ctx.from.label,
-        destination: ctx.to?.label ?? w.onDemand,
-        travel_date: ctx.date,
-        travel_time: ctx.time,
-        passengers: form.passengers,
-        vehicle_class: vehicle,
-        prefill,
-        notes: form.notes,
+        destination: mode === 'oneway' ? (ctx.to?.label ?? '') : w.onDemand,
+        travel_date: date, travel_time: time,
+        passengers: form.passengers, vehicle_class: vehicle, prefill, notes: form.notes,
       },
     };
     try {
       const res = await fetch('/api/intake', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
       });
-      if (res.ok) {
-        setRef(reference());
-        setSubmit('ok');
-      } else {
-        setSubmit('error');
-      }
-    } catch {
-      setSubmit('error');
-    }
+      if (res.ok) { setRef(reference()); setSubmit('ok'); } else setSubmit('error');
+    } catch { setSubmit('error'); }
   };
 
   const steps: { id: StepId; label: string }[] = [
@@ -183,16 +171,62 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
 
         {submit === 'ok' ? (
           <ConfirmationScreen title={w.confirmedTitle} sub={w.confirmedSub} refLabel={w.reference} refValue={ref} closeLabel={t.common.close} onClose={onClose} />
+        ) : phase === 'setup' ? (
+          /* ————— Étape 0 : trajet, mode et horaire ————— */
+          <section className="osw__setup">
+            <h3 className="osw__title">{w.setupTitle}</h3>
+            <p className="osw__sub">{w.setupSub}</p>
+
+            <div className="osw__trip">
+              <div className="osw__trip-pt"><span className="osw__dot" aria-hidden /><div><small>{w.recapFrom}</small><strong>{ctx.from.label}</strong></div></div>
+              {ctx.to && <div className="osw__trip-pt"><span className="osw__dot osw__dot--end" aria-hidden /><div><small>{w.recapTo}</small><strong>{ctx.to.label}</strong></div></div>}
+            </div>
+
+            <div className="osw__modes">
+              <button type="button" className={`osw__mode${mode === 'oneway' ? ' is-active' : ''}`} onClick={() => setMode('oneway')} aria-pressed={mode === 'oneway'}>
+                <strong>{c.tabOneWay}</strong>
+                <span>{w.modeOneWaySub}</span>
+              </button>
+              <button type="button" className={`osw__mode${mode === 'hourly' ? ' is-active' : ''}`} onClick={() => setMode('hourly')} aria-pressed={mode === 'hourly'}>
+                <strong>{c.tabHourly}</strong>
+                <span>{w.modeHourlySub}</span>
+              </button>
+            </div>
+
+            <div className="osw__setup-grid">
+              <label className="osw__field">
+                <span>{c.date}</span>
+                <input type="date" value={date} min={todayISO()} onChange={(e) => setDate(e.target.value)} />
+              </label>
+              <label className="osw__field">
+                <span>{c.time}</span>
+                <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+              </label>
+              {mode === 'hourly' && (
+                <label className="osw__field">
+                  <span>{c.duration}</span>
+                  <select value={hours} onChange={(e) => setHours(Number(e.target.value))}>
+                    {Array.from({ length: 10 }, (_, i) => i + HOURLY_MIN_HOURS).map((h) => (
+                      <option key={h} value={h}>{c.hoursOption.replace('{n}', String(h))}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
+            </div>
+
+            <div className="osw__actions">
+              <button className="os-btn os-btn--ghost" onClick={onClose}>{t.common.close}</button>
+              <button className="os-btn os-btn--gold" onClick={startFlow} disabled={estimating}>
+                {estimating ? c.calculating : w.continue}
+              </button>
+            </div>
+          </section>
         ) : (
+          /* ————— Flux : véhicule → coordonnées → paiement ————— */
           <>
-            {/* Stepper */}
             <div className="osw__stepper" role="list">
               {steps.map((s, i) => (
-                <div
-                  key={s.id}
-                  role="listitem"
-                  className={`osw__step${step === s.id ? ' is-active' : ''}${step > s.id ? ' is-done' : ''}`}
-                >
+                <div key={s.id} role="listitem" className={`osw__step${step === s.id ? ' is-active' : ''}${step > s.id ? ' is-done' : ''}`}>
                   <span className="osw__step-num">{String(s.id).padStart(2, '0')}</span>
                   <span className="osw__step-label">{s.label}</span>
                   {i < steps.length - 1 && <span className="osw__step-line" aria-hidden />}
@@ -201,7 +235,6 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
             </div>
 
             <div className="osw__body">
-              {/* Colonne gauche : contenu de l'étape */}
               <div className="osw__main">
                 {step === 1 && (
                   <section className="osw__section">
@@ -213,20 +246,16 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
                         const fleet = FLEET.find((f) => f.className === info.name);
                         return (
                           <article key={cls} className={`osw__vcard${vehicle === cls ? ' is-selected' : ''}`}>
-                            <div className="osw__vimg">
-                              <img src={image} alt={fleet?.name ?? info.name} loading="lazy" />
-                            </div>
+                            <div className="osw__vimg"><img src={image} alt={fleet?.name ?? info.name} loading="lazy" /></div>
                             <div className="osw__vinfo">
                               <strong className="osw__vname">{fleet?.name ?? info.name}</strong>
                               <span className="osw__vmeta">{info.seats} {w.seats} · {info.luggage} {w.luggage}</span>
                             </div>
                             <div className="osw__vprice">
-                              <span className="osw__vfrom">{t.calculator.fromPrice}</span>
-                              <strong>{formatEUR(ctx.prices[cls])}</strong>
+                              <span className="osw__vfrom">{c.fromPrice}</span>
+                              <strong>{prices ? formatEUR(prices[cls]) : '—'}</strong>
                             </div>
-                            <button className="os-btn os-btn--gold osw__vbtn" onClick={() => chooseVehicle(cls)}>
-                              {w.select}
-                            </button>
+                            <button className="os-btn os-btn--gold osw__vbtn" onClick={() => chooseVehicle(cls)}>{w.select}</button>
                           </article>
                         );
                       })}
@@ -257,13 +286,11 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
                       <div className="osw__field-grid">
                         <label className="osw__field">
                           <span>{w.passengers}</span>
-                          <input type="number" min={1} max={16} value={form.passengers}
-                            onChange={(e) => set('passengers', Math.max(1, Number(e.target.value) || 1))} />
+                          <input type="number" min={1} max={16} value={form.passengers} onChange={(e) => set('passengers', Math.max(1, Number(e.target.value) || 1))} />
                         </label>
                         <label className="osw__field">
                           <span>{w.luggageCount}</span>
-                          <input type="number" min={0} max={16} value={form.luggage}
-                            onChange={(e) => set('luggage', Math.max(0, Number(e.target.value) || 0))} />
+                          <input type="number" min={0} max={16} value={form.luggage} onChange={(e) => set('luggage', Math.max(0, Number(e.target.value) || 0))} />
                         </label>
                       </div>
                       <div className="osw__field-grid">
@@ -281,18 +308,9 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
                         <textarea rows={3} value={form.notes} onChange={(e) => set('notes', e.target.value)} placeholder={w.notesPlaceholder} />
                       </label>
                       <div className="osw__checks">
-                        <label className="osw__check">
-                          <input type="checkbox" checked={form.pets} onChange={(e) => set('pets', e.target.checked)} />
-                          <span>{w.pets}</span>
-                        </label>
-                        <label className="osw__check">
-                          <input type="checkbox" checked={form.childSeat} onChange={(e) => set('childSeat', e.target.checked)} />
-                          <span>{w.childSeat}</span>
-                        </label>
-                        <label className="osw__check">
-                          <input type="checkbox" checked={form.fastExit} onChange={(e) => set('fastExit', e.target.checked)} />
-                          <span>{w.fastExit}</span>
-                        </label>
+                        <label className="osw__check"><input type="checkbox" checked={form.pets} onChange={(e) => set('pets', e.target.checked)} /><span>{w.pets}</span></label>
+                        <label className="osw__check"><input type="checkbox" checked={form.childSeat} onChange={(e) => set('childSeat', e.target.checked)} /><span>{w.childSeat}</span></label>
+                        <label className="osw__check"><input type="checkbox" checked={form.fastExit} onChange={(e) => set('fastExit', e.target.checked)} /><span>{w.fastExit}</span></label>
                       </div>
                     </div>
                     <div className="osw__actions">
@@ -306,43 +324,19 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
                   <section className="osw__section">
                     <h3 className="osw__title">{w.paymentTitle}</h3>
                     <p className="osw__sub">{w.paymentSub}</p>
-
-                    <div className="osw__total">
-                      <span>{w.total}</span>
-                      <strong>{formatEUR(amount)}</strong>
-                    </div>
-
+                    <div className="osw__total"><span>{w.total}</span><strong>{formatEUR(amount)}</strong></div>
                     <div className="osw__paylabel">{w.payMethod}</div>
                     <div className="osw__pays">
-                      <button
-                        type="button"
-                        className={`osw__pay${pay === 'transfer' ? ' is-active' : ''}`}
-                        onClick={() => setPay('transfer')}
-                        aria-pressed={pay === 'transfer'}
-                      >
-                        {w.bankTransfer}
-                      </button>
-                      <button
-                        type="button"
-                        className={`osw__pay${pay === 'paypal' ? ' is-active' : ''}`}
-                        onClick={() => setPay('paypal')}
-                        aria-pressed={pay === 'paypal'}
-                      >
-                        {w.paypal}
-                      </button>
+                      <button type="button" className={`osw__pay${pay === 'transfer' ? ' is-active' : ''}`} onClick={() => setPay('transfer')} aria-pressed={pay === 'transfer'}>{w.bankTransfer}</button>
+                      <button type="button" className={`osw__pay${pay === 'paypal' ? ' is-active' : ''}`} onClick={() => setPay('paypal')} aria-pressed={pay === 'paypal'}>{w.paypal}</button>
                     </div>
-
                     <div className="osw__paylabel">{w.promoCode}</div>
                     <div className="osw__promo">
                       <input type="text" value={promo} onChange={(e) => { setPromo(e.target.value); setPromoOn(false); }} placeholder={w.promoPlaceholder} />
-                      <button type="button" className="os-btn os-btn--ghost" disabled={!promo.trim()} onClick={() => setPromoOn(true)}>
-                        {w.apply}
-                      </button>
+                      <button type="button" className="os-btn os-btn--ghost" disabled={!promo.trim()} onClick={() => setPromoOn(true)}>{w.apply}</button>
                     </div>
                     {promoOn && <p className="osw__promo-ok">✓ {w.promoApplied}</p>}
-
                     {submit === 'error' && <p className="osw__error-msg">{w.errorSub}</p>}
-
                     <div className="osw__actions">
                       <button className="os-btn os-btn--ghost" onClick={() => setStep(2)}>{w.back}</button>
                       <button className="os-btn os-btn--gold" onClick={confirm} disabled={submit === 'sending'}>
@@ -353,42 +347,35 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
                 )}
               </div>
 
-              {/* Colonne droite : récap sticky */}
+              {/* Récap sticky */}
               <aside className="osw__recap">
                 <div className="osw__recap-head">
                   <h4>{w.recapTitle}</h4>
-                  <button type="button" className="osw__recap-edit" onClick={() => setStep(1)}>{w.edit}</button>
+                  <button type="button" className="osw__recap-edit" onClick={() => setPhase('setup')}>{w.edit}</button>
                 </div>
                 <div className="osw__recap-route">
                   <span className="osw__dot" aria-hidden />
-                  <div>
-                    <small>{w.recapFrom}</small>
-                    <strong>{ctx.from.label}</strong>
-                  </div>
+                  <div><small>{w.recapFrom}</small><strong>{ctx.from.label}</strong></div>
                 </div>
-                {ctx.mode === 'oneway' && ctx.to && (
+                {mode === 'oneway' && ctx.to && (
                   <div className="osw__recap-route">
                     <span className="osw__dot osw__dot--end" aria-hidden />
-                    <div>
-                      <small>{w.recapTo}</small>
-                      <strong>{ctx.to.label}</strong>
-                    </div>
+                    <div><small>{w.recapTo}</small><strong>{ctx.to.label}</strong></div>
                   </div>
                 )}
                 <ul className="osw__recap-list">
+                  <li><span>{w.recapMode}</span><strong>{mode === 'oneway' ? c.tabOneWay : c.tabHourly}</strong></li>
                   <li><span>{w.recapDate}</span><strong>{dateLabel}</strong></li>
-                  <li><span>{w.recapTime}</span><strong>{ctx.time}</strong></li>
-                  {ctx.mode === 'oneway' && ctx.distanceKm != null && (
-                    <li><span>{w.recapDistance}</span><strong>≈ {ctx.distanceKm} {t.calculator.km}</strong></li>
+                  <li><span>{w.recapTime}</span><strong>{time}</strong></li>
+                  {mode === 'oneway' && distanceKm != null && (
+                    <li><span>{w.recapDistance}</span><strong>≈ {distanceKm} {c.km}</strong></li>
                   )}
-                  {ctx.mode === 'hourly' && ctx.hours != null && (
-                    <li><span>{w.recapDuration}</span><strong>{ctx.hours} {w.hoursShort}</strong></li>
-                  )}
+                  {mode === 'hourly' && <li><span>{w.recapDuration}</span><strong>{hours} {w.hoursShort}</strong></li>}
                   {vehicle && <li><span>{w.recapVehicle}</span><strong>{vehicleName}</strong></li>}
                 </ul>
                 <div className="osw__recap-amount">
                   <span>{w.recapAmount}</span>
-                  <strong>{vehicle ? formatEUR(amount) : '—'}</strong>
+                  <strong>{vehicle && prices ? formatEUR(amount) : '—'}</strong>
                 </div>
               </aside>
             </div>
@@ -405,9 +392,7 @@ function ConfirmationScreen({ title, sub, refLabel, refValue, closeLabel, onClos
   return (
     <div className="osw__done">
       <div className="osw__done-check" aria-hidden>
-        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M20 6 9 17l-5-5" />
-        </svg>
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
       </div>
       <h3 className="osw__title">{title}</h3>
       <p className="osw__sub">{sub}</p>
