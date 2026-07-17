@@ -23,6 +23,8 @@ export const en: typeof fr = {
     from: 'Estimated price',
     disclaimerHourly: 'Hourly hire — minimum 3 consecutive hours.',
     book: 'Book this route',
+    searching: 'Searching…',
+    calculating: 'Calculating route…',
     pickRoute: 'Choose a route…',
     tabOneWay: 'One Way',
     tabHourly: 'Hourly',

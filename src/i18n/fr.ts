@@ -21,6 +21,8 @@ export const fr = {
     from: 'Prix estimé',
     disclaimerHourly: 'Mise à disposition — minimum 3 heures consécutives.',
     book: 'Réserver ce trajet',
+    searching: 'Recherche…',
+    calculating: 'Calcul de l’itinéraire…',
     pickRoute: 'Choisir un trajet…',
     tabOneWay: 'Aller simple',
     tabHourly: 'Mise à disposition',

@@ -1,16 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '@/i18n';
 import { VEHICLE_CLASSES, type VehicleClass } from '@/data/pricing';
 import { FLEET } from '@/data/fleet';
 import { formatEUR } from '@/lib/pricing';
-import type { Poi } from '@/data/locations';
+import type { Place } from '@/lib/geocode';
 import './wizard.css';
 
 /** Contexte transmis par le calculateur au wizard de réservation. */
 export interface BookingContext {
   mode: 'oneway' | 'hourly';
-  from: Poi;
-  to?: Poi;
+  from: Place;
+  to?: Place;
   date: string;
   time: string;
   hours?: number;
@@ -76,7 +76,11 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
     pets: false, childSeat: false, fastExit: false,
   });
 
-  // Réinitialise à chaque ouverture + verrouille le scroll.
+  // onClose dans un ref pour ne pas relancer l'effet (sinon reset intempestif pendant la saisie).
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  // Réinitialise UNIQUEMENT à l'ouverture + verrouille le scroll.
   useEffect(() => {
     if (!open) return;
     setStep(1);
@@ -85,13 +89,13 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
     setShowErrors(false);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onCloseRef.current(); };
     window.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = prev;
       window.removeEventListener('keydown', onKey);
     };
-  }, [open, onClose]);
+  }, [open]);
 
   const amount = vehicle ? ctx.prices[vehicle] : 0;
   const vehicleName = vehicle ? VEHICLE_CLASSES[vehicle].name : '';

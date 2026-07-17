@@ -1,17 +1,17 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactElement } from 'react';
 import { useI18n } from '@/i18n';
-import { searchLocations, estimateOneWay, estimateHourly } from '@/lib/estimate';
+import { estimateHourly } from '@/lib/estimate';
+import { geocodeSearch, estimatePlaces, type Place, type OneWayEstimate } from '@/lib/geocode';
 import { HOURLY_MIN_HOURS, VEHICLE_CLASSES, type VehicleClass } from '@/data/pricing';
 import { formatEUR } from '@/lib/pricing';
-import type { Poi, PoiType } from '@/data/locations';
+import type { PoiType } from '@/data/locations';
 import BookingWizard, { type BookingContext } from '@/components/booking/BookingWizard';
 import './calculator.css';
 
 type Tab = 'oneway' | 'hourly';
-
 const CLASS_ORDER: VehicleClass[] = ['E', 'V', 'S'];
 
-/** Formulaire de réservation intelligent — onglets One Way / Hourly + autocomplétion. */
+/** Formulaire de réservation intelligent — onglets One Way / Hourly + géocodage d'adresses réelles. */
 export default function FareCalculator() {
   const { t } = useI18n();
   const c = t.calculator;
@@ -22,31 +22,37 @@ export default function FareCalculator() {
   const [time, setTime] = useState('10:00');
   const [hours, setHours] = useState(HOURLY_MIN_HOURS);
 
-  const [from, setFrom] = useState<Poi | null>(null);
-  const [fromQuery, setFromQuery] = useState('');
-  const [to, setTo] = useState<Poi | null>(null);
-  const [toQuery, setToQuery] = useState('');
+  const [from, setFrom] = useState<Place | null>(null);
+  const [to, setTo] = useState<Place | null>(null);
+
+  const [estimate, setEstimate] = useState<OneWayEstimate | null>(null);
+  const [estimating, setEstimating] = useState(false);
 
   const [wizardOpen, setWizardOpen] = useState(false);
 
-  const oneWay = useMemo(() => (from && to ? estimateOneWay(from, to) : null), [from, to]);
   const hourly = useMemo(() => estimateHourly(hours), [hours]);
 
-  const canSearch = tab === 'oneway' ? Boolean(from && to) : Boolean(from);
+  // Estimation One Way (asynchrone : distance routière réelle).
+  useEffect(() => {
+    if (tab !== 'oneway' || !from || !to) { setEstimate(null); setEstimating(false); return; }
+    const ctrl = new AbortController();
+    setEstimating(true);
+    estimatePlaces(from, to, ctrl.signal)
+      .then((e) => { setEstimate(e); setEstimating(false); })
+      .catch(() => { if (!ctrl.signal.aborted) setEstimating(false); });
+    return () => ctrl.abort();
+  }, [tab, from, to]);
 
   const ctx: BookingContext | null = useMemo(() => {
     if (tab === 'oneway') {
-      if (!from || !to || !oneWay) return null;
-      return {
-        mode: 'oneway', from, to, date, time,
-        prices: oneWay.prices, distanceKm: oneWay.distanceKm, routeLabel: oneWay.routeLabel,
-      };
+      if (!from || !to || !estimate) return null;
+      return { mode: 'oneway', from, to, date, time, prices: estimate.prices, distanceKm: estimate.distanceKm, routeLabel: estimate.routeLabel };
     }
     if (!from) return null;
     return { mode: 'hourly', from, date, time, hours: hourly.hours, prices: hourly.prices };
-  }, [tab, from, to, oneWay, hourly, date, time]);
+  }, [tab, from, to, estimate, hourly, date, time]);
 
-  const openWizard = () => { if (ctx) setWizardOpen(true); };
+  const canSearch = Boolean(ctx);
 
   return (
     <div className="os-calc" id="mobility">
@@ -55,22 +61,9 @@ export default function FareCalculator() {
         <span>{c.subtitle}</span>
       </div>
 
-      {/* Onglets */}
       <div className="os-calc__tabs" role="tablist" aria-label={c.title}>
-        <button
-          role="tab" aria-selected={tab === 'oneway'}
-          className={`os-calc__tab${tab === 'oneway' ? ' is-active' : ''}`}
-          onClick={() => setTab('oneway')}
-        >
-          {c.tabOneWay}
-        </button>
-        <button
-          role="tab" aria-selected={tab === 'hourly'}
-          className={`os-calc__tab${tab === 'hourly' ? ' is-active' : ''}`}
-          onClick={() => setTab('hourly')}
-        >
-          {c.tabHourly}
-        </button>
+        <button role="tab" aria-selected={tab === 'oneway'} className={`os-calc__tab${tab === 'oneway' ? ' is-active' : ''}`} onClick={() => setTab('oneway')}>{c.tabOneWay}</button>
+        <button role="tab" aria-selected={tab === 'hourly'} className={`os-calc__tab${tab === 'hourly' ? ' is-active' : ''}`} onClick={() => setTab('hourly')}>{c.tabHourly}</button>
       </div>
 
       <div className="os-calc__row os-calc__row--dt">
@@ -85,24 +78,16 @@ export default function FareCalculator() {
       </div>
 
       <Autocomplete
-        label={c.fromLabel}
-        placeholder={c.fromPlaceholder}
-        query={fromQuery}
-        selected={from}
-        noResults={c.noResults}
-        onQueryChange={(v) => { setFromQuery(v); setFrom(null); }}
-        onSelect={(p) => { setFrom(p); setFromQuery(p.label); }}
+        label={c.fromLabel} placeholder={c.fromPlaceholder}
+        selected={from} noResults={c.noResults} searching={c.searching}
+        onClear={() => setFrom(null)} onSelect={setFrom}
       />
 
       {tab === 'oneway' ? (
         <Autocomplete
-          label={c.toLabel}
-          placeholder={c.toPlaceholder}
-          query={toQuery}
-          selected={to}
-          noResults={c.noResults}
-          onQueryChange={(v) => { setToQuery(v); setTo(null); }}
-          onSelect={(p) => { setTo(p); setToQuery(p.label); }}
+          label={c.toLabel} placeholder={c.toPlaceholder}
+          selected={to} noResults={c.noResults} searching={c.searching}
+          onClear={() => setTo(null)} onSelect={setTo}
         />
       ) : (
         <label className="os-calc__field">
@@ -115,26 +100,27 @@ export default function FareCalculator() {
         </label>
       )}
 
-      {/* Mini-récap prix */}
-      {tab === 'oneway' && oneWay && (
-        <div className="os-calc__quote">
-          <div className="os-calc__quote-dist">
-            <span>{c.estDistance}</span>
-            <strong>≈ {oneWay.distanceKm} {c.km}</strong>
+      {tab === 'oneway' && from && to && (
+        estimating ? (
+          <p className="os-calc__hint">{c.calculating}</p>
+        ) : estimate && (
+          <div className="os-calc__quote">
+            <div className="os-calc__quote-dist">
+              <span>{c.estDistance}</span>
+              <strong>≈ {estimate.distanceKm} {c.km}</strong>
+            </div>
+            <PriceRow prices={estimate.prices} fromLabel={c.fromPrice} />
           </div>
-          <PriceRow prices={oneWay.prices} fromLabel={c.fromPrice} />
-        </div>
+        )
       )}
+      {tab === 'oneway' && (!from || !to) && <p className="os-calc__hint">{c.fillBoth}</p>}
       {tab === 'hourly' && (
         <div className="os-calc__quote">
           <PriceRow prices={hourly.prices} fromLabel={c.fromPrice} suffix={` ${c.perHour}`} />
         </div>
       )}
-      {tab === 'oneway' && !oneWay && (
-        <p className="os-calc__hint">{c.fillBoth}</p>
-      )}
 
-      <button className="os-btn os-btn--gold os-calc__search" onClick={openWizard} disabled={!canSearch}>
+      <button className="os-btn os-btn--gold os-calc__search" onClick={() => ctx && setWizardOpen(true)} disabled={!canSearch}>
         {c.search}
       </button>
 
@@ -157,24 +143,42 @@ function PriceRow({ prices, fromLabel, suffix }: { prices: Record<VehicleClass, 
   );
 }
 
-/* ————— Champ d'autocomplétion ————— */
+/* ————— Champ d'autocomplétion d'adresses (géocodage réel, débounce + abort) ————— */
 interface AcProps {
   label: string;
   placeholder: string;
-  query: string;
-  selected: Poi | null;
+  selected: Place | null;
   noResults: string;
-  onQueryChange: (value: string) => void;
-  onSelect: (poi: Poi) => void;
+  searching: string;
+  onClear: () => void;
+  onSelect: (place: Place) => void;
 }
 
-function Autocomplete({ label, placeholder, query, selected, noResults, onQueryChange, onSelect }: AcProps) {
+function Autocomplete({ label, placeholder, selected, noResults, searching, onClear, onSelect }: AcProps) {
+  const [query, setQuery] = useState(selected?.label ?? '');
+  const [results, setResults] = useState<Place[]>([]);
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [highlight, setHighlight] = useState(-1);
   const wrapRef = useRef<HTMLDivElement>(null);
   const listId = useId();
 
-  const results = useMemo(() => (open ? searchLocations(query) : []), [open, query]);
+  // Synchronise le champ quand la sélection change de l'extérieur.
+  useEffect(() => { if (selected) setQuery(selected.label); }, [selected]);
+
+  // Recherche débouncée + annulable.
+  useEffect(() => {
+    if (!open) return;
+    const q = query.trim();
+    const ctrl = new AbortController();
+    setLoading(true);
+    const id = window.setTimeout(() => {
+      geocodeSearch(q, ctrl.signal)
+        .then((r) => { setResults(r); setLoading(false); })
+        .catch(() => { if (!ctrl.signal.aborted) setLoading(false); });
+    }, 220);
+    return () => { window.clearTimeout(id); ctrl.abort(); };
+  }, [query, open]);
 
   // Ferme au clic extérieur.
   useEffect(() => {
@@ -186,21 +190,13 @@ function Autocomplete({ label, placeholder, query, selected, noResults, onQueryC
     return () => document.removeEventListener('mousedown', onDown);
   }, [open]);
 
-  const pick = (poi: Poi) => { onSelect(poi); setOpen(false); setHighlight(-1); };
+  const pick = (p: Place) => { onSelect(p); setQuery(p.label); setOpen(false); setHighlight(-1); };
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') { setOpen(false); setHighlight(-1); return; }
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (!open) { setOpen(true); return; }
-      setHighlight((h) => Math.min(h + 1, results.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setHighlight((h) => Math.max(h - 1, 0));
-    } else if (e.key === 'Enter' && open && highlight >= 0 && results[highlight]) {
-      e.preventDefault();
-      pick(results[highlight]);
-    }
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (!open) { setOpen(true); return; } setHighlight((h) => Math.min(h + 1, results.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlight((h) => Math.max(h - 1, 0)); }
+    else if (e.key === 'Enter' && open && highlight >= 0 && results[highlight]) { e.preventDefault(); pick(results[highlight]); }
   };
 
   return (
@@ -209,36 +205,31 @@ function Autocomplete({ label, placeholder, query, selected, noResults, onQueryC
       <div className="os-ac__control">
         {selected && <PoiIcon type={selected.type} className="os-ac__lead" />}
         <input
-          type="text"
-          value={query}
-          placeholder={placeholder}
-          role="combobox"
-          aria-expanded={open}
-          aria-controls={listId}
-          aria-autocomplete="list"
-          autoComplete="off"
+          type="text" value={query} placeholder={placeholder}
+          role="combobox" aria-expanded={open} aria-controls={listId} aria-autocomplete="list" autoComplete="off"
           className={selected ? 'os-ac__input--sel' : undefined}
-          onChange={(e) => { onQueryChange(e.target.value); setOpen(true); setHighlight(-1); }}
+          onChange={(e) => { setQuery(e.target.value); if (selected) onClear(); setOpen(true); setHighlight(-1); }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
         />
       </div>
       {open && (
         <ul className="os-ac__list" id={listId} role="listbox">
-          {results.length === 0 && <li className="os-ac__empty">{noResults}</li>}
-          {results.map((poi, i) => (
-            <li key={poi.id} role="option" aria-selected={i === highlight}>
+          {loading && results.length === 0 && <li className="os-ac__empty">{searching}</li>}
+          {!loading && results.length === 0 && <li className="os-ac__empty">{noResults}</li>}
+          {results.map((p, i) => (
+            <li key={p.id} role="option" aria-selected={i === highlight}>
               <button
                 type="button"
                 className={`os-ac__item${i === highlight ? ' is-hl' : ''}`}
                 onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setHighlight(i)}
-                onClick={() => pick(poi)}
+                onClick={() => pick(p)}
               >
-                <PoiIcon type={poi.type} className="os-ac__icon" />
+                <PoiIcon type={p.type} className="os-ac__icon" />
                 <span className="os-ac__text">
-                  <strong>{poi.label}</strong>
-                  <small>{poi.sub}</small>
+                  <strong>{p.label}</strong>
+                  <small>{p.sub}</small>
                 </span>
               </button>
             </li>
