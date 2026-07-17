@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import DocumentModal, { type DocData } from '../documents/DocumentModal';
+import DataTable, { type Column } from '../ui/DataTable';
 import { QUOTES as DEMO } from '../mockData';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
 
@@ -103,6 +104,33 @@ export default function Quotes() {
     if (error) setError(error.message);
   }
 
+  const columns: Column<Row>[] = [
+    { key: 'reference', header: 'Réf.', value: (q) => q.reference,
+      render: (q) => <button className="btn btn-link p-0 fw-semibold" onClick={() => setView(toDoc(q))}>{q.reference}</button> },
+    { key: 'company', header: 'Société / contact', value: (q) => q.company,
+      render: (q) => <>{q.company}{q.email && <div className="small text-muted">{q.email}</div>}</> },
+    { key: 'event', header: 'Événement', filterable: true, value: (q) => q.event },
+    { key: 'dates', header: 'Dates', value: (q) => q.dates },
+    { key: 'vehicles', header: 'Véh.', value: (q) => q.vehicles },
+    { key: 'amount', header: 'Estimation', value: (q) => q.amount ?? 0, render: (q) => q.amount != null ? `${q.amount.toFixed(0)} €` : '—' },
+    { key: 'status', header: 'Statut', filterable: true, sortable: false, width: 210,
+      value: (q) => LABELS[q.status] ?? q.status,
+      render: (q) => (
+        <div className="d-flex gap-1 align-items-center">
+          {writable && !q.demo && (q.status === 'accepted' || q.status === 'sent' || q.status === 'in_progress') && (
+            <button className="btn btn-sm btn-success" title="Convertir en réservation" onClick={() => convert(q)}>
+              <i className="bi bi-arrow-right-circle" />
+            </button>
+          )}
+          {writable && !q.demo ? (
+            <select className="form-select form-select-sm" value={q.status} onChange={(e) => setStatus(q, e.target.value)}>
+              {STATUSES.map((st) => <option key={st} value={st}>{LABELS[st]}</option>)}
+            </select>
+          ) : <span className={`badge ${badge(q.status)}`}>{LABELS[q.status] ?? q.status}</span>}
+        </div>
+      ) },
+  ];
+
   return (
     <div className="card card-outline card-warning">
       <div className="card-header d-flex justify-content-between align-items-center">
@@ -117,39 +145,8 @@ export default function Quotes() {
         {error && <div className="alert alert-danger m-3">{error}</div>}
         {info && <div className="alert alert-success m-3">{info}</div>}
         {!loading && (
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead><tr><th>Réf.</th><th>Société / contact</th><th>Événement</th><th>Dates</th><th>Véh.</th><th>Estimation</th><th style={{ width: 150 }}>Statut</th></tr></thead>
-              <tbody>
-                {rows.map((q) => (
-                  <tr key={q.id}>
-                    <td className="fw-semibold">
-                      <button className="btn btn-link p-0 fw-semibold" onClick={() => setView(toDoc(q))}>{q.reference}</button>
-                    </td>
-                    <td>{q.company}{q.email && <div className="small text-muted">{q.email}</div>}</td>
-                    <td>{q.event}</td><td>{q.dates}</td><td>{q.vehicles}</td>
-                    <td>{q.amount != null ? `${q.amount.toFixed(0)} €` : '—'}</td>
-                    <td className="text-nowrap">
-                      {writable && !q.demo && (q.status === 'accepted' || q.status === 'sent' || q.status === 'in_progress') && (
-                        <button className="btn btn-sm btn-success me-1" title="Convertir en réservation"
-                          onClick={() => convert(q)}>
-                          <i className="bi bi-arrow-right-circle" />
-                        </button>
-                      )}
-                      {writable && !q.demo ? (
-                        <select className={`form-select form-select-sm badge-select`} value={q.status}
-                          onChange={(e) => setStatus(q, e.target.value)}>
-                          {STATUSES.map((s) => <option key={s} value={s}>{LABELS[s]}</option>)}
-                        </select>
-                      ) : (
-                        <span className={`badge ${badge(q.status)}`}>{LABELS[q.status] ?? q.status}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable columns={columns} rows={rows} rowKey={(q) => q.id}
+            searchPlaceholder="Rechercher réf., société, événement…" empty="Aucun devis." />
         )}
       </div>
       {view && <DocumentModal doc={view} onClose={() => setView(null)} />}

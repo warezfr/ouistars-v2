@@ -34,7 +34,7 @@ export default function AdminLayout() {
       }
     }
     if (loc.pathname.includes('/singleton/')) return 'Contenu';
-    return 'Back-office';
+    return 'Command Center';
   }, [loc.pathname]);
 
   const filtered = (items: NavEntry[]) =>

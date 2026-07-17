@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import DataTable, { type Column } from '../ui/DataTable';
 
 /** Clients agrégés depuis les réservations (site + API ETG). */
 interface ClientRow {
@@ -17,7 +18,6 @@ export default function Clients() {
   const [rows, setRows] = useState<ClientRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [q, setQ] = useState('');
 
   useEffect(() => {
     (async () => {
@@ -61,46 +61,32 @@ export default function Clients() {
     })();
   }, []);
 
-  const shown = q.trim()
-    ? rows.filter((r) => `${r.name} ${r.email ?? ''} ${r.phone ?? ''}`.toLowerCase().includes(q.toLowerCase()))
-    : rows;
+  const columns: Column<ClientRow>[] = [
+    { key: 'name', header: 'Client', value: (r) => r.name, render: (r) => <span className="fw-semibold">{r.name}</span> },
+    { key: 'email', header: 'E-mail', value: (r) => r.email ?? '', render: (r) => r.email ? <a href={`mailto:${r.email}`}>{r.email}</a> : '—' },
+    { key: 'phone', header: 'Téléphone', value: (r) => r.phone ?? '' },
+    { key: 'bookings', header: 'Réservations', value: (r) => r.bookings },
+    { key: 'total', header: 'Total', value: (r) => r.total, render: (r) => r.total > 0 ? `${r.total.toFixed(0)} €` : '—' },
+    { key: 'lastDate', header: 'Dernière', value: (r) => r.lastDate },
+    { key: 'source', header: 'Canaux', filterable: true, sortable: false,
+      value: (r) => [...r.sources].join(', '),
+      render: (r) => [...r.sources].map((sc) => (
+        <span key={sc} className={`badge me-1 ${sc === 'ETG' ? 'text-bg-primary' : 'text-bg-light border'}`}>{sc}</span>
+      )) },
+  ];
 
   return (
     <div className="card card-outline card-warning">
-      <div className="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div className="card-header">
         <h3 className="card-title mb-0">Clients <span className="badge text-bg-secondary ms-1">{rows.length}</span></h3>
-        <input className="form-control form-control-sm" style={{ maxWidth: 260 }}
-          placeholder="Rechercher nom, e-mail, téléphone…" value={q} onChange={(e) => setQ(e.target.value)} />
       </div>
       <div className="card-body p-0">
         {loading && <div className="p-3 text-muted">Chargement…</div>}
         {error && <div className="alert alert-danger m-3">{error}</div>}
         {!loading && !error && (
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead><tr><th>Client</th><th>E-mail</th><th>Téléphone</th><th>Réservations</th><th>Total</th><th>Dernière</th><th>Canaux</th></tr></thead>
-              <tbody>
-                {shown.length === 0 && (
-                  <tr><td colSpan={7} className="text-center text-muted py-4">
-                    Aucun client — les clients apparaissent automatiquement à la première réservation.
-                  </td></tr>
-                )}
-                {shown.map((r) => (
-                  <tr key={r.key}>
-                    <td className="fw-semibold">{r.name}</td>
-                    <td>{r.email ? <a href={`mailto:${r.email}`}>{r.email}</a> : '—'}</td>
-                    <td>{r.phone ?? '—'}</td>
-                    <td>{r.bookings}</td>
-                    <td>{r.total > 0 ? `${r.total.toFixed(0)} €` : '—'}</td>
-                    <td>{r.lastDate || '—'}</td>
-                    <td>{[...r.sources].map((s) => (
-                      <span key={s} className={`badge me-1 ${s === 'ETG' ? 'text-bg-primary' : 'text-bg-light border'}`}>{s}</span>
-                    ))}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable columns={columns} rows={rows} rowKey={(r) => r.key}
+            searchPlaceholder="Rechercher nom, e-mail, téléphone…"
+            empty="Aucun client — ils apparaissent à la première réservation." />
         )}
       </div>
     </div>

@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { getCollection } from './collections';
 import { listEntries, deleteEntry, updateEntry } from './api';
 import type { CmsEntry } from './types';
+import DataTable, { type Column } from '@/admin/ui/DataTable';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
 
 export default function CollectionList() {
@@ -39,6 +40,31 @@ export default function CollectionList() {
     load();
   }
 
+  const columns: Column<CmsEntry>[] = [
+    { key: 'thumb', header: '', sortable: false, width: 64,
+      value: () => '', render: (r) => thumbOf(r)
+        ? <img src={thumbOf(r)!} alt="" loading="lazy" style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 4 }} />
+        : <span className="text-muted"><i className="bi bi-file-earmark" /></span> },
+    { key: 'title', header: 'Titre', value: (r) => titleOf(r),
+      render: (r) => <Link to={`/admin/content/${def.key}/${r.id}`} className="fw-semibold text-decoration-none">{titleOf(r)}</Link> },
+    { key: 'status', header: 'Statut', filterable: true, width: 130,
+      value: (r) => r.status === 'published' ? 'Publié' : 'Brouillon',
+      render: (r) => (
+        <button className={`badge border-0 ${r.status === 'published' ? 'text-bg-success' : 'text-bg-secondary'}`}
+          disabled={!writable} onClick={() => toggleStatus(r)}>
+          {r.status === 'published' ? 'Publié' : 'Brouillon'}
+        </button>
+      ) },
+    { key: 'position', header: 'Ordre', width: 80, value: (r) => r.position },
+    { key: 'actions', header: 'Actions', sortable: false, width: 120, className: 'text-end pe-3',
+      value: () => '', render: (r) => (
+        <>
+          <Link className="btn btn-sm btn-outline-secondary me-1" to={`/admin/content/${def.key}/${r.id}`}><i className="bi bi-pencil" /></Link>
+          {writable && <button className="btn btn-sm btn-outline-danger" onClick={() => onDelete(r)}><i className="bi bi-trash" /></button>}
+        </>
+      ) },
+  ];
+
   return (
     <div className="card card-outline card-warning">
       <div className="card-header d-flex align-items-center justify-content-between">
@@ -52,59 +78,13 @@ export default function CollectionList() {
           </Link>
         )}
       </div>
-
       <div className="card-body p-0">
         {loading && <div className="p-3 text-muted">Chargement…</div>}
         {error && <div className="alert alert-danger m-3">Erreur : {error}</div>}
         {!loading && !error && (
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead>
-                <tr>
-                  <th style={{ width: 64 }} />
-                  <th>Titre</th>
-                  <th style={{ width: 130 }}>Statut</th>
-                  <th style={{ width: 80 }}>Ordre</th>
-                  <th style={{ width: 140 }} className="text-end pe-3">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.length === 0 && (
-                  <tr><td colSpan={5} className="text-center text-muted py-4">
-                    Aucun élément.{writable && ' Cliquez sur « + » pour en ajouter.'}
-                  </td></tr>
-                )}
-                {rows.map((r) => (
-                  <tr key={r.id}>
-                    <td>
-                      {thumbOf(r)
-                        ? <img src={thumbOf(r)!} alt="" loading="lazy"
-                            style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 4 }} />
-                        : <span className="text-muted"><i className="bi bi-file-earmark" /></span>}
-                    </td>
-                    <td><Link to={`/admin/content/${def.key}/${r.id}`} className="fw-semibold text-decoration-none">{titleOf(r)}</Link></td>
-                    <td>
-                      <button className={`badge border-0 ${r.status === 'published' ? 'text-bg-success' : 'text-bg-secondary'}`}
-                        disabled={!writable} onClick={() => toggleStatus(r)}>
-                        {r.status === 'published' ? 'Publié' : 'Brouillon'}
-                      </button>
-                    </td>
-                    <td className="text-muted">{r.position}</td>
-                    <td className="text-end pe-3">
-                      <Link className="btn btn-sm btn-outline-secondary me-1" to={`/admin/content/${def.key}/${r.id}`}>
-                        <i className="bi bi-pencil" />
-                      </Link>
-                      {writable && (
-                        <button className="btn btn-sm btn-outline-danger" onClick={() => onDelete(r)}>
-                          <i className="bi bi-trash" />
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable columns={columns} rows={rows} rowKey={(r) => r.id}
+            searchPlaceholder={`Rechercher dans ${def.label.toLowerCase()}…`}
+            empty={`Aucun élément.${writable ? ' Cliquez sur « + » pour en ajouter.' : ''}`} />
         )}
       </div>
     </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { createEntry } from '../cms/api';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
+import DataTable, { type Column } from '../ui/DataTable';
 
 /**
  * Candidatures chauffeurs (table chauffeur_applications).
@@ -86,6 +87,23 @@ export default function Applications() {
 
   const pending = rows.filter((a) => a.status === 'new' || a.status === 'reviewing').length;
 
+  const columns: Column<Row>[] = [
+    { key: 'reference', header: 'Réf.', value: (a) => a.reference, render: (a) => <span className="fw-semibold">{a.reference}</span> },
+    { key: 'name', header: 'Nom', value: (a) => a.name },
+    { key: 'city', header: 'Ville', filterable: true, value: (a) => a.city ?? '—' },
+    { key: 'vtcCard', header: 'Carte VTC', value: (a) => a.vtcCard ?? '—' },
+    { key: 'contact', header: 'Contact', sortable: false, value: (a) => a.phone ?? a.email ?? '—' },
+    { key: 'status', header: 'Statut', filterable: true, value: (a) => LABELS[a.status] ?? a.status,
+      render: (a) => <span className={`badge ${badge(a.status)}`}>{LABELS[a.status] ?? a.status}</span> },
+    { key: 'actions', header: 'Actions', sortable: false, className: 'text-end pe-3', value: () => '',
+      render: (a) => (writable && (a.status === 'new' || a.status === 'reviewing')) ? (
+        <span className="text-nowrap">
+          <button className="btn btn-sm btn-success me-1" onClick={() => decide(a, 'approved')}><i className="bi bi-person-plus me-1" />Approuver</button>
+          <button className="btn btn-sm btn-outline-danger" onClick={() => decide(a, 'rejected')}>Refuser</button>
+        </span>
+      ) : <span className="text-muted small">—</span> },
+  ];
+
   return (
     <div className="card card-outline card-warning">
       <div className="card-header d-flex justify-content-between align-items-center">
@@ -97,31 +115,8 @@ export default function Applications() {
         {error && <div className="alert alert-danger m-3">{error}</div>}
         {info && <div className="alert alert-success m-3">{info} <a href="/admin/content/driver">Ouvrir les chauffeurs →</a></div>}
         {!loading && (
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead><tr><th>Réf.</th><th>Nom</th><th>Ville</th><th>Carte VTC</th><th>Contact</th><th>Statut</th><th className="text-end pe-3">Actions</th></tr></thead>
-              <tbody>
-                {rows.map((a) => (
-                  <tr key={a.id}>
-                    <td className="fw-semibold">{a.reference}</td>
-                    <td>{a.name}</td><td>{a.city ?? '—'}</td><td>{a.vtcCard ?? '—'}</td>
-                    <td className="small">{a.phone ?? a.email ?? '—'}</td>
-                    <td><span className={`badge ${badge(a.status)}`}>{LABELS[a.status] ?? a.status}</span></td>
-                    <td className="text-end pe-3 text-nowrap">
-                      {writable && (a.status === 'new' || a.status === 'reviewing') ? (
-                        <>
-                          <button className="btn btn-sm btn-success me-1" onClick={() => decide(a, 'approved')}>
-                            <i className="bi bi-person-plus me-1" />Approuver
-                          </button>
-                          <button className="btn btn-sm btn-outline-danger" onClick={() => decide(a, 'rejected')}>Refuser</button>
-                        </>
-                      ) : <span className="text-muted small">—</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DataTable columns={columns} rows={rows} rowKey={(a) => a.id}
+            searchPlaceholder="Rechercher réf., nom, ville…" empty="Aucune candidature." />
         )}
       </div>
     </div>

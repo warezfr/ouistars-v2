@@ -21,7 +21,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: 'Pilotage',
     items: [
-      { label: 'Tableau de bord', icon: 'bi-speedometer2', to: '/admin' },
+      { label: 'Command Center', icon: 'bi-speedometer2', to: '/admin' },
     ],
   },
   {

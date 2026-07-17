@@ -4,6 +4,7 @@ import { listEntries } from '../cms/api';
 import { BOOKINGS as DEMO } from '../mockData';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
 import DocumentModal, { type DocData } from '../documents/DocumentModal';
+import DataTable, { type Column } from '../ui/DataTable';
 
 type Status = 'pending' | 'confirmed' | 'assigned' | 'completed' | 'cancelled';
 
@@ -51,7 +52,6 @@ export default function Bookings() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | Status>('all');
   const [view, setView] = useState<DocData | null>(null);
 
   async function load() {
@@ -122,7 +122,6 @@ export default function Bookings() {
   useEffect(() => { load(); }, []);
 
   const selected = useMemo(() => rows.find((r) => r.key === selectedKey) ?? null, [rows, selectedKey]);
-  const shown = filter === 'all' ? rows : rows.filter((r) => r.status === filter);
   const patchLocal = (key: string, changes: Partial<Row>) =>
     setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...changes } : r)));
 
@@ -211,6 +210,21 @@ export default function Bookings() {
     load();
   }
 
+  const SRC_LABEL: Record<string, string> = { site: 'Site', etg: 'ETG', demo: 'démo' };
+  const bookingColumns: Column<Row>[] = [
+    { key: 'reference', header: 'Réf.', value: (r) => r.reference, render: (r) => <span className="fw-semibold">{r.reference}</span> },
+    { key: 'source', header: 'Source', filterable: true, value: (r) => SRC_LABEL[r.source],
+      render: (r) => <span className={`badge ${r.source === 'etg' ? 'text-bg-primary' : 'text-bg-light border'}`}>{SRC_LABEL[r.source]}</span> },
+    { key: 'client', header: 'Client', value: (r) => r.client },
+    { key: 'route', header: 'Trajet', value: (r) => r.route },
+    { key: 'date', header: 'Date', value: (r) => r.date },
+    { key: 'vehicle', header: 'Véhicule', filterable: true, value: (r) => r.vehicle },
+    { key: 'driver', header: 'Chauffeur', value: (r) => r.driver ?? '—' },
+    { key: 'amount', header: 'Montant', value: (r) => r.amount ?? 0, render: (r) => r.amount != null ? `${r.amount} €` : '—' },
+    { key: 'status', header: 'Statut', filterable: true, value: (r) => STATUS_LABELS[r.status],
+      render: (r) => <span className={`badge ${badge(r.status)}`}>{STATUS_LABELS[r.status]}</span> },
+  ];
+
   return (
     <>
       <div className="card card-outline card-warning">
@@ -225,10 +239,6 @@ export default function Bookings() {
                 <i className="bi bi-plus-lg me-1" />Nouvelle réservation
               </button>
             )}
-            <select className="form-select form-select-sm" value={filter} onChange={(e) => setFilter(e.target.value as never)}>
-              <option value="all">Tous statuts</option>
-              {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
-            </select>
             <button className="btn btn-sm btn-outline-secondary" onClick={load}><i className="bi bi-arrow-clockwise" /></button>
           </div>
         </div>
@@ -237,24 +247,11 @@ export default function Bookings() {
           {error && <div className="alert alert-danger m-3">{error}</div>}
           {notice && <div className="alert alert-info m-3">{notice}</div>}
           {!loading && (
-            <div className="table-responsive">
-              <table className="table table-hover align-middle mb-0" style={{ cursor: 'pointer' }}>
-                <thead><tr><th>Réf.</th><th>Source</th><th>Client</th><th>Trajet</th><th>Date</th><th>Véhicule</th><th>Chauffeur</th><th>Montant</th><th>Statut</th></tr></thead>
-                <tbody>
-                  {shown.length === 0 && <tr><td colSpan={9} className="text-center text-muted py-4">Aucune réservation.</td></tr>}
-                  {shown.map((b) => (
-                    <tr key={b.key} className={b.key === selectedKey ? 'table-active' : undefined} onClick={() => setSelectedKey(b.key)}>
-                      <td className="fw-semibold">{b.reference}</td>
-                      <td><span className={`badge ${b.source === 'etg' ? 'text-bg-primary' : 'text-bg-light border'}`}>{b.source === 'etg' ? 'ETG' : b.source === 'demo' ? 'démo' : 'Site'}</span></td>
-                      <td>{b.client}</td><td>{b.route}</td><td>{b.date}</td><td>{b.vehicle}</td>
-                      <td>{b.driver ?? '—'}</td>
-                      <td>{b.amount != null ? `${b.amount} €` : '—'}</td>
-                      <td><span className={`badge ${badge(b.status)}`}>{STATUS_LABELS[b.status]}</span></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable columns={bookingColumns} rows={rows} rowKey={(r) => r.key}
+              rowClass={(r) => r.key === selectedKey ? 'table-active' : undefined}
+              onRowClick={(r) => setSelectedKey(r.key)}
+              searchPlaceholder="Rechercher réf., client, trajet…"
+              empty="Aucune réservation." />
           )}
         </div>
       </div>
