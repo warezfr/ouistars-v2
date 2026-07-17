@@ -9,9 +9,13 @@ servers:
 
 components:
   securitySchemes:
-    basicAuth:
+    bearerAuth:
       type: http
-      scheme: basic
+      scheme: bearer
+      bearerFormat: opaque
+      description: >-
+        Jeton d'API généré dans le back-office Oui Stars (Administration → Clés API).
+        En-tête requis : `Authorization: Bearer os_live_…`
 
   schemas:
     GeoPoint:
@@ -136,7 +140,7 @@ components:
           type: string
 
 security:
-  - basicAuth: []
+  - bearerAuth: []
 
 paths:
   /search:

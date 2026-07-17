@@ -14,6 +14,7 @@ import Applications from './pages/Applications';
 import Users from './pages/Users';
 import Clients from './pages/Clients';
 import Invoices from './pages/Invoices';
+import ApiKeys from './pages/ApiKeys';
 import Placeholder from './pages/Placeholder';
 
 import CollectionList from './cms/CollectionList';
@@ -44,6 +45,7 @@ export default function AdminApp() {
             <Route path="users" element={<Users />} />
             <Route path="clients" element={<Clients />} />
             <Route path="invoices" element={<Invoices />} />
+            <Route path="api-keys" element={<ApiKeys />} />
 
             <Route path="content/:collection" element={<CollectionList />} />
             <Route path="content/:collection/:id" element={<CollectionEditor />} />

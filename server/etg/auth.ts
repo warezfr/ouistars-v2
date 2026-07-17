@@ -1,23 +1,28 @@
+import { createHash } from 'node:crypto';
 import { getServiceSupabase } from './supabase.js';
 
 /**
- * Authentification partenaire ETG.
- * ETG appelle nos webhooks en Basic Auth (login/mot de passe que nous leur
- * communiquons) — c'est le schéma déclaré dans openapi.yaml (`basicAuth`).
- * On accepte aussi un Bearer token adossé à la table `etg_api_keys`
- * (partenaires additionnels) lorsque Supabase est configuré.
+ * Authentification partenaire de l'API.
+ * Schéma principal : Bearer token (`Authorization: Bearer os_live_…`), généré
+ * depuis le back-office (Administration → Clés API). Seul le hash SHA-256 du
+ * token est stocké en base (`etg_api_keys.token_hash`) — jamais le token clair.
+ * Compat transitoire : Basic Auth (env ETG_BASIC_AUTH_*) reste accepté tant
+ * que les variables existent, pour ne pas casser une intégration en cours.
  */
 export async function verifyPartnerApiKey(authHeader: string | undefined): Promise<boolean> {
   if (!authHeader) return false;
 
-  if (authHeader.startsWith('Basic ')) {
-    return verifyBasic(authHeader.slice(6).trim());
-  }
   if (authHeader.startsWith('Bearer ')) {
     return verifyBearer(authHeader.slice(7).trim());
   }
+  if (authHeader.startsWith('Basic ')) {
+    return verifyBasic(authHeader.slice(6).trim()); // hérité — à retirer après migration des partenaires
+  }
   return false;
 }
+
+export const hashToken = (token: string): string =>
+  createHash('sha256').update(token, 'utf8').digest('hex');
 
 /** Comparaison à temps quasi constant pour éviter les attaques temporelles. */
 function safeEqual(a: string, b: string): boolean {
@@ -48,18 +53,29 @@ function verifyBasic(encoded: string): boolean {
 async function verifyBearer(token: string): Promise<boolean> {
   if (!token) return false;
 
-  // Jeton statique de repli (staging) si configuré.
+  // Jeton statique d'environnement (secours / staging).
   const staticToken = process.env.ETG_BEARER_TOKEN;
   if (staticToken && safeEqual(token, staticToken)) return true;
 
   const supabase = getServiceSupabase();
   if (!supabase) return false;
 
-  const { data, error } = await supabase
+  // Recherche par hash SHA-256 (stockage sécurisé), repli sur l'ancien champ clair.
+  const digest = hashToken(token);
+  let { data, error } = await supabase
     .from('etg_api_keys')
     .select('id, active')
-    .eq('token', token)
+    .eq('token_hash', digest)
     .maybeSingle();
+
+  if ((error || !data) && token) {
+    const legacy = await supabase
+      .from('etg_api_keys')
+      .select('id, active')
+      .eq('token', token)
+      .maybeSingle();
+    data = legacy.data; error = legacy.error;
+  }
 
   if (error || !data?.active) return false;
 

@@ -70,6 +70,7 @@ export const NAV_GROUPS: NavGroup[] = [
     section: 'Administration',
     items: [
       { label: 'Utilisateurs & rôles', icon: 'bi-people', to: '/admin/users' },
+      { label: 'Clés API', icon: 'bi-key', to: '/admin/api-keys' },
       { label: 'Pays (référentiel)', icon: 'bi-globe', collection: 'country' },
     ],
   },
