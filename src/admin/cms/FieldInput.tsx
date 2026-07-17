@@ -1,4 +1,7 @@
 import type { Field } from './types';
+import RichText from './RichText';
+import MediaUpload from './MediaUpload';
+import Repeater from './Repeater';
 
 interface Props {
   field: Field;
@@ -19,6 +22,20 @@ export default function FieldInput({ field, value, onChange, disabled }: Props) 
           value={(value as string) ?? ''} onChange={(e) => onChange(field.name, e.target.value)} />
       )}
 
+      {field.type === 'richtext' && (
+        <RichText value={(value as string) ?? ''} disabled={disabled}
+          onChange={(html) => onChange(field.name, html)} />
+      )}
+
+      {field.type === 'repeater' && (
+        <Repeater field={field} value={value} onChange={onChange} disabled={disabled} />
+      )}
+
+      {field.type === 'image' && (
+        <MediaUpload value={(value as string) ?? ''} disabled={disabled} placeholder={field.placeholder}
+          onChange={(url) => onChange(field.name, url)} />
+      )}
+
       {field.type === 'select' && (
         <select {...common} value={(value as string) ?? ''} onChange={(e) => onChange(field.name, e.target.value)}>
           <option value="">—</option>
@@ -37,14 +54,9 @@ export default function FieldInput({ field, value, onChange, disabled }: Props) 
           onChange={(e) => onChange(field.name, e.target.value === '' ? null : Number(e.target.value))} />
       )}
 
-      {(field.type === 'text' || field.type === 'image') && (
-        <>
-          <input {...common} type="text" placeholder={field.placeholder ?? (field.type === 'image' ? '/mon-image.webp ou https://…' : '')}
-            value={(value as string) ?? ''} onChange={(e) => onChange(field.name, e.target.value)} />
-          {field.type === 'image' && typeof value === 'string' && value && (
-            <img className="adm-field__thumb" src={value} alt="" loading="lazy" />
-          )}
-        </>
+      {field.type === 'text' && (
+        <input {...common} type="text" placeholder={field.placeholder}
+          value={(value as string) ?? ''} onChange={(e) => onChange(field.name, e.target.value)} />
       )}
 
       {field.help && <small className="adm-field__help">{field.help}</small>}

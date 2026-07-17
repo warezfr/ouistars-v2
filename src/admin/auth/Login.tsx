@@ -17,36 +17,51 @@ export default function Login() {
   }
 
   return (
-    <div className="adm-login">
-      <form className="adm-login__card" onSubmit={onSubmit}>
-        <div className="adm-login__brand">OUI<span>STARS</span></div>
-        <p className="adm-login__sub">Back-office — connexion</p>
+    <div className="login-page d-flex align-items-center justify-content-center min-vh-100 bg-body-tertiary">
+      <div className="login-box">
+        <div className="card card-outline card-warning shadow">
+          <div className="card-header text-center">
+            <span className="h4 fw-bold">OUI<span className="text-warning">STARS</span></span>
+            <div className="text-muted small">Back-office</div>
+          </div>
+          <div className="card-body login-card-body">
+            <p className="login-box-msg">Connectez-vous pour accéder au back-office</p>
 
-        {!configured && (
-          <p className="adm-login__warn">
-            Supabase n’est pas configuré (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).
-            La connexion est indisponible tant que ces variables ne sont pas définies.
-          </p>
-        )}
+            {!configured && (
+              <div className="alert alert-warning small">
+                Supabase n’est pas configuré (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).
+              </div>
+            )}
 
-        <label className="adm-field">
-          <span>E-mail</span>
-          <input type="email" autoComplete="username" required value={email}
-            onChange={(e) => setEmail(e.target.value)} placeholder="admin@ouistars.com" />
-        </label>
-        <label className="adm-field">
-          <span>Mot de passe</span>
-          <input type="password" autoComplete="current-password" required value={password}
-            onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
-        </label>
+            <form onSubmit={onSubmit}>
+              <div className="input-group mb-3">
+                <input type="email" className="form-control" placeholder="E-mail" autoComplete="username"
+                  required value={email} onChange={(e) => setEmail(e.target.value)} />
+                <span className="input-group-text"><i className="bi bi-envelope" /></span>
+              </div>
+              <div className="input-group mb-3">
+                <input type="password" className="form-control" placeholder="Mot de passe" autoComplete="current-password"
+                  required value={password} onChange={(e) => setPassword(e.target.value)} />
+                <span className="input-group-text"><i className="bi bi-lock" /></span>
+              </div>
 
-        {error && <p className="adm-login__err">{error}</p>}
+              {error && <div className="alert alert-danger small py-2">{error}</div>}
 
-        <button className="adm-btn adm-btn--gold" type="submit" disabled={busy || !configured}>
-          {busy ? 'Connexion…' : 'Se connecter'}
-        </button>
-        <a className="adm-login__back" href="/">← Retour au site</a>
-      </form>
+              <div className="row">
+                <div className="col-12">
+                  <button type="submit" className="btn btn-warning w-100" disabled={busy || !configured}>
+                    {busy ? 'Connexion…' : 'Se connecter'}
+                  </button>
+                </div>
+              </div>
+            </form>
+
+            <p className="mt-3 mb-0 text-center">
+              <a href="/" className="text-muted small">← Retour au site</a>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

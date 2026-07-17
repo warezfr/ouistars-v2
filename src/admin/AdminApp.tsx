@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminLayout from './layout/AdminLayout';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
+import { mountAdminLTE } from './adminlte';
 
 import Dashboard from './pages/Dashboard';
 import Bookings from './pages/Bookings';
@@ -18,13 +20,15 @@ import CollectionEditor from './cms/CollectionEditor';
 import SingletonEditor from './cms/SingletonEditor';
 
 import './admin.css';
+import './admin-overrides.css';
 
 /**
- * Back-office Oui Stars — authentifié (Supabase Auth + rôles).
- * Contenu du site piloté par le CMS générique (/admin/content/:collection),
- * modules métier dédiés, et placeholders pour l'architecture cible.
+ * Back-office Oui Stars — thème AdminLTE 4 (chargé uniquement ici).
+ * Authentifié (Supabase Auth + rôles). Contenu du site piloté par le CMS.
  */
 export default function AdminApp() {
+  useEffect(() => mountAdminLTE(), []);
+
   return (
     <AuthProvider>
       <ProtectedRoute>
@@ -32,7 +36,6 @@ export default function AdminApp() {
           <Route element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
 
-            {/* Modules métier existants */}
             <Route path="bookings" element={<Bookings />} />
             <Route path="quotes" element={<Quotes />} />
             <Route path="pricing" element={<Pricing />} />
@@ -41,12 +44,10 @@ export default function AdminApp() {
             <Route path="applications" element={<Applications />} />
             <Route path="vehicles" element={<Vehicles />} />
 
-            {/* CMS générique */}
             <Route path="content/:collection" element={<CollectionList />} />
             <Route path="content/:collection/:id" element={<CollectionEditor />} />
             <Route path="singleton/:key" element={<SingletonEditor />} />
 
-            {/* Modules planifiés */}
             <Route path="soon/:label" element={<Placeholder />} />
 
             <Route path="*" element={<Navigate to="/admin" replace />} />

@@ -27,7 +27,7 @@ export default function SingletonEditor() {
     // eslint-disable-next-line
   }, [key]);
 
-  if (!def) return <div className="adm-card">Contenu inconnu : {key}</div>;
+  if (!def) return <div className="alert alert-warning">Contenu inconnu : {key}</div>;
   const setField = (name: string, value: unknown) => { setData((d) => ({ ...d, [name]: value })); setDone(false); };
 
   async function onSave() {
@@ -37,28 +37,26 @@ export default function SingletonEditor() {
     finally { setSaving(false); }
   }
 
-  if (loading) return <div className="adm-card">Chargement…</div>;
+  if (loading) return <div className="card"><div className="card-body text-muted">Chargement…</div></div>;
 
   return (
-    <div className="adm-editor">
-      <div className="adm-toolbar"><h2 className="adm-h2">{def.label}</h2></div>
-      {!writable && <div className="adm-card adm-card--warn">Lecture seule.</div>}
-      {error && <div className="adm-card adm-card--err">Erreur : {error}</div>}
-      {done && <div className="adm-card adm-card--ok">Enregistré ✓</div>}
-      <div className="adm-card">
-        <div className="adm-form-grid">
+    <div className="card card-outline card-warning">
+      <div className="card-header"><h3 className="card-title mb-0">{def.label}</h3></div>
+      <div className="card-body">
+        {!writable && <div className="alert alert-warning">Lecture seule.</div>}
+        {error && <div className="alert alert-danger">Erreur : {error}</div>}
+        {done && <div className="alert alert-success py-2">Enregistré ✓</div>}
+        <div className="row g-3">
           {def.fields.map((f) => (
-            <div key={f.name} className={f.type === 'textarea' ? 'adm-col-2' : ''}>
+            <div key={f.name} className={['textarea', 'richtext', 'repeater', 'image'].includes(f.type) ? 'col-12' : 'col-md-6'}>
               <FieldInput field={f} value={data[f.name]} onChange={setField} disabled={!writable} />
             </div>
           ))}
         </div>
         {writable && (
-          <div className="adm-actions">
-            <button className="adm-btn adm-btn--gold" onClick={onSave} disabled={saving}>
-              {saving ? 'Enregistrement…' : 'Enregistrer'}
-            </button>
-          </div>
+          <button className="btn btn-warning mt-3" onClick={onSave} disabled={saving}>
+            <i className="bi bi-check-lg me-1" />{saving ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
         )}
       </div>
     </div>

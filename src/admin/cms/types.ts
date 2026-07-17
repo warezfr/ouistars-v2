@@ -1,5 +1,6 @@
 /** Modèle générique de contenu piloté par configuration (CMS). */
-export type FieldType = 'text' | 'textarea' | 'number' | 'boolean' | 'image' | 'select';
+export type FieldType =
+  | 'text' | 'textarea' | 'richtext' | 'number' | 'boolean' | 'image' | 'select' | 'repeater';
 
 export interface Field {
   name: string;
@@ -9,6 +10,10 @@ export interface Field {
   options?: { value: string; label: string }[];
   help?: string;
   placeholder?: string;
+  /** Sous-champs pour le type « repeater » (liste d'objets). */
+  subfields?: Field[];
+  /** Champ des sous-objets servant de libellé de ligne (repeater). */
+  itemLabel?: string;
 }
 
 export interface Collection {

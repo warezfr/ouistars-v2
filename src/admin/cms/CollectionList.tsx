@@ -24,7 +24,7 @@ export default function CollectionList() {
   }
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [collection]);
 
-  if (!def) return <div className="adm-card">Collection inconnue : {collection}</div>;
+  if (!def) return <div className="alert alert-warning">Collection inconnue : {collection}</div>;
 
   const titleOf = (r: CmsEntry) =>
     (def.titleField && (r.data[def.titleField] as string)) || r.title || r.slug || r.id.slice(0, 8);
@@ -40,45 +40,73 @@ export default function CollectionList() {
   }
 
   return (
-    <div>
-      <div className="adm-toolbar">
+    <div className="card card-outline card-warning">
+      <div className="card-header d-flex align-items-center justify-content-between">
         <div>
-          <h2 className="adm-h2">{def.label}</h2>
-          <p className="adm-muted">{rows.length} élément(s)</p>
+          <h3 className="card-title mb-0">{def.label}</h3>
+          <small className="text-muted">{rows.length} élément(s)</small>
         </div>
-        {writable && <Link className="adm-btn adm-btn--gold" to={`/admin/content/${def.key}/new`}>+ {def.singular}</Link>}
+        {writable && (
+          <Link className="btn btn-warning btn-sm" to={`/admin/content/${def.key}/new`}>
+            <i className="bi bi-plus-lg me-1" />{def.singular}
+          </Link>
+        )}
       </div>
 
-      {loading && <div className="adm-card">Chargement…</div>}
-      {error && <div className="adm-card adm-card--err">Erreur : {error}</div>}
-
-      {!loading && !error && (
-        <div className="adm-card adm-card--pad0">
-          <table className="adm-table">
-            <thead><tr><th></th><th>Titre</th><th>Statut</th><th>Ordre</th><th></th></tr></thead>
-            <tbody>
-              {rows.length === 0 && <tr><td colSpan={5} className="adm-empty">Aucun élément. {writable && 'Cliquez sur « + » pour en ajouter.'}</td></tr>}
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td className="adm-td-thumb">{thumbOf(r) && <img src={thumbOf(r)!} alt="" loading="lazy" />}</td>
-                  <td><Link className="adm-link" to={`/admin/content/${def.key}/${r.id}`}>{titleOf(r)}</Link></td>
-                  <td>
-                    <button className={`adm-pill ${r.status === 'published' ? 'is-on' : ''}`}
-                      disabled={!writable} onClick={() => toggleStatus(r)}>
-                      {r.status === 'published' ? 'Publié' : 'Brouillon'}
-                    </button>
-                  </td>
-                  <td className="adm-muted">{r.position}</td>
-                  <td className="adm-row-actions">
-                    <Link className="adm-link" to={`/admin/content/${def.key}/${r.id}`}>Éditer</Link>
-                    {writable && <button className="adm-linkbtn adm-danger" onClick={() => onDelete(r)}>Suppr.</button>}
-                  </td>
+      <div className="card-body p-0">
+        {loading && <div className="p-3 text-muted">Chargement…</div>}
+        {error && <div className="alert alert-danger m-3">Erreur : {error}</div>}
+        {!loading && !error && (
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th style={{ width: 64 }} />
+                  <th>Titre</th>
+                  <th style={{ width: 130 }}>Statut</th>
+                  <th style={{ width: 80 }}>Ordre</th>
+                  <th style={{ width: 140 }} className="text-end pe-3">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {rows.length === 0 && (
+                  <tr><td colSpan={5} className="text-center text-muted py-4">
+                    Aucun élément.{writable && ' Cliquez sur « + » pour en ajouter.'}
+                  </td></tr>
+                )}
+                {rows.map((r) => (
+                  <tr key={r.id}>
+                    <td>
+                      {thumbOf(r)
+                        ? <img src={thumbOf(r)!} alt="" loading="lazy"
+                            style={{ width: 48, height: 32, objectFit: 'cover', borderRadius: 4 }} />
+                        : <span className="text-muted"><i className="bi bi-file-earmark" /></span>}
+                    </td>
+                    <td><Link to={`/admin/content/${def.key}/${r.id}`} className="fw-semibold text-decoration-none">{titleOf(r)}</Link></td>
+                    <td>
+                      <button className={`badge border-0 ${r.status === 'published' ? 'text-bg-success' : 'text-bg-secondary'}`}
+                        disabled={!writable} onClick={() => toggleStatus(r)}>
+                        {r.status === 'published' ? 'Publié' : 'Brouillon'}
+                      </button>
+                    </td>
+                    <td className="text-muted">{r.position}</td>
+                    <td className="text-end pe-3">
+                      <Link className="btn btn-sm btn-outline-secondary me-1" to={`/admin/content/${def.key}/${r.id}`}>
+                        <i className="bi bi-pencil" />
+                      </Link>
+                      {writable && (
+                        <button className="btn btn-sm btn-outline-danger" onClick={() => onDelete(r)}>
+                          <i className="bi bi-trash" />
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -5,13 +5,16 @@ export default function Placeholder({ title }: { title?: string }) {
   const loc = useLocation();
   const label = title ?? decodeURIComponent(loc.pathname.split('/').pop() ?? 'Module');
   return (
-    <div className="adm-card adm-soon">
-      <h2 className="adm-h2">{label}</h2>
-      <p className="adm-muted">
-        Ce module fait partie de l’architecture cible du back-office et sera construit
-        lors d’une prochaine étape. La navigation et le socle (auth, rôles, CMS) sont déjà en place.
-      </p>
-      <span className="adm-soon__tag">Bientôt disponible</span>
+    <div className="card card-outline card-secondary">
+      <div className="card-body text-center py-5">
+        <i className="bi bi-cone-striped display-4 text-warning" />
+        <h4 className="mt-3">{label}</h4>
+        <p className="text-muted mb-3">
+          Ce module fait partie de l’architecture cible du back-office et sera construit lors d’une prochaine étape.
+          La navigation et le socle (auth, rôles, CMS, thème AdminLTE) sont déjà en place.
+        </p>
+        <span className="badge text-bg-warning">Bientôt disponible</span>
+      </div>
     </div>
   );
 }

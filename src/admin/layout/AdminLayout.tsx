@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { NAV_GROUPS, type NavEntry } from '@/admin/nav';
 import { useAuth } from '@/admin/auth/AuthContext';
@@ -13,6 +13,10 @@ export default function AdminLayout() {
   const loc = useLocation();
   const { email, profile, signOut } = useAuth();
   const [q, setQ] = useState('');
+  const [userOpen, setUserOpen] = useState(false);
+
+  // Repli du menu sur mobile après navigation.
+  useEffect(() => { document.body.classList.remove('sidebar-open'); }, [loc.pathname]);
 
   const currentLabel = useMemo(() => {
     for (const g of NAV_GROUPS) {
@@ -29,53 +33,98 @@ export default function AdminLayout() {
   const filtered = (items: NavEntry[]) =>
     q.trim() ? items.filter((i) => i.label.toLowerCase().includes(q.toLowerCase())) : items;
 
+  const toggleSidebar = () => document.body.classList.toggle('sidebar-collapse');
+
   return (
-    <div className="adm">
-      <aside className="adm__side">
-        <div className="adm__brand">OUI<span>STARS</span><small>Back-office</small></div>
-
-        <div className="adm__navsearch">
-          <input placeholder="Filtrer le menu…" value={q} onChange={(e) => setQ(e.target.value)} />
+    <div className="app-wrapper">
+      {/* Header */}
+      <nav className="app-header navbar navbar-expand bg-body">
+        <div className="container-fluid">
+          <ul className="navbar-nav">
+            <li className="nav-item">
+              <button className="nav-link btn btn-link" type="button" onClick={toggleSidebar} aria-label="Menu">
+                <i className="bi bi-list fs-4" />
+              </button>
+            </li>
+            <li className="nav-item d-none d-md-block">
+              <span className="navbar-text fw-semibold text-body">{currentLabel}</span>
+            </li>
+          </ul>
+          <ul className="navbar-nav ms-auto align-items-center">
+            <li className="nav-item">
+              <a className="nav-link" href="/" title="Voir le site"><i className="bi bi-box-arrow-up-right" /></a>
+            </li>
+            <li className="nav-item dropdown user-menu position-relative">
+              <button className="nav-link btn btn-link d-flex align-items-center gap-2" type="button"
+                onClick={() => setUserOpen((v) => !v)}>
+                <span className="d-none d-sm-inline text-body">{profile?.displayName ?? email ?? 'Admin'}</span>
+                <span className="badge text-bg-warning text-uppercase">{profile?.role ?? ''}</span>
+                <i className="bi bi-person-circle fs-5" />
+              </button>
+              {userOpen && (
+                <div className="dropdown-menu dropdown-menu-end show mt-2" style={{ right: 0 }}>
+                  <span className="dropdown-item-text small text-muted">{email}</span>
+                  <div className="dropdown-divider" />
+                  <a className="dropdown-item" href="/">← Retour au site</a>
+                  <button className="dropdown-item text-danger" onClick={signOut}>Se déconnecter</button>
+                </div>
+              )}
+            </li>
+          </ul>
         </div>
+      </nav>
 
-        <nav className="adm__nav">
-          {NAV_GROUPS.map((g) => {
-            const items = filtered(g.items);
-            if (!items.length) return null;
-            return (
-              <div className="adm__group" key={g.section}>
-                <p className="adm__group-title">{g.section}</p>
-                {items.map((it) => {
-                  const href = hrefOf(it);
-                  return (
-                    <NavLink key={it.label} to={href}
-                      end={href === '/admin'}
-                      className={({ isActive }) => `adm__link${isActive ? ' is-active' : ''}${it.soon ? ' is-soon' : ''}`}>
-                      {it.label}{it.soon && <span className="adm__soon-dot" title="Bientôt" />}
-                    </NavLink>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </nav>
-
-        <a className="adm__back" href="/">← Retour au site</a>
+      {/* Sidebar */}
+      <aside className="app-sidebar shadow" data-bs-theme="dark">
+        <div className="sidebar-brand">
+          <a href="/admin" className="brand-link">
+            <span className="brand-text">OUI<b className="text-warning">STARS</b></span>
+          </a>
+        </div>
+        <div className="sidebar-wrapper">
+          <div className="px-2 py-2">
+            <input className="form-control form-control-sm" placeholder="Filtrer le menu…"
+              value={q} onChange={(e) => setQ(e.target.value)} />
+          </div>
+          <nav>
+            <ul className="nav sidebar-menu flex-column" role="menu">
+              {NAV_GROUPS.map((g) => {
+                const items = filtered(g.items);
+                if (!items.length) return null;
+                return (
+                  <li key={g.section} className="nav-section-block">
+                    <span className="nav-header">{g.section}</span>
+                    {items.map((it) => {
+                      const href = hrefOf(it);
+                      return (
+                        <NavLink key={it.label} to={href} end={href === '/admin'} role="menuitem"
+                          className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
+                          <i className={`nav-icon bi ${it.icon}`} />
+                          <p>{it.label}{it.soon && <span className="badge text-bg-secondary ms-auto">bientôt</span>}</p>
+                        </NavLink>
+                      );
+                    })}
+                  </li>
+                );
+              })}
+            </ul>
+          </nav>
+        </div>
       </aside>
 
-      <div className="adm__main">
-        <header className="adm__header">
-          <h1>{currentLabel}</h1>
-          <div className="adm__tools">
-            <div className="adm__user">
-              <b>{profile?.displayName ?? email ?? 'Admin'}</b>
-              <span>{profile?.role ?? ''}</span>
-            </div>
-            <button className="adm__logout" onClick={signOut}>Déconnexion</button>
+      {/* Contenu */}
+      <main className="app-main">
+        <div className="app-content-header">
+          <div className="container-fluid">
+            <h3 className="mb-0">{currentLabel}</h3>
           </div>
-        </header>
-        <div className="adm__content"><Outlet /></div>
-      </div>
+        </div>
+        <div className="app-content">
+          <div className="container-fluid">
+            <Outlet />
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

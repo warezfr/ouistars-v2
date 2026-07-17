@@ -32,7 +32,7 @@ export default function CollectionEditor() {
     // eslint-disable-next-line
   }, [id]);
 
-  if (!def) return <div className="adm-card">Collection inconnue : {collection}</div>;
+  if (!def) return <div className="alert alert-warning">Collection inconnue : {collection}</div>;
 
   const setField = (name: string, value: unknown) => setData((d) => ({ ...d, [name]: value }));
   const title = def.titleField ? (data[def.titleField] as string) : undefined;
@@ -48,50 +48,62 @@ export default function CollectionEditor() {
     } catch (e) { setError((e as Error).message); setSaving(false); }
   }
 
-  if (loading) return <div className="adm-card">Chargement…</div>;
+  if (loading) return <div className="card"><div className="card-body text-muted">Chargement…</div></div>;
 
   return (
-    <div className="adm-editor">
-      <div className="adm-toolbar">
-        <h2 className="adm-h2">{isNew ? `Nouveau — ${def.singular}` : `Éditer — ${def.singular}`}</h2>
-        <button className="adm-linkbtn" onClick={() => nav(`/admin/content/${def.key}`)}>← Retour</button>
+    <>
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <h5 className="mb-0">{isNew ? `Nouveau — ${def.singular}` : `Éditer — ${def.singular}`}</h5>
+        <button className="btn btn-sm btn-outline-secondary" onClick={() => nav(`/admin/content/${def.key}`)}>
+          <i className="bi bi-arrow-left me-1" />Retour
+        </button>
       </div>
 
-      {!writable && <div className="adm-card adm-card--warn">Lecture seule — votre rôle ne permet pas la modification.</div>}
-      {error && <div className="adm-card adm-card--err">Erreur : {error}</div>}
+      {!writable && <div className="alert alert-warning">Lecture seule — votre rôle ne permet pas la modification.</div>}
+      {error && <div className="alert alert-danger">Erreur : {error}</div>}
 
-      <div className="adm-card">
-        <div className="adm-form-grid">
-          {def.fields.map((f) => (
-            <div key={f.name} className={f.type === 'textarea' ? 'adm-col-2' : ''}>
-              <FieldInput field={f} value={data[f.name]} onChange={setField} disabled={!writable} />
+      <div className="row g-3">
+        <div className="col-lg-8">
+          <div className="card card-outline card-warning">
+            <div className="card-body">
+              <div className="row g-3">
+                {def.fields.map((f) => (
+                  <div key={f.name}
+                    className={['textarea', 'richtext', 'repeater', 'image'].includes(f.type) ? 'col-12' : 'col-md-6'}>
+                    <FieldInput field={f} value={data[f.name]} onChange={setField} disabled={!writable} />
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-
-        <div className="adm-form-meta">
-          <label className="adm-field">
-            <span>Statut</span>
-            <select value={status} disabled={!writable} onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}>
-              <option value="published">Publié</option>
-              <option value="draft">Brouillon</option>
-            </select>
-          </label>
-          <label className="adm-field">
-            <span>Ordre</span>
-            <input type="number" value={position} disabled={!writable}
-              onChange={(e) => setPosition(Number(e.target.value))} />
-          </label>
-        </div>
-
-        {writable && (
-          <div className="adm-actions">
-            <button className="adm-btn adm-btn--gold" onClick={onSave} disabled={saving}>
-              {saving ? 'Enregistrement…' : 'Enregistrer'}
-            </button>
           </div>
-        )}
+        </div>
+
+        <div className="col-lg-4">
+          <div className="card card-outline card-secondary">
+            <div className="card-header"><h3 className="card-title mb-0">Publication</h3></div>
+            <div className="card-body">
+              <div className="mb-3">
+                <label className="form-label">Statut</label>
+                <select className="form-select" value={status} disabled={!writable}
+                  onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}>
+                  <option value="published">Publié</option>
+                  <option value="draft">Brouillon</option>
+                </select>
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Ordre d’affichage</label>
+                <input type="number" className="form-control" value={position} disabled={!writable}
+                  onChange={(e) => setPosition(Number(e.target.value))} />
+              </div>
+              {writable && (
+                <button className="btn btn-warning w-100" onClick={onSave} disabled={saving}>
+                  <i className="bi bi-check-lg me-1" />{saving ? 'Enregistrement…' : 'Enregistrer'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
