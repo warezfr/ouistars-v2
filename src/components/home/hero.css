@@ -28,3 +28,6 @@
   transition: border-color 0.25s var(--os-ease), color 0.25s var(--os-ease);
 }
 .os-hero__chip:hover { border-color: var(--os-gold); color: var(--os-ivory); }
+
+/* Titre hero réduit (demande client) */
+.os-title-hero { font-size: clamp(1.9rem, 3.4vw, 3.2rem); line-height: 1.12; }

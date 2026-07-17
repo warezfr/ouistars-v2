@@ -1,5 +1,4 @@
 import { useI18n } from '@/i18n';
-import { SERVICES } from '@/data/services';
 import FareCalculator from './FareCalculator';
 import './hero.css';
 
@@ -7,7 +6,7 @@ interface Props { onBook: (prefill?: string) => void; onQuote: () => void; }
 
 /** Hero vidéo plein écran — imagerie luxe, voile noir → transparent + halo doré. */
 export default function Hero({ onBook, onQuote }: Props) {
-  const { lang, t } = useI18n();
+  const { t } = useI18n();
   return (
     <section className="relative flex min-h-screen items-center overflow-hidden pb-16 pt-32" id="top">
       <video
@@ -42,11 +41,6 @@ export default function Hero({ onBook, onQuote }: Props) {
             <button className="os-btn os-btn--gold" onClick={() => onBook()}>{t.hero.ctaBook}</button>
             <button className="os-btn os-btn--ghost" onClick={onQuote}>{t.hero.ctaQuote}</button>
           </div>
-          <ul className="mt-7 flex max-w-[60ch] list-none flex-wrap gap-2 p-0" aria-label={t.services.title}>
-            {SERVICES.map((s) => (
-              <li key={s.id} className="os-hero__chip">{lang === 'fr' ? s.fr : s.en}</li>
-            ))}
-          </ul>
         </div>
 
         {/* Calculateur en carte « verre fumé » (voir calculator.css) */}

@@ -105,3 +105,14 @@
   }
   .os-nav__mobile-cta .os-btn { justify-content: center; }
 }
+
+/* ——— Réorganisation : logo + marque à gauche, liens parfaitement centrés, actions droite épurées ——— */
+.os-nav__brand { display: inline-flex; align-items: center; gap: 10px; }
+.os-nav__logo { display: block; width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(0 2px 8px rgba(201, 162, 75, 0.35)); }
+@media (min-width: 1081px) {
+  .os-nav__inner { position: relative; }
+  .os-nav__links {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    margin: 0; flex-wrap: nowrap; justify-content: center;
+  }
+}
