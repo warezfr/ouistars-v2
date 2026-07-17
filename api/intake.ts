@@ -87,6 +87,31 @@ function serverPrice(p: z.infer<typeof Pricing>): number | null {
   return null;
 }
 
+/**
+ * Insertion tolérante au schéma : si une colonne n'existe pas dans la table
+ * (PostgREST PGRST204), on la retire et on réessaie. Rend l'API robuste aux
+ * différences de schéma sans migration manuelle.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function insertResilient(
+  db: any, table: string, row: Record<string, unknown>,
+): Promise<{ error: { message: string } | null; dropped: string[] }> {
+  const payload = { ...row };
+  const dropped: string[] = [];
+  for (let i = 0; i < 12; i++) {
+    const { error } = await db.from(table).insert(payload);
+    if (!error) return { error: null, dropped };
+    const m = /Could not find the '([^']+)' column/.exec(error.message);
+    if (error.code === 'PGRST204' && m && m[1] in payload) {
+      delete payload[m[1]];
+      dropped.push(m[1]);
+      continue;
+    }
+    return { error, dropped };
+  }
+  return { error: { message: 'trop de colonnes manquantes' }, dropped };
+}
+
 const esc = (s: unknown) =>
   String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -130,7 +155,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const amount = pricing ? serverPrice(pricing) : null;
 
       if (supabase) {
-        const { error } = await supabase.from('website_bookings').insert({
+        const { error } = await insertResilient(supabase, 'website_bookings', {
           reference, channel, ...data,
           email: data.email || null,
           price_amount: amount,
@@ -168,7 +193,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (type === 'quote') {
       const data = QuoteData.parse(body.data ?? {});
       if (supabase) {
-        const { error } = await supabase.from('quotes').insert({ reference, channel, ...data, email: data.email || null });
+        const { error } = await insertResilient(supabase, 'quotes', { reference, channel, ...data, email: data.email || null });
         if (error) throw error;
       }
       if (data.email) {
@@ -193,7 +218,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (type === 'chauffeur') {
       const data = ChauffeurData.parse(body.data ?? {});
       if (supabase) {
-        const { error } = await supabase.from('chauffeur_applications').insert({ reference, ...data, email: data.email || null });
+        const { error } = await insertResilient(supabase, 'chauffeur_applications', { reference, ...data, email: data.email || null });
         if (error) throw error;
       }
       if (ops) {
