@@ -116,3 +116,10 @@
     margin: 0; flex-wrap: nowrap; justify-content: center;
   }
 }
+
+/* Les liens étant hors flux (centrés en absolu), on repousse les actions à droite. */
+@media (min-width: 1081px) {
+  .os-nav__actions { margin-left: auto; }
+  .os-nav__links { max-width: calc(100% - 480px); }
+  .os-nav__links a { font-size: 0.7rem; letter-spacing: 0.14em; }
+}
