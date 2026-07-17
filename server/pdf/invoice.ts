@@ -46,14 +46,17 @@ export async function buildInvoice(d: InvoiceData): Promise<Buffer> {
   if (d.clientPhone) { doc.text(`T. ${d.clientPhone}`, 48, cy); cy += 13; }
   if (d.clientEmail) { doc.text(`E. ${d.clientEmail}`, 48, cy); cy += 13; }
 
-  // Titre + méta — droite
-  doc.fillColor(GOLD).fontSize(30).font('Helvetica-Bold').text(title, 320, y - 4, { width: 227, align: 'right' });
+  // Titre + méta — droite (taille auto-ajustée pour tenir sur une ligne)
+  doc.font('Helvetica-Bold');
+  let titleSize = 30;
+  while (titleSize > 14 && doc.fontSize(titleSize).widthOfString(title) > 227) titleSize -= 2;
+  doc.fillColor(GOLD).fontSize(titleSize).text(title, 320, y - 4, { width: 227, align: 'right', lineBreak: false });
   const meta: [string, string][] = [
     ['Date', d.date],
     ['N° document', d.number],
     ['Réf. réservation', d.reference],
   ];
-  let my = y + 34;
+  let my = y - 4 + titleSize + 12;
   for (const [k, v] of meta) {
     doc.fillColor(MUT).fontSize(8.5).font('Helvetica').text(k, 330, my, { width: 110, align: 'right' });
     doc.fillColor(INK).fontSize(8.5).font('Helvetica-Bold').text(`:  ${v}`, 445, my, { width: 102 });
@@ -73,10 +76,15 @@ export async function buildInvoice(d: InvoiceData): Promise<Buffer> {
 
   let subtotal = 0;
   d.lines.forEach((l, i) => {
-    const rowH = l.sub ? 34 : 24;
+    // Hauteur dynamique selon le libellé (les adresses longues ne débordent plus).
+    doc.font('Helvetica-Bold').fontSize(9.5);
+    const labelH = doc.heightOfString(l.label, { width: 255 });
+    doc.font('Helvetica').fontSize(7.5);
+    const subH = l.sub ? doc.heightOfString(l.sub, { width: 255 }) : 0;
+    const rowH = Math.max(24, 7 + labelH + (l.sub ? subH + 3 : 0) + 7);
     if (i % 2 === 0) doc.rect(48, y, cols.right - 48, rowH).fill(PAPER);
     doc.fillColor(INK).fontSize(9.5).font('Helvetica-Bold').text(l.label, cols.desc + 10, y + 7, { width: 255 });
-    if (l.sub) doc.fillColor(MUT).fontSize(7.5).font('Helvetica').text(l.sub, cols.desc + 10, y + 20, { width: 255 });
+    if (l.sub) doc.fillColor(MUT).fontSize(7.5).font('Helvetica').text(l.sub, cols.desc + 10, y + 7 + labelH + 3, { width: 255 });
     const lineTotal = l.qty * l.unit;
     subtotal += lineTotal;
     doc.fillColor(INK).fontSize(9.5).font('Helvetica');

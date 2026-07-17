@@ -13,7 +13,7 @@ export const DOC_CSS = `
 .osdoc__brand-name { font-size:1.25rem; font-weight:800; letter-spacing:.08em; }
 .osdoc__brand-name span { color:#c9a227; }
 .osdoc__brand-sub { font-size:.55rem; letter-spacing:.14em; color:#9aa0aa; }
-.osdoc__contacts { display:flex; gap:22px; font-size:.68rem; }
+.osdoc__contacts { display:flex; gap:22px; font-size:.68rem; white-space:nowrap; }
 .osdoc__contacts b { display:block; color:#c9a227; font-size:.6rem; letter-spacing:.08em; margin-bottom:2px; }
 .osdoc__body { padding:26px 32px 0; }
 .osdoc__top { display:flex; justify-content:space-between; gap:24px; margin-bottom:22px; }
@@ -22,7 +22,8 @@ export const DOC_CSS = `
 .osdoc__to .name { font-size:1.05rem; font-weight:700; margin:8px 0 4px; }
 .osdoc__to .line { font-size:.78rem; color:#666; }
 .osdoc__title { text-align:right; }
-.osdoc__title h2 { margin:0 0 10px; font-size:2rem; letter-spacing:.06em; color:#c9a227; font-weight:800; }
+.osdoc__title h2 { margin:0 0 10px; font-size:1.9rem; letter-spacing:.05em; color:#c9a227; font-weight:800; white-space:nowrap; }
+.osdoc__title h2.long { font-size:1.3rem; }
 .osdoc__meta { font-size:.74rem; color:#666; }
 .osdoc__meta div { margin-bottom:3px; }
 .osdoc__meta b { color:#1a1a1a; }
@@ -65,8 +66,9 @@ export const DOC_CSS = `
 .oswel__corner.tr { top:26px; right:26px; border-left:0; border-bottom:0; }
 .oswel__corner.bl { bottom:26px; left:26px; border-right:0; border-top:0; }
 .oswel__corner.br { bottom:26px; right:26px; border-left:0; border-top:0; }
-.oswel__logo { height:64px; margin-bottom:8px; }
-.oswel__brand { font-size:1.6rem; font-weight:800; letter-spacing:.1em; }
+.oswel__brandrow { display:flex; align-items:center; gap:16px; }
+.oswel__logo { height:58px; display:block; }
+.oswel__brand { font-size:1.7rem; font-weight:800; letter-spacing:.12em; line-height:1; }
 .oswel__brand span { color:#c9a227; }
 .oswel__hello { color:#c9a227; letter-spacing:.5em; font-size:clamp(.7rem,1.6vw,1rem); margin:5vh 0 3vh; }
 .oswel__name { font-weight:800; text-transform:uppercase; line-height:1.05;

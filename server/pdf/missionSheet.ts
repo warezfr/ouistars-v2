@@ -65,9 +65,13 @@ export async function buildMissionSheet(d: MissionData, logo?: Buffer | null): P
   if (logo) {
     try { doc.image(logo, W / 2 - 32, 56, { height: 64 }); } catch { /* texte seul */ }
   }
-  doc.fillColor('#ffffff').fontSize(24).font('Helvetica-Bold')
-    .text('OUI', 0, logo ? 128 : 88, { width: W / 2 + 24, align: 'right', continued: true })
-    .fillColor(GOLD).text('STARS');
+  doc.font('Helvetica-Bold').fontSize(24);
+  const wOui = doc.widthOfString('OUI');
+  const wStars = doc.widthOfString('STARS');
+  const bx = (W - (wOui + wStars)) / 2;
+  const by = logo ? 132 : 90;
+  doc.fillColor('#ffffff').text('OUI', bx, by, { lineBreak: false });
+  doc.fillColor(GOLD).text('STARS', bx + wOui, by, { lineBreak: false });
 
   // WELCOME / BIENVENUE
   doc.fillColor(GOLD).fontSize(13).font('Helvetica')

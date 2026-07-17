@@ -67,11 +67,13 @@ export function bandHeader(doc: PDFKit.PDFDocument, logo: Buffer | null, contact
   }
   const cx = 350;
   doc.fillColor(GOLD).fontSize(7).font('Helvetica-Bold');
-  doc.text('TÉLÉPHONE', cx, 24); doc.text('E-MAIL', cx + 90, 24); doc.text('SITE WEB', cx + 180, 24);
+  doc.text('TÉLÉPHONE', cx, 24, { lineBreak: false });
+  doc.text('E-MAIL', cx + 90, 24, { lineBreak: false });
+  doc.text('SITE WEB', cx + 180, 24, { lineBreak: false });
   doc.fillColor('#e8e8ec').fontSize(7.5).font('Helvetica');
-  doc.text(contact.phone, cx, 35, { width: 85 });
-  doc.text(contact.email, cx + 90, 35, { width: 88 });
-  doc.text(contact.site, cx + 180, 35, { width: 75 });
+  doc.text(contact.phone, cx, 35, { lineBreak: false });
+  doc.text(contact.email, cx + 90, 35, { lineBreak: false });
+  doc.text(contact.site, cx + 180, 35, { lineBreak: false });
   doc.rect(0, 88, 595, 3).fill(GOLD);
   doc.restore();
   return 110;
@@ -79,6 +81,8 @@ export function bandHeader(doc: PDFKit.PDFDocument, logo: Buffer | null, contact
 
 /** Vague de pied de page (or + nuit) avec message — inspirée du template. */
 export function waveFooter(doc: PDFKit.PDFDocument, message = 'Merci de votre confiance', sub = 'Oui Stars — Premium Chauffeur Service') {
+  // Empêche pdfkit d'ajouter des pages : le pied se dessine sous la marge basse.
+  doc.page.margins.bottom = 0;
   doc.save();
   doc.moveTo(0, 780).bezierCurveTo(160, 735, 380, 815, 595, 762)
     .lineTo(595, 842).lineTo(0, 842).closePath().fill(GOLD);
@@ -105,6 +109,7 @@ export function field(doc: PDFKit.PDFDocument, label: string, value: string, y: 
 }
 
 export function footer(doc: PDFKit.PDFDocument) {
+  doc.page.margins.bottom = 0; // pas de saut de page pour le pied
   doc.fillColor(MUT).fontSize(8).font('Helvetica')
     .text('Oui Stars — 78 Av. des Champs-Élysées, 75008 Paris — info@ouistars.com — +33 6 51 03 03 06', 48, 790, { align: 'center', width: 499 });
 }

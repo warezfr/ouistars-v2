@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
 import { useSingleton } from '@/lib/cms';
+import { supabase } from '@/lib/supabase';
 import { DOC_CSS } from './docStyles';
 
 /** Données normalisées d'un document affichable/imprimable. */
@@ -96,11 +97,35 @@ export default function DocumentModal({ doc, onClose }: Props) {
     `mailto:${doc.client.email ?? ''}?subject=${encodeURIComponent(`${title} ${doc.reference} — Oui Stars`)}` +
     `&body=${encodeURIComponent(`Bonjour ${doc.client.name},\n\nVeuillez trouver votre ${title.toLowerCase()} ${doc.number} (réf. ${doc.reference}).\n\nBien cordialement,\nOui Stars`)}`;
 
-  const whatsapp = () => {
-    const digits = (doc.client.phone ?? '').replace(/\D/g, '');
-    const text = encodeURIComponent(`Bonjour ${doc.client.name}, votre ${title.toLowerCase()} ${doc.number} (réf. ${doc.reference}) — Oui Stars.`);
-    return digits ? `https://wa.me/${digits.replace(/^0/, '33')}?text=${text}` : null;
-  };
+  const waDigits = (doc.client.phone ?? '').replace(/\D/g, '').replace(/^0/, '33');
+
+  /** WhatsApp ne permet pas de joindre un fichier via lien : on téléverse le PDF
+   *  dans le Storage (public) et on joint son URL dans le message. */
+  async function shareWhatsApp() {
+    setBusy('wa'); setNotice(null);
+    let link = '';
+    try {
+      const res = await fetch('/api/documents/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: doc.reference, type: API_TYPES[doc.kind] }),
+      });
+      if (res.ok && supabase) {
+        const blob = await res.blob();
+        const path = `docs/${doc.number}.pdf`;
+        const { error } = await supabase.storage.from('cms').upload(path, blob, {
+          upsert: true, contentType: 'application/pdf', cacheControl: '60',
+        });
+        if (!error) link = supabase.storage.from('cms').getPublicUrl(path).data.publicUrl;
+      }
+    } catch { /* lien absent → message texte seul */ }
+    const text = encodeURIComponent(
+      `Bonjour ${doc.client.name}, votre ${title.toLowerCase()} ${doc.number} (réf. ${doc.reference}) — Oui Stars.` +
+      (link ? `\n\nDocument PDF : ${link}` : ''),
+    );
+    window.open(`https://wa.me/${waDigits}?text=${text}`, '_blank');
+    if (!link) setNotice('PDF non joint (lien indisponible) — message texte envoyé.');
+    setBusy(null);
+  }
 
   return (
     <>
@@ -121,10 +146,11 @@ export default function DocumentModal({ doc, onClose }: Props) {
                   title={doc.client.email ? `Envoyer à ${doc.client.email}` : 'Pas d’e-mail client'}>
                   <i className={`bi ${busy === 'send' ? 'bi-hourglass-split' : 'bi-envelope'} me-1`} />Envoyer
                 </button>
-                {whatsapp() && (
-                  <a className="btn btn-sm btn-outline-success" href={whatsapp()!} target="_blank" rel="noreferrer">
-                    <i className="bi bi-whatsapp me-1" />WhatsApp
-                  </a>
+                {waDigits && (
+                  <button className="btn btn-sm btn-outline-success" onClick={shareWhatsApp} disabled={busy === 'wa'}
+                    title="Envoie le message avec le lien du PDF">
+                    <i className={`bi ${busy === 'wa' ? 'bi-hourglass-split' : 'bi-whatsapp'} me-1`} />WhatsApp
+                  </button>
                 )}
                 {doc.kind === 'mission' && (
                   <button className="btn btn-sm btn-dark" onClick={() => setWelcome(true)}>
@@ -163,7 +189,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
                       {doc.client.email && <div className="line">E. {doc.client.email}</div>}
                     </div>
                     <div className="osdoc__title">
-                      <h2>{title}</h2>
+                      <h2 className={title.length > 10 ? 'long' : undefined}>{title}</h2>
                       <div className="osdoc__meta">
                         <div>Date : <b>{doc.date}</b></div>
                         <div>N° document : <b>{doc.number}</b></div>
@@ -265,8 +291,10 @@ function WelcomeScreen({ clientName, reference, flight, logo, brand, onClose }: 
         <button onClick={toggleFs}><i className="bi bi-arrows-fullscreen me-1" />Plein écran</button>
         <button onClick={onClose}><i className="bi bi-x-lg" /></button>
       </div>
-      <img className="oswel__logo" src={logo} alt="" />
-      <div className="oswel__brand">{brand.slice(0, 3)}<span>{brand.slice(3)}</span></div>
+      <div className="oswel__brandrow">
+        <img className="oswel__logo" src={logo} alt="" />
+        <div className="oswel__brand">{brand.slice(0, 3)}<span>{brand.slice(3)}</span></div>
+      </div>
       <div className="oswel__hello">WELCOME · BIENVENUE</div>
       <div className="oswel__name">{clientName}</div>
       <div className="oswel__rule" />
