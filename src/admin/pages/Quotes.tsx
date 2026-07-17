@@ -26,6 +26,7 @@ export default function Quotes() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<DocData | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   async function load() {
     setLoading(true); setError(null);
@@ -68,6 +69,33 @@ export default function Quotes() {
     footNote: 'Devis valable 30 jours. Estimation susceptible d’ajustement selon le programme définitif.',
   });
 
+  /** Devis accepté → réservation confirmée (la chaîne continue jusqu'à la facture). */
+  async function convert(q: Row) {
+    if (!supabase || q.demo) return;
+    setInfo(null); setError(null);
+    const parts = (q.contact ?? q.company ?? '').trim().split(/\s+/);
+    const reference = `EV-${q.reference.replace(/^WEB-|^OS-/, '')}`;
+    const { error } = await supabase.from('website_bookings').insert({
+      reference,
+      channel: 'devis',
+      first_name: parts.shift() ?? q.company ?? '',
+      last_name: parts.join(' '),
+      email: q.email ?? null,
+      phone: q.phone ?? null,
+      pickup: q.event ?? 'Événement',
+      destination: '—',
+      travel_date: q.dates.split(' ')[0] || null,
+      passengers: q.vehicles,
+      prefill: `Événement : ${q.event} · ${q.dates} · ${q.vehicles} véhicule(s)`,
+      notes: q.details ?? null,
+      price_amount: q.amount ?? null,
+      status: 'confirmed',
+    });
+    if (error) { setError(`Conversion impossible : ${error.message}`); return; }
+    await setStatus(q, 'accepted');
+    setInfo(`Devis converti en réservation ${reference} — retrouvez-la dans Réservations (et « À facturer » si un montant est renseigné).`);
+  }
+
   async function setStatus(r: Row, status: string) {
     setRows((rs) => rs.map((x) => (x.id === r.id ? { ...x, status } : x)));
     if (!supabase || r.demo) return;
@@ -87,6 +115,7 @@ export default function Quotes() {
       <div className="card-body p-0">
         {loading && <div className="p-3 text-muted">Chargement…</div>}
         {error && <div className="alert alert-danger m-3">{error}</div>}
+        {info && <div className="alert alert-success m-3">{info}</div>}
         {!loading && (
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0">
@@ -100,7 +129,13 @@ export default function Quotes() {
                     <td>{q.company}{q.email && <div className="small text-muted">{q.email}</div>}</td>
                     <td>{q.event}</td><td>{q.dates}</td><td>{q.vehicles}</td>
                     <td>{q.amount != null ? `${q.amount.toFixed(0)} €` : '—'}</td>
-                    <td>
+                    <td className="text-nowrap">
+                      {writable && !q.demo && (q.status === 'accepted' || q.status === 'sent' || q.status === 'in_progress') && (
+                        <button className="btn btn-sm btn-success me-1" title="Convertir en réservation"
+                          onClick={() => convert(q)}>
+                          <i className="bi bi-arrow-right-circle" />
+                        </button>
+                      )}
                       {writable && !q.demo ? (
                         <select className={`form-select form-select-sm badge-select`} value={q.status}
                           onChange={(e) => setStatus(q, e.target.value)}>

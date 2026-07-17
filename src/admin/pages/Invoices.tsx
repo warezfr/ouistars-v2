@@ -1,146 +1,243 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import DocumentModal, { type DocData } from '../documents/DocumentModal';
+import { useAuth, canWrite } from '@/admin/auth/AuthContext';
 
 /**
- * Factures — générées à la volée depuis les réservations facturables
- * (confirmée / assignée / terminée). Numérotation FA-<réf>.
+ * Facturation conforme : registre `invoices` (numérotation continue FA-AAAA-NNNN,
+ * émission atomique via issue_invoice), statut payé/impayé, PDF archivé,
+ * et liste des réservations facturables restantes.
  */
-interface Row {
-  key: string;
-  source: 'site' | 'etg';
-  reference: string;
-  client: string;
-  email?: string;
-  route: string;
-  date: string;
-  amount: number;
-  status: string;
+interface Invoice {
+  id: string; number: string; reference: string; source: string;
+  client_name: string; client_email?: string; client_phone?: string;
+  route?: string; service_date?: string; amount: number;
+  status: 'unpaid' | 'paid' | 'cancelled'; issued_at: string; pdf_path?: string;
+}
+interface Billable {
+  key: string; source: 'site' | 'etg'; reference: string; client: string;
+  email?: string; phone?: string; route: string; date: string; amount: number; status: string;
 }
 
-const BILLABLE = ['confirmed', 'assigned', 'completed'];
+const BILLABLE_STATUSES = ['confirmed', 'assigned', 'completed'];
 
 export default function Invoices() {
-  const [rows, setRows] = useState<Row[]>([]);
+  const { profile } = useAuth();
+  const writable = canWrite(profile?.role);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [billables, setBillables] = useState<Billable[]>([]);
+  const [registerReady, setRegisterReady] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [view, setView] = useState<DocData | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      if (!supabase) { setError('Supabase non configuré.'); setLoading(false); return; }
-      const out: Row[] = [];
-      const [site, etg] = await Promise.all([
-        supabase.from('website_bookings').select('*').in('status', BILLABLE).order('created_at', { ascending: false }).limit(300),
-        supabase.from('etg_orders').select('*').order('created_at', { ascending: false }).limit(300),
-      ]);
-      if (site.error && etg.error) { setError(site.error.message); setLoading(false); return; }
-      for (const b of site.data ?? []) {
-        if (b.price_amount == null) continue;
-        out.push({
-          key: `s-${b.id}`, source: 'site', reference: b.reference,
-          client: [b.first_name, b.last_name].filter(Boolean).join(' ') || b.email || '—',
-          email: b.email ?? undefined,
-          route: b.prefill || [b.pickup, b.destination].filter(Boolean).join(' → ') || '—',
-          date: [b.travel_date, b.travel_time].filter(Boolean).join(' '),
-          amount: Number(b.price_amount), status: b.status,
-        });
-      }
-      for (const o of etg.data ?? []) {
-        if (o.etg_status === 'cancelled') continue;
-        const mp = (o.main_passenger ?? {}) as { first_name?: string; last_name?: string; email?: string };
-        out.push({
-          key: `e-${o.order_id}`, source: 'etg', reference: o.order_id,
-          client: [mp.first_name, mp.last_name].filter(Boolean).join(' ') || '—',
-          email: mp.email,
-          route: `${(o.search_payload?.start_point?.iata ?? o.search_payload?.start_point?.address ?? '—')} → ${(o.search_payload?.end_point?.iata ?? o.search_payload?.end_point?.address ?? '—')}`,
-          date: (o.start_time ?? '').replace('T', ' ').slice(0, 16),
-          amount: Number(o.price_amount ?? 0), status: o.workflow_status ?? 'confirmed',
-        });
-      }
-      setRows(out);
-      setLoading(false);
-    })();
-  }, []);
+  async function load() {
+    if (!supabase) { setError('Supabase non configuré.'); setLoading(false); return; }
+    setLoading(true); setError(null);
 
-  async function download(r: Row) {
-    setBusy(r.key);
-    try {
-      const res = await fetch('/api/documents/generate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reference: r.reference, type: 'invoice' }),
+    const inv = await supabase.from('invoices').select('*').order('issued_at', { ascending: false }).limit(300);
+    if (inv.error) {
+      // Table absente → registre pas encore migré
+      setRegisterReady(false);
+    } else {
+      setRegisterReady(true);
+      setInvoices((inv.data ?? []) as Invoice[]);
+    }
+    const invoicedRefs = new Set((inv.data ?? []).map((i) => i.reference));
+
+    const out: Billable[] = [];
+    const [site, etg] = await Promise.all([
+      supabase.from('website_bookings').select('*').in('status', BILLABLE_STATUSES).order('created_at', { ascending: false }).limit(300),
+      supabase.from('etg_orders').select('*').order('created_at', { ascending: false }).limit(300),
+    ]);
+    for (const b of site.data ?? []) {
+      if (b.price_amount == null || invoicedRefs.has(b.reference)) continue;
+      out.push({
+        key: `s-${b.id}`, source: 'site', reference: b.reference,
+        client: [b.first_name, b.last_name].filter(Boolean).join(' ') || b.email || '—',
+        email: b.email ?? undefined, phone: b.phone ?? undefined,
+        route: b.prefill || [b.pickup, b.destination].filter(Boolean).join(' → ') || '—',
+        date: [b.travel_date, b.travel_time].filter(Boolean).join(' '),
+        amount: Number(b.price_amount), status: b.status,
       });
-      if (!res.ok) throw new Error();
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = `FA-${r.reference}.pdf`; a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      setError('Génération impossible (vérifiez SUPABASE_SERVICE_ROLE_KEY côté Vercel).');
+    }
+    for (const o of etg.data ?? []) {
+      if (o.etg_status === 'cancelled' || o.price_amount == null || invoicedRefs.has(o.order_id)) continue;
+      const mp = (o.main_passenger ?? {}) as { first_name?: string; last_name?: string; email?: string; phone_number?: string };
+      out.push({
+        key: `e-${o.order_id}`, source: 'etg', reference: o.order_id,
+        client: [mp.first_name, mp.last_name].filter(Boolean).join(' ') || '—',
+        email: mp.email, phone: mp.phone_number,
+        route: `${o.search_payload?.start_point?.iata ?? o.search_payload?.start_point?.address ?? '—'} → ${o.search_payload?.end_point?.iata ?? o.search_payload?.end_point?.address ?? '—'}`,
+        date: (o.start_time ?? '').replace('T', ' ').slice(0, 16),
+        amount: Number(o.price_amount), status: o.workflow_status ?? 'confirmed',
+      });
+    }
+    setBillables(out);
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  /** Émet la facture (n° séquentiel atomique) puis archive le PDF dans Storage. */
+  async function issue(b: Billable) {
+    if (!supabase) return;
+    setBusy(b.key); setError(null);
+    try {
+      const { data, error } = await supabase.rpc('issue_invoice', {
+        p_reference: b.reference, p_source: b.source, p_client_name: b.client,
+        p_client_email: b.email ?? null, p_client_phone: b.phone ?? null,
+        p_route: b.route, p_service_date: b.date, p_amount: b.amount,
+      });
+      if (error) throw error;
+      const row = data as Invoice;
+
+      // Archive le PDF officiel dans le Storage (non bloquant).
+      try {
+        const res = await fetch('/api/documents/generate', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reference: b.reference, type: 'invoice', number: row.number }),
+        });
+        if (res.ok) {
+          const blob = await res.blob();
+          const path = `invoices/${row.number}.pdf`;
+          const up = await supabase.storage.from('cms').upload(path, blob, {
+            upsert: true, contentType: 'application/pdf',
+          });
+          if (!up.error) await supabase.from('invoices').update({ pdf_path: path }).eq('id', row.id);
+        }
+      } catch { /* archivage best-effort */ }
+
+      await load();
+    } catch (e) {
+      setError(`Émission impossible : ${(e as Error).message}`);
     } finally {
       setBusy(null);
     }
   }
 
-  const total = rows.reduce((s, r) => s + r.amount, 0);
+  async function setPaid(inv: Invoice, paid: boolean) {
+    if (!supabase) return;
+    const { error } = await supabase.from('invoices')
+      .update({ status: paid ? 'paid' : 'unpaid', paid_at: paid ? new Date().toISOString() : null })
+      .eq('id', inv.id);
+    if (error) setError(error.message); else load();
+  }
 
-  const toDoc = (r: Row): DocData => ({
-    kind: 'invoice',
-    reference: r.reference,
-    number: `FA-${r.reference.replace(/^OS-?/, '')}`,
-    date: new Date().toISOString().slice(0, 10),
-    client: { name: r.client, email: r.email },
-    items: [{ label: `Transport avec chauffeur — ${r.route}`, sub: r.date, qty: 1, unit: r.amount }],
+  const toDoc = (i: Invoice): DocData => ({
+    kind: 'invoice', reference: i.reference, number: i.number,
+    date: (i.issued_at ?? '').slice(0, 10),
+    client: { name: i.client_name, email: i.client_email, phone: i.client_phone },
+    items: [{ label: `Transport avec chauffeur — ${i.route ?? ''}`, sub: i.service_date, qty: 1, unit: Number(i.amount) }],
   });
 
+  const totalIssued = invoices.filter((i) => i.status !== 'cancelled').reduce((s, i) => s + Number(i.amount), 0);
+  const totalUnpaid = invoices.filter((i) => i.status === 'unpaid').reduce((s, i) => s + Number(i.amount), 0);
+
   return (
-    <div className="card card-outline card-warning">
-      <div className="card-header d-flex justify-content-between align-items-center">
-        <h3 className="card-title mb-0">Factures
-          <span className="badge text-bg-secondary ms-2">{rows.length}</span>
-        </h3>
-        <span className="text-muted small">Total facturable : <strong>{total.toFixed(0)} €</strong></span>
+    <>
+      {!registerReady && (
+        <div className="alert alert-warning">
+          Le registre de factures n’est pas encore migré en base (table <code>invoices</code>) —
+          exécutez la migration <code>0006_invoices.sql</code> dans Supabase.
+        </div>
+      )}
+      {error && <div className="alert alert-danger">{error}</div>}
+
+      <div className="card card-outline card-warning mb-3">
+        <div className="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <h3 className="card-title mb-0">Registre des factures
+            <span className="badge text-bg-secondary ms-2">{invoices.length}</span>
+          </h3>
+          <span className="text-muted small">
+            Émis : <strong>{totalIssued.toFixed(0)} €</strong> · Impayé : <strong className="text-danger">{totalUnpaid.toFixed(0)} €</strong>
+          </span>
+        </div>
+        <div className="card-body p-0">
+          {loading && <div className="p-3 text-muted">Chargement…</div>}
+          {!loading && (
+            <div className="table-responsive">
+              <table className="table table-hover align-middle mb-0">
+                <thead><tr><th>N°</th><th>Réf.</th><th>Client</th><th>Trajet</th><th>Émise le</th><th>Montant TTC</th><th>Statut</th><th className="text-end pe-3">Actions</th></tr></thead>
+                <tbody>
+                  {invoices.length === 0 && (
+                    <tr><td colSpan={8} className="text-center text-muted py-4">
+                      Aucune facture émise — utilisez « Émettre » sur une réservation facturable ci-dessous.
+                    </td></tr>
+                  )}
+                  {invoices.map((i) => (
+                    <tr key={i.id}>
+                      <td className="fw-semibold">{i.number}</td>
+                      <td>{i.reference}</td>
+                      <td>{i.client_name}</td>
+                      <td className="small">{i.route}</td>
+                      <td>{(i.issued_at ?? '').slice(0, 10)}</td>
+                      <td>{Number(i.amount).toFixed(0)} €</td>
+                      <td>
+                        <span className={`badge ${i.status === 'paid' ? 'text-bg-success' : i.status === 'cancelled' ? 'text-bg-secondary' : 'text-bg-danger'}`}>
+                          {i.status === 'paid' ? 'Payée' : i.status === 'cancelled' ? 'Annulée' : 'Impayée'}
+                        </span>
+                      </td>
+                      <td className="text-end pe-3 text-nowrap">
+                        <button className="btn btn-sm btn-warning me-1" title="Voir" onClick={() => setView(toDoc(i))}>
+                          <i className="bi bi-eye" />
+                        </button>
+                        {writable && i.status !== 'cancelled' && (
+                          <button className={`btn btn-sm ${i.status === 'paid' ? 'btn-outline-secondary' : 'btn-outline-success'}`}
+                            title={i.status === 'paid' ? 'Marquer impayée' : 'Marquer payée'}
+                            onClick={() => setPaid(i, i.status !== 'paid')}>
+                            <i className={`bi ${i.status === 'paid' ? 'bi-arrow-counterclockwise' : 'bi-check2-circle'}`} />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="card-body p-0">
-        {loading && <div className="p-3 text-muted">Chargement…</div>}
-        {error && <div className="alert alert-danger m-3">{error}</div>}
-        {!loading && !error && (
-          <div className="table-responsive">
-            <table className="table table-hover align-middle mb-0">
-              <thead><tr><th>N° facture</th><th>Réf.</th><th>Client</th><th>Trajet</th><th>Date</th><th>Montant TTC</th><th>Statut</th><th className="text-end pe-3">PDF</th></tr></thead>
-              <tbody>
-                {rows.length === 0 && (
-                  <tr><td colSpan={8} className="text-center text-muted py-4">
-                    Aucune réservation facturable — les factures se génèrent depuis les réservations confirmées / terminées.
-                  </td></tr>
-                )}
-                {rows.map((r) => (
-                  <tr key={r.key}>
-                    <td className="fw-semibold">FA-{r.reference.replace(/^OS-?/, '')}</td>
-                    <td>{r.reference}</td>
-                    <td>{r.client}</td>
-                    <td>{r.route}</td>
-                    <td>{r.date || '—'}</td>
-                    <td>{r.amount.toFixed(0)} €</td>
-                    <td><span className={`badge ${r.status === 'completed' ? 'text-bg-success' : 'text-bg-warning'}`}>{r.status}</span></td>
-                    <td className="text-end pe-3 text-nowrap">
-                      <button className="btn btn-sm btn-warning me-1" title="Voir la facture" onClick={() => setView(toDoc(r))}>
-                        <i className="bi bi-eye" />
-                      </button>
-                      <button className="btn btn-sm btn-outline-secondary" title="PDF direct" onClick={() => download(r)} disabled={busy === r.key}>
-                        <i className={`bi ${busy === r.key ? 'bi-hourglass-split' : 'bi-file-earmark-pdf'}`} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+
+      <div className="card card-outline card-secondary">
+        <div className="card-header">
+          <h3 className="card-title mb-0">À facturer
+            <span className="badge text-bg-warning ms-2">{billables.length}</span>
+          </h3>
+        </div>
+        <div className="card-body p-0">
+          {!loading && (
+            <div className="table-responsive">
+              <table className="table table-hover align-middle mb-0">
+                <thead><tr><th>Réf.</th><th>Client</th><th>Trajet</th><th>Date</th><th>Montant</th><th className="text-end pe-3">Émettre</th></tr></thead>
+                <tbody>
+                  {billables.length === 0 && (
+                    <tr><td colSpan={6} className="text-center text-muted py-4">
+                      Rien à facturer — les réservations confirmées/terminées avec montant apparaissent ici.
+                    </td></tr>
+                  )}
+                  {billables.map((b) => (
+                    <tr key={b.key}>
+                      <td className="fw-semibold">{b.reference}</td>
+                      <td>{b.client}</td><td className="small">{b.route}</td><td>{b.date || '—'}</td>
+                      <td>{b.amount.toFixed(0)} €</td>
+                      <td className="text-end pe-3">
+                        <button className="btn btn-sm btn-warning" disabled={!writable || !registerReady || busy === b.key}
+                          onClick={() => issue(b)}>
+                          <i className={`bi ${busy === b.key ? 'bi-hourglass-split' : 'bi-receipt'} me-1`} />
+                          {busy === b.key ? 'Émission…' : 'Émettre la facture'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
+
       {view && <DocumentModal doc={view} onClose={() => setView(null)} />}
-    </div>
+    </>
   );
 }

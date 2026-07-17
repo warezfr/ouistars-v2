@@ -37,6 +37,8 @@ export interface OneWayEstimate {
   distanceKm: number;
   prices: Prices;
   routeLabel?: string;
+  /** Id du trajet de la grille (transmis au serveur pour recalcul du prix). */
+  routeId?: string;
 }
 
 const PARIS = { lat: 48.8566, lng: 2.3522 };
@@ -161,7 +163,7 @@ export async function estimatePlaces(from: Place, to: Place, signal?: AbortSigna
   const route = fixedRoute(detectZone(from), detectZone(to));
   const distanceKm = await roadDistanceKm(from, to, signal);
   if (route) {
-    return { basis: 'fixed-route', distanceKm, prices: { ...route.prices }, routeLabel: route.label };
+    return { basis: 'fixed-route', distanceKm, prices: { ...route.prices }, routeLabel: route.label, routeId: route.id };
   }
   const price = (rate: number) => Math.max(100, Math.round((distanceKm * rate) / 5) * 5);
   return {

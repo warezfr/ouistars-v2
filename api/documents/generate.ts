@@ -89,11 +89,28 @@ async function loadBooking(reference: string): Promise<BookingLike | null> {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const { reference, type } = (req.body ?? {}) as { reference?: string; type?: string };
+  const { reference, type, number } = (req.body ?? {}) as { reference?: string; type?: string; number?: string };
   if (!reference || !type) return res.status(400).json({ error: 'reference et type requis' });
 
   const booking = (await loadBooking(reference)) ?? { ...DEMO, reference };
   const logo = await fetchLogo();
+
+  // Mentions légales depuis les Paramètres du site (si base joignable).
+  let legal = '';
+  {
+    const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (url && key) {
+      const db = createClient(url, key, { auth: { persistSession: false } });
+      const { data } = await db.from('cms_singletons').select('data').eq('key', 'settings').maybeSingle();
+      const st = (data?.data ?? {}) as Record<string, string>;
+      legal = [st.legalForm, st.legalAddress, st.siren ? `SIREN ${st.siren}` : '', st.vatNumber ? `TVA ${st.vatNumber}` : '']
+        .filter(Boolean).join(' — ');
+    }
+  }
+  const legalNote = legal
+    ? `${legal}. TVA transport de personnes : 10 %. Pénalités de retard : 3× le taux légal ; indemnité forfaitaire de recouvrement : 40 €.`
+    : undefined;
   const serviceDate = [booking.date, booking.time].filter(Boolean).join(' ');
   const line = {
     label: `Transport avec chauffeur — ${booking.route}`,
@@ -115,11 +132,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } else if (type === 'invoice') {
     pdf = await buildInvoice({
-      number: `FA-${booking.reference.replace(/^OS-?/, '')}`,
+      number: number ?? `FA-${booking.reference.replace(/^OS-?/, '')}`,
       reference: booking.reference,
       date: new Date().toISOString().slice(0, 10),
       clientName: booking.clientName, clientEmail: booking.clientEmail, clientPhone: booking.clientPhone,
       lines: [line], logo,
+      footNote: legalNote,
     });
   } else if (type === 'quote') {
     pdf = await buildInvoice({

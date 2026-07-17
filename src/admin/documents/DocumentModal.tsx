@@ -51,7 +51,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
     try {
       const res = await fetch('/api/documents/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reference: doc.reference, type: API_TYPES[doc.kind] }),
+        body: JSON.stringify({ reference: doc.reference, type: API_TYPES[doc.kind], number: doc.number }),
       });
       if (!res.ok) throw new Error();
       const blob = await res.blob();

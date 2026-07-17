@@ -14,6 +14,8 @@ interface Row {
   reference: string;
   client: string;
   contact?: string;
+  email?: string;
+  phone?: string;
   route: string;
   date: string;
   vehicle: string;
@@ -43,7 +45,9 @@ export default function Bookings() {
   const writable = canWrite(profile?.role);
 
   const [rows, setRows] = useState<Row[]>([]);
-  const [drivers, setDrivers] = useState<string[]>([]);
+  const [drivers, setDrivers] = useState<{ name: string; email?: string; phone?: string }[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +63,11 @@ export default function Bookings() {
         supabase.from('etg_orders').select('*').order('created_at', { ascending: false }).limit(200),
         listEntries('driver').catch(() => []),
       ]);
-      setDrivers(drv.map((d) => (d.data?.name as string) || d.title || '').filter(Boolean));
+      setDrivers(drv.map((d) => ({
+        name: ((d.data?.name as string) || d.title || '').trim(),
+        email: (d.data?.email as string) || undefined,
+        phone: (d.data?.whatsapp as string) || (d.data?.phone as string) || undefined,
+      })).filter((d) => d.name));
       if (!site.error) {
         for (const b of site.data ?? []) {
           out.push({
@@ -67,6 +75,8 @@ export default function Bookings() {
             reference: b.reference,
             client: [b.first_name, b.last_name].filter(Boolean).join(' ') || b.email || '—',
             contact: b.phone ?? b.email ?? undefined,
+            email: b.email ?? undefined,
+            phone: b.phone ?? undefined,
             route: b.prefill || [b.pickup, b.destination].filter(Boolean).join(' → ') || '—',
             date: [b.travel_date, b.travel_time].filter(Boolean).join(' ') || '—',
             vehicle: b.vehicle_class ?? '—',
@@ -84,6 +94,8 @@ export default function Bookings() {
             reference: o.order_id,
             client: [o.main_passenger?.first_name, o.main_passenger?.last_name].filter(Boolean).join(' ') || '—',
             contact: o.main_passenger?.phone_number,
+            email: o.main_passenger?.email ?? undefined,
+            phone: o.main_passenger?.phone_number ?? undefined,
             route: `${o.search_payload?.start_point?.iata ?? o.search_payload?.start_point?.address ?? '—'} → ${o.search_payload?.end_point?.iata ?? o.search_payload?.end_point?.address ?? '—'}`,
             date: (o.start_time ?? '').replace('T', ' ').slice(0, 16),
             vehicle: o.transfer_category ?? '—',
@@ -125,7 +137,7 @@ export default function Bookings() {
       reference: r.reference,
       number: `${kind === 'mission' ? 'OM' : 'BC'}-${r.reference.replace(/^OS-?/, '')}`,
       date: new Date().toISOString().slice(0, 10),
-      client: { name: r.client, phone: isEmail ? undefined : r.contact, email: isEmail ? r.contact : undefined },
+      client: { name: r.client, phone: r.phone ?? (isEmail ? undefined : r.contact), email: r.email ?? (isEmail ? r.contact : undefined) },
       items: [{ label: `Transport avec chauffeur — ${r.route}`, sub: r.date, qty: 1, unit: r.amount ?? 0 }],
       mission: {
         date: datePart || '—', time: timeParts.join(' ') || undefined,
@@ -156,7 +168,47 @@ export default function Bookings() {
     const notes = driver ? `${base} [chauffeur:${driver}]`.trim() : base || null;
     const { error } = await supabase.from('website_bookings')
       .update({ notes, updated_at: new Date().toISOString() }).eq('id', row.id);
-    if (error) setError(error.message);
+    if (error) { setError(error.message); return; }
+
+    // Fiche de mission envoyée automatiquement au chauffeur (si e-mail + Resend).
+    const d = drivers.find((x) => x.name === driver);
+    if (driver && d?.email) {
+      setNotice(`Envoi de la fiche de mission à ${d.email}…`);
+      try {
+        const res = await fetch('/api/documents/send', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ reference: row.reference, type: 'mission_sheet', to: d.email,
+            message: `Nouvelle mission ${row.reference} — ${row.route} le ${row.date}. Fiche en pièce jointe.` }),
+        });
+        setNotice(res.ok
+          ? `✓ Fiche de mission envoyée à ${driver} (${d.email})`
+          : res.status === 501
+            ? 'Chauffeur assigné — envoi e-mail non configuré (RESEND_API_KEY).'
+            : 'Chauffeur assigné — échec de l’envoi de la fiche.');
+      } catch { setNotice('Chauffeur assigné — échec de l’envoi de la fiche.'); }
+    }
+  }
+
+  /** Création manuelle (téléphone, e-mail, comptoir…). */
+  async function createManual(form: Record<string, string>) {
+    if (!supabase) return;
+    const reference = `MAN-${Date.now().toString(36).toUpperCase().slice(-5)}`;
+    const parts = (form.client ?? '').trim().split(/\s+/);
+    const { error } = await supabase.from('website_bookings').insert({
+      reference, channel: 'manuel',
+      first_name: parts.shift() ?? '', last_name: parts.join(' '),
+      phone: form.phone || null, email: form.email || null,
+      pickup: form.pickup || '—', destination: form.destination || '—',
+      travel_date: form.date || null, travel_time: form.time || null,
+      passengers: Number(form.passengers || 1),
+      vehicle_class: form.vehicle || null,
+      price_amount: form.amount ? Number(form.amount) : null,
+      status: 'confirmed',
+    });
+    if (error) { setError(`Création impossible : ${error.message}`); return; }
+    setCreating(false);
+    setNotice(`Réservation ${reference} créée.`);
+    load();
   }
 
   return (
@@ -168,6 +220,11 @@ export default function Bookings() {
             {rows[0]?.source === 'demo' && <span className="badge text-bg-warning ms-2">démo</span>}
           </h3>
           <div className="d-flex gap-2">
+            {writable && (
+              <button className="btn btn-sm btn-warning" onClick={() => setCreating(true)}>
+                <i className="bi bi-plus-lg me-1" />Nouvelle réservation
+              </button>
+            )}
             <select className="form-select form-select-sm" value={filter} onChange={(e) => setFilter(e.target.value as never)}>
               <option value="all">Tous statuts</option>
               {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
@@ -178,6 +235,7 @@ export default function Bookings() {
         <div className="card-body p-0">
           {loading && <div className="p-3 text-muted">Chargement…</div>}
           {error && <div className="alert alert-danger m-3">{error}</div>}
+          {notice && <div className="alert alert-info m-3">{notice}</div>}
           {!loading && (
             <div className="table-responsive">
               <table className="table table-hover align-middle mb-0" style={{ cursor: 'pointer' }}>
@@ -234,7 +292,7 @@ export default function Bookings() {
                   <select className="form-select mb-3" value={selected.driver ?? ''} disabled={!writable}
                     onChange={(e) => setDriver(selected, e.target.value)}>
                     <option value="">— Aucun —</option>
-                    {[...new Set([...(selected.driver ? [selected.driver] : []), ...drivers])].map((d) =>
+                    {[...new Set([...(selected.driver ? [selected.driver] : []), ...drivers.map((d) => d.name)])].map((d) =>
                       <option key={d} value={d}>{d}</option>)}
                   </select>
                 </>
@@ -261,6 +319,57 @@ export default function Bookings() {
                   apparaîtront ici automatiquement.
                 </div>
               )}
+            </div>
+          </div>
+        </>
+      )}
+      {creating && (
+        <>
+          <div className="modal-backdrop fade show" onClick={() => setCreating(false)} />
+          <div className="modal d-block" tabIndex={-1}>
+            <div className="modal-dialog">
+              <div className="modal-content">
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget as HTMLFormElement);
+                  createManual(Object.fromEntries([...fd.entries()].map(([k, v]) => [k, String(v)])));
+                }}>
+                  <div className="modal-header">
+                    <h5 className="modal-title">Nouvelle réservation (manuelle)</h5>
+                    <button type="button" className="btn-close" onClick={() => setCreating(false)} />
+                  </div>
+                  <div className="modal-body">
+                    <div className="row g-2">
+                      <div className="col-12"><label className="form-label">Client *</label>
+                        <input name="client" className="form-control" required placeholder="Prénom Nom" /></div>
+                      <div className="col-6"><label className="form-label">Téléphone</label>
+                        <input name="phone" className="form-control" /></div>
+                      <div className="col-6"><label className="form-label">E-mail</label>
+                        <input name="email" type="email" className="form-control" /></div>
+                      <div className="col-6"><label className="form-label">Départ *</label>
+                        <input name="pickup" className="form-control" required /></div>
+                      <div className="col-6"><label className="form-label">Destination *</label>
+                        <input name="destination" className="form-control" required /></div>
+                      <div className="col-4"><label className="form-label">Date</label>
+                        <input name="date" type="date" className="form-control" /></div>
+                      <div className="col-4"><label className="form-label">Heure</label>
+                        <input name="time" type="time" className="form-control" /></div>
+                      <div className="col-4"><label className="form-label">Passagers</label>
+                        <input name="passengers" type="number" min="1" defaultValue="2" className="form-control" /></div>
+                      <div className="col-6"><label className="form-label">Classe</label>
+                        <select name="vehicle" className="form-select">
+                          <option value="E">E-Class</option><option value="V">V-Class</option><option value="S">S-Class</option>
+                        </select></div>
+                      <div className="col-6"><label className="form-label">Montant TTC (€)</label>
+                        <input name="amount" type="number" min="0" step="1" className="form-control" /></div>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => setCreating(false)}>Annuler</button>
+                    <button type="submit" className="btn btn-warning">Créer</button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </>

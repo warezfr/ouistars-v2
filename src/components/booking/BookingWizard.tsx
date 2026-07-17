@@ -148,12 +148,22 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
       `${estimate?.routeLabel ?? ''} — ${vehicleName} — ${amount}€${mode === 'hourly' ? ` — ${hours}h` : ''}`;
     const payload = {
       type: 'booking', channel: 'siteweb',
+      website: '', // honeypot anti-bot (doit rester vide)
       data: {
         first_name, last_name, phone: form.phone, email: form.email,
         pickup: ctx.from.label,
         destination: mode === 'oneway' ? (ctx.to?.label ?? '') : w.onDemand,
         travel_date: date, travel_time: time,
         passengers: form.passengers, vehicle_class: vehicle, prefill, notes: form.notes,
+        route_id: mode === 'oneway' ? (ctx.estimate?.routeId ?? null) : null,
+        price_amount: amount, // indicatif — le serveur recalcule depuis la grille
+      },
+      pricing: {
+        mode,
+        routeId: mode === 'oneway' ? (ctx.estimate?.routeId ?? null) : null,
+        distanceKm: mode === 'oneway' ? (ctx.estimate?.distanceKm ?? null) : null,
+        hours: mode === 'hourly' ? hours : null,
+        vehicleClass: vehicle,
       },
     };
     try {

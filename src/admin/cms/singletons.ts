@@ -46,6 +46,10 @@ export const SINGLETONS: Record<string, SingletonDef> = {
       { name: 'instagram', label: 'Instagram (URL)', type: 'text' },
       { name: 'linkedin', label: 'LinkedIn (URL)', type: 'text' },
       { name: 'footerText', label: 'Texte du footer', type: 'textarea' },
+      { name: 'legalForm', label: 'Forme juridique (facturation)', type: 'text', placeholder: 'SASU Oui Stars' },
+      { name: 'siren', label: 'SIREN / SIRET', type: 'text', placeholder: '123 456 789 00012' },
+      { name: 'vatNumber', label: 'N° TVA intracommunautaire', type: 'text', placeholder: 'FR12 345678901' },
+      { name: 'legalAddress', label: 'Adresse du siège (facturation)', type: 'textarea' },
     ],
   },
   rates: {

@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { ROUTE_RATES, HOURLY_RATES, PER_KM_RATES, MEET_GREET_RATES, PRICE_LIST_VERSION } from '@/data/pricing';
+import { supabase } from '@/lib/supabase';
+import { listEntries } from '../cms/api';
 import { formatEUR } from '@/lib/pricing';
 
 const CATS: Record<string, string> = {
@@ -22,7 +25,53 @@ function TableCard({ title, head, children }: { title: string; head: React.React
   );
 }
 
+/** Correspondance grille site → route_keys des rate cards ETG (E→business, V→business_van, S→first). */
+const ETG_MAP: Record<string, string[]> = {
+  'cdg-ory-lbg-paris': ['cdg-paris', 'ory-paris', 'lbg-paris', 'paris-cdg', 'paris-ory'],
+  'paris-versailles': ['paris-versailles'],
+  'paris-stations': ['gare-nord-paris'],
+  'nce-monaco': ['nce-monaco', 'monaco-nce'],
+};
+const CLASS_TO_ETG: Record<string, string> = { E: 'business', V: 'business_van', S: 'first' };
+
 export default function Pricing() {
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+
+  /** Pousse les prix de la collection « route » vers les rate cards de l'API ETG. */
+  async function syncEtg() {
+    if (!supabase) { setSyncMsg('Supabase non configuré.'); return; }
+    setSyncing(true); setSyncMsg(null);
+    try {
+      const routes = await listEntries('route');
+      let updated = 0, missed = 0;
+      for (const r of routes) {
+        const d = r.data as { routeId?: string; priceE?: number; priceV?: number; priceS?: number };
+        const prefixes = d.routeId ? ETG_MAP[d.routeId] : undefined;
+        if (!prefixes) continue;
+        for (const prefix of prefixes) {
+          for (const [cls, cat] of Object.entries(CLASS_TO_ETG)) {
+            const price = d[`price${cls}` as 'priceE'];
+            if (price == null) continue;
+            const { data: rows, error } = await supabase
+              .from('etg_rate_cards')
+              .update({ base_price: price })
+              .eq('route_key', `${prefix}-${cat === 'business' ? 'business' : cat === 'business_van' ? 'business-van' : 'first'}`)
+              .select('id');
+            if (error) { missed++; continue; }
+            updated += rows?.length ?? 0;
+          }
+        }
+      }
+      setSyncMsg(`✓ Synchronisation ETG : ${updated} rate card(s) alignée(s) sur la grille du site.${missed ? ` (${missed} échec(s))` : ''}
+        Les trajets sans équivalent ETG (excursions longues, city-to-city) ne sont pas poussés.`);
+    } catch (e) {
+      setSyncMsg(`Échec : ${(e as Error).message}`);
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   const grouped = ROUTE_RATES.reduce<Record<string, typeof ROUTE_RATES>>((acc, r) => {
     (acc[r.category] ||= []).push(r);
     return acc;
@@ -42,8 +91,13 @@ export default function Pricing() {
           <a className="btn btn-sm btn-outline-secondary" href="/admin/singleton/rates">
             <i className="bi bi-clock-history me-1" />Tarifs horaires / km
           </a>
+          <button className="btn btn-sm btn-dark" onClick={syncEtg} disabled={syncing}
+            title="Aligne les prix de l'API partenaire ETG sur la grille du site">
+            <i className={`bi ${syncing ? 'bi-hourglass-split' : 'bi-arrow-repeat'} me-1`} />Synchroniser l’API ETG
+          </button>
         </div>
       </div>
+      {syncMsg && <div className="alert alert-info">{syncMsg}</div>}
 
       {Object.entries(grouped).map(([cat, rows]) => (
         <TableCard key={cat} title={CATS[cat] ?? cat}
