@@ -11,15 +11,23 @@ import type {
 } from './types.js';
 
 let supabase: SupabaseClient | null = null;
+let warnedNoSupabase = false;
 
-function getSupabase(): SupabaseClient {
+/**
+ * Client Supabase service-role, ou `null` si non configuré.
+ * Sans Supabase, toute l'API bascule sur le store mémoire (offres/commandes)
+ * et les journaux d'appels sont ignorés — l'API reste pleinement fonctionnelle
+ * (recherche, réservation, statut, annulation, certification ETG).
+ */
+function getSupabase(): SupabaseClient | null {
   const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
-    if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-      throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured in production');
+    if (!warnedNoSupabase) {
+      console.warn('[ETG] Supabase non configuré (SUPABASE_SERVICE_ROLE_KEY manquant) — repli sur le store mémoire.');
+      warnedNoSupabase = true;
     }
-    return null as unknown as SupabaseClient; // Dev only: will fallback to memory
+    return null;
   }
   if (!supabase) {
     supabase = createClient(url, key, {
