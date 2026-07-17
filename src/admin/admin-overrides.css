@@ -46,3 +46,38 @@
 .adm-tags__chip { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; }
 .adm-tags__x { border: 0; background: transparent; color: inherit; cursor: pointer; line-height: 1; padding: 0 2px; font-size: .95rem; }
 .adm-tags__input { border: 0; outline: none; background: transparent; color: var(--bs-body-color); flex: 1; min-width: 120px; padding: 2px; }
+
+/* ————— Mobile : menu en tiroir + confort tactile ————— */
+.adm-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1035; }
+
+@media (max-width: 991.98px) {
+  /* Barre latérale hors-écran, glissée au clic sur le hamburger */
+  .app-sidebar {
+    position: fixed !important; top: 0; bottom: 0; left: 0; width: 260px; z-index: 1040;
+    transform: translateX(-100%); transition: transform .28s ease;
+  }
+  body.sidebar-open .app-sidebar { transform: translateX(0); box-shadow: 0 0 40px rgba(0,0,0,.5); }
+  /* Contenu et header pleine largeur */
+  .app-main, .app-header { margin-left: 0 !important; }
+  .app-content > .container-fluid,
+  .app-content-header > .container-fluid { padding-left: .75rem; padding-right: .75rem; }
+  .app-content-header h3 { font-size: 1.15rem; }
+
+  /* Barre d'outils des tableaux : recherche pleine largeur, filtres empilés */
+  .card-body .input-group, .app-content .input-group { max-width: 100% !important; }
+  .app-content .form-select { max-width: 100% !important; flex: 1 1 46%; }
+
+  /* Petits boxes du Command Center plus compacts */
+  .small-box .inner h3 { font-size: 1.6rem; }
+  .small-box-icon { font-size: 2.6rem; }
+
+  /* Cartes moins d'espace perdu */
+  .card-body { padding: .85rem; }
+  .app-content-header { padding: .5rem 0; }
+
+  /* Fenêtres (documents, réservation manuelle) : marge minimale */
+  .modal-dialog { margin: .5rem; }
+}
+
+/* Le voile ne doit jamais rester sur desktop */
+@media (min-width: 992px) { .adm-backdrop { display: none; } }

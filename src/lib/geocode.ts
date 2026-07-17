@@ -117,6 +117,48 @@ export async function geocodeSearch(query: string, signal?: AbortSignal): Promis
   }
 }
 
+/** Géocodage inverse : coordonnées → adresse (Photon reverse). */
+export async function reverseGeocode(lat: number, lng: number, signal?: AbortSignal): Promise<Place> {
+  const fallback: Place = {
+    id: `osm:${lat.toFixed(5)},${lng.toFixed(5)}`,
+    label: 'Ma position',
+    sub: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
+    lat, lng, type: 'landmark', source: 'osm',
+  };
+  try {
+    const url = `https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}&lang=fr`;
+    const res = await fetch(url, { signal });
+    if (!res.ok) return fallback;
+    const data = (await res.json()) as { features?: PhotonFeature[] };
+    const f = data.features?.[0];
+    if (!f) return fallback;
+    const place = featureToPlace(f);
+    // On garde les coordonnées GPS réelles (plus précises que le centroïde OSM).
+    return place ? { ...place, lat, lng, id: fallback.id } : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/** Position de l'utilisateur (Geolocation API) → adresse. */
+export function geolocate(signal?: AbortSignal): Promise<Place> {
+  return new Promise((resolve, reject) => {
+    if (!('geolocation' in navigator)) {
+      reject(new Error('La géolocalisation n’est pas disponible sur cet appareil.'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve(reverseGeocode(pos.coords.latitude, pos.coords.longitude, signal)),
+      (err) => reject(new Error(
+        err.code === err.PERMISSION_DENIED
+          ? 'Localisation refusée — autorisez l’accès à votre position.'
+          : 'Impossible d’obtenir votre position.',
+      )),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  });
+}
+
 /** Détecte la zone tarifaire connue la plus proche d'un point (sinon null). */
 function detectZone(pt: { lat: number; lng: number }): string | null {
   // rayon de rattachement par type de zone (km)

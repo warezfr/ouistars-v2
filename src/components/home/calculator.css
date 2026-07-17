@@ -100,3 +100,19 @@
   position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
   color: var(--os-gold-deep); font-size: 1rem; pointer-events: none; opacity: 0.7;
 }
+
+/* Bouton « Me localiser » (champ Départ) */
+.os-ac__locate {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 999px;
+  border: 1px solid var(--os-gold-deep, #a17e2f); background: transparent;
+  color: var(--os-gold, #c9a227); cursor: pointer; padding: 0;
+  transition: background .2s, color .2s;
+}
+.os-ac__locate:hover { background: var(--os-gold, #c9a227); color: #14161c; }
+.os-ac__locate:disabled { opacity: .6; cursor: wait; }
+.os-ac__control input { padding-right: 44px; }
+.os-ac__locate-spin { animation: os-locate-spin 1s linear infinite; }
+@keyframes os-locate-spin { to { transform: rotate(360deg); } }
+.os-ac__geoerr { display: block; margin-top: 4px; color: #e0a34b; font-size: .72rem; }

@@ -15,6 +15,7 @@ export default function AdminLayout() {
   const { email, profile, signOut } = useAuth();
   const [q, setQ] = useState('');
   const [userOpen, setUserOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [theme, setTheme] = useState<AdminTheme>(getAdminTheme());
 
   const toggleTheme = () => {
@@ -22,8 +23,13 @@ export default function AdminLayout() {
     setAdminTheme(next); setTheme(next);
   };
 
-  // Repli du menu sur mobile après navigation.
-  useEffect(() => { document.body.classList.remove('sidebar-open'); }, [loc.pathname]);
+  // Ferme le menu mobile après navigation.
+  useEffect(() => {
+    document.body.classList.remove('sidebar-open');
+    setMobileOpen(false);
+  }, [loc.pathname]);
+
+  const closeMobile = () => { document.body.classList.remove('sidebar-open'); setMobileOpen(false); };
 
   const currentLabel = useMemo(() => {
     for (const g of NAV_GROUPS) {
@@ -40,7 +46,15 @@ export default function AdminLayout() {
   const filtered = (items: NavEntry[]) =>
     q.trim() ? items.filter((i) => i.label.toLowerCase().includes(q.toLowerCase())) : items;
 
-  const toggleSidebar = () => document.body.classList.toggle('sidebar-collapse');
+  const toggleSidebar = () => {
+    if (window.innerWidth < 992) {
+      const open = !document.body.classList.contains('sidebar-open');
+      document.body.classList.toggle('sidebar-open', open);
+      setMobileOpen(open);
+    } else {
+      document.body.classList.toggle('sidebar-collapse');
+    }
+  };
 
   return (
     <div className="app-wrapper">
@@ -124,6 +138,9 @@ export default function AdminLayout() {
           </nav>
         </div>
       </aside>
+
+      {/* Voile mobile (ferme le menu au clic) */}
+      {mobileOpen && <div className="adm-backdrop d-lg-none" onClick={closeMobile} />}
 
       {/* Contenu */}
       <main className="app-main">

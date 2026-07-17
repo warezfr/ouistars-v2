@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactElement } from 'react';
 import { useI18n } from '@/i18n';
-import { geocodeSearch, estimatePlaces, type Place, type OneWayEstimate } from '@/lib/geocode';
+import { geocodeSearch, estimatePlaces, geolocate, type Place, type OneWayEstimate } from '@/lib/geocode';
 import { VEHICLE_CLASSES, type VehicleClass } from '@/data/pricing';
 import { formatEUR } from '@/lib/pricing';
 import type { PoiType } from '@/data/locations';
@@ -47,7 +47,7 @@ export default function FareCalculator() {
         <Autocomplete
           label={c.fromLabel} placeholder={c.fromPlaceholder}
           selected={from} noResults={c.noResults} searching={c.searching}
-          onClear={() => setFrom(null)} onSelect={setFrom}
+          onClear={() => setFrom(null)} onSelect={setFrom} locatable
         />
         <span className="os-calc__od-arrow" aria-hidden>→</span>
         <Autocomplete
@@ -99,16 +99,34 @@ interface AcProps {
   searching: string;
   onClear: () => void;
   onSelect: (place: Place) => void;
+  /** Affiche un bouton « Me localiser » (géolocalisation → adresse). */
+  locatable?: boolean;
 }
 
-function Autocomplete({ label, placeholder, selected, noResults, searching, onClear, onSelect }: AcProps) {
+function Autocomplete({ label, placeholder, selected, noResults, searching, onClear, onSelect, locatable }: AcProps) {
   const [query, setQuery] = useState(selected?.label ?? '');
   const [results, setResults] = useState<Place[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
   const [highlight, setHighlight] = useState(-1);
   const wrapRef = useRef<HTMLDivElement>(null);
   const listId = useId();
+
+  async function locateMe() {
+    setLocating(true); setGeoError(null);
+    try {
+      const place = await geolocate();
+      onSelect(place);
+      setQuery(place.label);
+      setOpen(false);
+    } catch (e) {
+      setGeoError((e as Error).message);
+    } finally {
+      setLocating(false);
+    }
+  }
 
   useEffect(() => { if (selected) setQuery(selected.label); }, [selected]);
 
@@ -156,7 +174,22 @@ function Autocomplete({ label, placeholder, selected, noResults, searching, onCl
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
         />
+        {locatable && (
+          <button
+            type="button" className="os-ac__locate" title="Me localiser" aria-label="Me localiser"
+            disabled={locating}
+            onClick={locateMe}
+          >
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2"
+              className={locating ? 'os-ac__locate-spin' : undefined} aria-hidden focusable="false">
+              <circle cx="12" cy="12" r="3.2" />
+              <path d="M12 2v3M12 19v3M2 12h3M19 12h3" strokeLinecap="round" />
+              <circle cx="12" cy="12" r="8" opacity="0.5" />
+            </svg>
+          </button>
+        )}
       </div>
+      {geoError && <small className="os-ac__geoerr">{geoError}</small>}
       {open && (
         <ul className="os-ac__list" id={listId} role="listbox">
           {loading && results.length === 0 && <li className="os-ac__empty">{searching}</li>}
