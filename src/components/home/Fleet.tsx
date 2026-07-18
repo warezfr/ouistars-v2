@@ -11,10 +11,13 @@ interface CmsVehicle {
   seats?: number; luggage?: number; image?: string; descFr?: string; show_on_site?: boolean;
 }
 
-/** Flotte — cartes cliquables + modal détaillée. Contenu piloté par le back-office. */
+/** Flotte — « showroom » : rail de sélection + grande scène véhicule
+    (lettrage fantôme doré, socle lumineux) + fiche specs en filets or.
+    Contenu piloté par le back-office (collection vehicle). */
 export default function Fleet() {
   const { t } = useI18n();
   const [selected, setSelected] = useState<FleetVehicle | null>(null);
+  const [idx, setIdx] = useState(0);
 
   const cmsVehicles = usePublished<CmsVehicle>('vehicle', []);
   const list: FleetVehicle[] = cmsVehicles.length
@@ -32,46 +35,71 @@ export default function Fleet() {
         }))
     : FLEET;
 
+  const cur = list[Math.min(idx, list.length - 1)] ?? list[0];
+
   return (
-    <section className="os-section" id="fleet">
+    <section className="os-section os-flx" id="fleet">
       <div className="os-container">
         <Reveal>
-          <p className="os-eyebrow">{t.fleet.eyebrow}</p>
-          <h2>{t.fleet.title}</h2>
+          <div className="os-flx__head">
+            <div>
+              <p className="os-eyebrow">{t.fleet.eyebrow}</p>
+              <h2 className="os-flx__title">{t.fleet.title}</h2>
+            </div>
+            <span className="os-flx__count">{String(list.length).padStart(2, '0')} véhicules</span>
+          </div>
         </Reveal>
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {list.map((v) => (
-            <Reveal key={v.id}>
-              <button
-                type="button"
-                onClick={() => setSelected(v)}
-                className="group relative block w-full overflow-hidden rounded-2xl border border-gold-deep/20 bg-surface/60 text-left transition-colors duration-500 hover:border-gold-deep/60"
-              >
-                <div className="relative aspect-[16/10] overflow-hidden">
-                  <img
-                    src={v.image}
-                    alt={v.name}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-night/85 via-transparent to-transparent" aria-hidden />
-                  <span className="absolute left-4 top-4 rounded-full border border-gold-deep bg-night/60 px-3 py-1 text-[0.66rem] font-semibold uppercase tracking-[0.18em] text-gold backdrop-blur-sm">
-                    {v.className}
-                  </span>
+
+        <div className="os-flx__layout">
+          {/* Rail de sélection */}
+          <ol className="os-flx__rail">
+            {list.map((v, i) => (
+              <li key={v.id}>
+                <button
+                  type="button"
+                  className={`os-flx__railbtn${i === idx ? ' is-active' : ''}`}
+                  onMouseEnter={() => setIdx(i)}
+                  onClick={() => setIdx(i)}
+                >
+                  <span className="os-flx__railclass">{v.className}</span>
+                  <span className="os-flx__railname">{v.name}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+
+          {/* Scène showroom */}
+          <div className="os-flx__stage">
+            <span className="os-flx__ghost" aria-hidden>{cur?.className}</span>
+            <div className="os-flx__pedestal" aria-hidden />
+            {list.map((v, i) => (
+              <img
+                key={v.id}
+                src={v.image}
+                alt={v.name}
+                loading={i === 0 ? 'eager' : 'lazy'}
+                className={`os-flx__car${i === idx ? ' is-on' : ''}`}
+              />
+            ))}
+
+            {/* Fiche : nom, description, specs, action */}
+            {cur && (
+              <div className="os-flx__sheet">
+                <div className="os-flx__sheet-id">
+                  <h3 className="os-flx__name">{cur.name}</h3>
+                  <p className="os-flx__desc">{cur.descFr}</p>
                 </div>
-                <div className="p-6">
-                  <h3 className="os-card-title font-display text-ivory">{v.name}</h3>
-                  <p className="os-small os-flush">{v.descFr}</p>
-                  <div className="mt-3 flex items-center gap-2 text-[0.8rem] tracking-wide text-gold-soft/85">
-                    <span>{v.seats} {t.fleet.passengers}</span>
-                    <span aria-hidden>·</span>
-                    <span>{v.luggage} {t.fleet.luggage}</span>
-                  </div>
-                  <span className="os-fleet__hint">{t.fleet.hint} →</span>
-                </div>
-              </button>
-            </Reveal>
-          ))}
+                <dl className="os-flx__specs">
+                  <div><dt>{t.fleet.classLabel}</dt><dd>{cur.className}</dd></div>
+                  <div><dt>{t.fleet.passengers}</dt><dd>{cur.seats}</dd></div>
+                  <div><dt>{t.fleet.luggage}</dt><dd>{cur.luggage}</dd></div>
+                </dl>
+                <button type="button" className="os-flx__more" onClick={() => setSelected(cur)}>
+                  {t.fleet.hint} →
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
