@@ -37,16 +37,19 @@ export default function Hero() {
             <span className="italic text-gold-soft">{t.hero.titleAccent}</span>
           </h1>
           <a className="os-hero__pricing-link" href="#tarifs">{t.hero.pricingLink}</a>
-          {/* Services en chips perlées — compact, laisse la place au calculateur */}
-          <div className="os-hero__chips">
-            {services.map((s) => (
-              <span key={s} className="os-hero__chip">{s}</span>
-            ))}
-          </div>
         </div>
 
         {/* Calculateur — barre horizontale pleine largeur (voir calculator.css) */}
         <FareCalculator />
+
+        {/* Bandeau défilant des services — sous le calculateur, en bas du hero */}
+        <div className="os-hero__marquee" aria-hidden>
+          <div className="os-hero__marquee-track">
+            {[...services, ...services].map((s, i) => (
+              <span key={i} className="os-hero__mq-item">{s}<i>✦</i></span>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

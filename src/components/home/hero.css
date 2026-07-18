@@ -15,8 +15,26 @@
 }
 .os-hero__pricing-link:hover { color: var(--os-gold); border-bottom-color: var(--os-gold); }
 
-/* Rangée de chips sous le titre */
-.os-hero__chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; max-width: 1020px; }
+/* Bandeau défilant des services (sous le calculateur) */
+.os-hero__marquee {
+  overflow: hidden; margin-top: -6px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.os-hero__marquee-track {
+  display: flex; width: max-content;
+  animation: os-hero-mq 42s linear infinite;
+  will-change: transform;
+}
+.os-hero__marquee:hover .os-hero__marquee-track { animation-play-state: paused; }
+.os-hero__mq-item {
+  display: inline-flex; align-items: center; white-space: nowrap;
+  font-size: 0.76rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--os-gold-soft); opacity: 0.9;
+}
+.os-hero__mq-item i { font-style: normal; color: var(--os-gold-deep); font-size: 0.58rem; margin: 0 28px; }
+@keyframes os-hero-mq { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .os-hero__marquee-track { animation: none; } }
 
 /* Chips perlées — les 13 services */
 .os-hero__chip {
