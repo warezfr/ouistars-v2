@@ -136,7 +136,7 @@ export default function Pricing() {
           data: { airport: m.airport, rateId: m.id, base: m.base, includedPax: m.includedPax, extraPaxSurcharge: m.extraPaxSurcharge },
         });
       }
-      notice(`✓ ${MEET_GREET_RATES.length} tarifs Meet & Greeter importés — pilotés d'ici.`);
+      notice(`✓ ${MEET_GREET_RATES.length} tarifs Meet & Greeter importés — pilotés depuis cette page.`);
       await loadAll();
     } catch (e) { notice(`Erreur : ${(e as Error).message}`); }
     finally { setSaving(null); }
@@ -271,7 +271,7 @@ export default function Pricing() {
       {/* ————— 1 · Grille des trajets ————— */}
       {showRoutes && (
       <Card title="Grille des trajets (E / V / S)"
-        sub={routes.length ? `${routes.length} trajets pilotés depuis ce salon` : 'Aucun trajet en base — la grille statique du code fait foi'}
+        sub={routes.length ? `${routes.length} trajets pilotés depuis cette page` : 'Aucun trajet en base — la grille statique du code fait foi'}
         right={routes.length === 0 && writable ? (
           <button className="btn btn-sm btn-warning" onClick={seedRoutes} disabled={saving === 'seed-routes'}>
             <i className="bi bi-download me-1" />{saving === 'seed-routes' ? 'Import…' : `Importer la grille statique (${ROUTE_RATES.length})`}
