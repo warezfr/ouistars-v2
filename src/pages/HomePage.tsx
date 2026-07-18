@@ -29,19 +29,19 @@ export default function HomePage() {
       <main>
         <Hero />
         <Services />
-        <SepDune />
+        <SepDune variant="croisee" />
         <MeetGreeter />
-        <SepDune />
+        <SepDune variant="houle" />
         <Fleet />
         <Experience />
-        <SepDune />
+        <SepDune variant="diagonale" />
         <Packages onBook={openBooking} />
         <PricingTables onBook={openBooking} />
-        <SepDune />
+        <SepDune variant="contre" />
         <Events onQuote={() => setQuote(true)} />
         <PrestigiousAddresses />
         <About />
-        <SepDune />
+        <SepDune variant="pic" />
         <Faq />
       </main>
       <Footer onJoin={() => setChauffeur(true)} />

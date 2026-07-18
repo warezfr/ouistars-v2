@@ -1,5 +1,5 @@
-/* Séparateur « dune sculptée » — version légère.
-   Hauteur contenue, opacités douces, dérive parallaxe lente. */
+/* Séparateurs « dunes sculptées » — cinq compositions, dérives variées.
+   Hauteur contenue, opacités douces. */
 .os-sepdune {
   position: relative; height: clamp(90px, 11vw, 150px);
   margin: -18px 0; overflow: hidden; pointer-events: none;
@@ -9,15 +9,23 @@
   width: calc(100% + 120px); height: 100%;
   will-change: transform;
 }
-.os-sepdune__l1 { animation: os-sepdune-d1 22s ease-in-out infinite; }
-.os-sepdune__l2 { animation: os-sepdune-d2 17s ease-in-out infinite; }
-.os-sepdune__l3 { animation: os-sepdune-d3 13s ease-in-out infinite; }
+/* Trois horloges de dérive ; .os-sepdune__rev inverse le sens → les couches
+   se croisent au lieu de glisser ensemble. */
+.os-sepdune__a1 { animation: os-sepdune-d1 22s ease-in-out infinite; }
+.os-sepdune__a2 { animation: os-sepdune-d2 17s ease-in-out infinite; }
+.os-sepdune__a3 { animation: os-sepdune-d3 13s ease-in-out infinite; }
+.os-sepdune__rev { animation-direction: reverse; }
 @keyframes os-sepdune-d1 { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-44px); } }
-@keyframes os-sepdune-d2 { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(34px); } }
+@keyframes os-sepdune-d2 { 0%, 100% { transform: translateX(-34px); } 50% { transform: translateX(0); } }
 @keyframes os-sepdune-d3 { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-26px); } }
 .os-sepdune__crest { animation: os-sepdune-glow 6s ease-in-out infinite; }
 @keyframes os-sepdune-glow { 0%, 100% { opacity: .32; } 50% { opacity: .62; } }
+.os-sepdune__star { animation: os-sepdune-tw 4.5s ease-in-out infinite; }
+@keyframes os-sepdune-tw { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+
+/* Le pic est un peu plus haut pour laisser respirer le sommet */
+.os-sepdune--pic { height: clamp(104px, 12.5vw, 168px); }
 
 @media (prefers-reduced-motion: reduce) {
-  .os-sepdune__l, .os-sepdune__crest { animation: none; }
+  .os-sepdune__l, .os-sepdune__crest, .os-sepdune__star { animation: none; }
 }
