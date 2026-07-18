@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MEET_GREET_RATES } from '@/data/pricing';
 import { computeMeetGreet, formatEUR } from '@/lib/pricing';
+import { parseFlightNumber } from '@/data/airlines';
 import { DateField, TimeField } from '@/components/booking/pickers';
 import { useI18n } from '@/i18n';
 import './meetgreet.css';
@@ -18,6 +19,23 @@ type ServiceType = 'arrival' | 'transit' | 'departure';
 type Step = 1 | 2 | 3 | 4;
 
 const WA_NUMBER = '33651030306';
+
+interface FlightLeg {
+  number: string; airline: string; status: string;
+  dep: { iata: string; airport: string; time: string };
+  arr: { iata: string; airport: string; time: string };
+}
+type FlightState =
+  | { kind: 'idle' }
+  | { kind: 'airline'; airline: string | null }
+  | { kind: 'loading'; airline: string | null }
+  | { kind: 'found'; airline: string | null; leg: FlightLeg }
+  | { kind: 'notfound'; airline: string | null };
+
+/** Codes IATA couverts par chaque choix d'aéroport (pour choisir le bon segment). */
+const AIRPORT_IATAS: Record<string, string[]> = {
+  'cdg-ory': ['CDG', 'ORY'], nce: ['NCE'], lbg: ['LBG'],
+};
 
 const SvcIcon = ({ kind }: { kind: ServiceType }) => {
   const paths: Record<ServiceType, string> = {
@@ -49,6 +67,43 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
   const [sending, setSending] = useState<'email' | 'whatsapp' | null>(null);
   const [errMsg, setErrMsg] = useState('');
   const [reference, setReference] = useState('');
+  const [flight, setFlight] = useState<FlightState>({ kind: 'idle' });
+  const flightReq = useRef(0);
+
+  // Saisie assistée du vol : compagnie reconnue localement, détails via /api/flight.
+  useEffect(() => {
+    const parsed = parseFlightNumber(form.flight_number);
+    if (!parsed) { setFlight({ kind: 'idle' }); return; }
+    setFlight({ kind: 'airline', airline: parsed.airline });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(form.travel_date)) return;
+
+    const id = ++flightReq.current;
+    const t = window.setTimeout(async () => {
+      setFlight({ kind: 'loading', airline: parsed.airline });
+      try {
+        const r = await fetch(`/api/flight?number=${encodeURIComponent(parsed.iata)}&date=${form.travel_date}`);
+        if (id !== flightReq.current) return;
+        if (!r.ok) { setFlight({ kind: 'airline', airline: parsed.airline }); return; }
+        const j = (await r.json()) as { enabled: boolean; found: boolean; flights: FlightLeg[] };
+        if (id !== flightReq.current) return;
+        if (!j.enabled) { setFlight({ kind: 'airline', airline: parsed.airline }); return; }
+        if (!j.found || j.flights.length === 0) { setFlight({ kind: 'notfound', airline: parsed.airline }); return; }
+        // Préfère le segment qui touche l'aéroport choisi (arrivée ou départ selon le service).
+        const iatas = AIRPORT_IATAS[airportId ?? ''] ?? [];
+        const leg = j.flights.find((f) =>
+          service === 'departure' ? iatas.includes(f.dep.iata) : iatas.includes(f.arr.iata),
+        ) ?? j.flights[0];
+        setFlight({ kind: 'found', airline: leg.airline || parsed.airline, leg });
+        // Préremplit l'heure du vol si vide (arrivée → heure d'atterrissage, départ → décollage).
+        const auto = service === 'departure' ? leg.dep.time : leg.arr.time;
+        if (auto) setForm((f) => (f.travel_time ? f : { ...f, travel_time: auto }));
+      } catch {
+        if (id === flightReq.current) setFlight({ kind: 'airline', airline: parsed.airline });
+      }
+    }, 700);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.flight_number, form.travel_date, service, airportId]);
 
   // Réinitialise à chaque ouverture + verrouille le scroll de la page.
   useEffect(() => {
@@ -109,6 +164,12 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
             airport_label: airportLabel,
             ...form,
             email: form.email || '',
+            notes: [
+              form.notes,
+              flight.kind === 'found'
+                ? `Vol identifié : ${flight.airline} ${flight.leg.number} — ${flight.leg.dep.airport} (${flight.leg.dep.iata}) ${flight.leg.dep.time} → ${flight.leg.arr.airport} (${flight.leg.arr.iata}) ${flight.leg.arr.time}`
+                : '',
+            ].filter(Boolean).join(' · '),
           },
         }),
       });
@@ -250,6 +311,21 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
                 <span>{mg.flight}</span>
                 <input className="os-mgw__input" placeholder="AF 1234" value={form.flight_number}
                   onChange={(e) => set('flight_number', e.target.value)} />
+                {flight.kind !== 'idle' && (
+                  <span className={`os-mgw__fhint ${flight.kind === 'notfound' ? 'is-warn' : ''} ${flight.kind === 'found' ? 'is-found' : ''}`}>
+                    {flight.kind === 'loading' && <>{mg.flightSearching}</>}
+                    {flight.kind === 'airline' && flight.airline && <>✈ {flight.airline}</>}
+                    {flight.kind === 'airline' && !flight.airline && <>✈ {mg.flightUnknownAirline}</>}
+                    {flight.kind === 'notfound' && <>{mg.flightNotFound}</>}
+                    {flight.kind === 'found' && (
+                      <>
+                        ✈ {flight.airline} — {flight.leg.dep.airport} ({flight.leg.dep.iata}) {flight.leg.dep.time}
+                        {' → '}{flight.leg.arr.airport} ({flight.leg.arr.iata}) {flight.leg.arr.time}
+                        {flight.leg.status && <i> · {flight.leg.status}</i>}
+                      </>
+                    )}
+                  </span>
+                )}
               </label>
               <label className="os-mgw__labeled">
                 <span>{mg.pax}</span>

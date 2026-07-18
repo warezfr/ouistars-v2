@@ -108,8 +108,14 @@
 .os-mgw__input--full { grid-column: 1 / -1; margin-bottom: 0; }
 .os-mgw__step > .os-mgw__input--full { margin-bottom: 12px; }
 .os-mgw__labeled { display: grid; gap: 4px; align-content: start; }
-.os-mgw__labeled > span { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--os-mut-2); }
+.os-mgw__labeled > span:first-child { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--os-mut-2); }
 .os-mgw__req { font-style: normal; color: var(--os-gold); }
+/* Indication vol reconnu sous le champ N° de vol */
+.os-mgw__fhint { display: block; font-size: 0.74rem; line-height: 1.45; color: var(--os-gold-soft);
+  letter-spacing: 0.01em; text-transform: none; animation: os-mgw-in 0.3s var(--os-ease); }
+.os-mgw__fhint.is-found { color: var(--os-gold-soft); }
+.os-mgw__fhint.is-warn { color: var(--os-mut); }
+.os-mgw__fhint i { font-style: normal; color: var(--os-mut-2); }
 .os-mgw__legend { margin: 10px 0 0; font-size: 0.75rem; color: var(--os-mut-2); }
 textarea.os-mgw__input { resize: vertical; }
 /* Pickers (DateField/TimeField) dans le wizard : pleine largeur */
