@@ -3,9 +3,9 @@ import Reveal from '@/components/ui/Reveal';
 import './sections.css';
 
 /**
- * Expérience — collage éditorial luxe : texte + liste « signature » en
- * chiffres romains (filets or) à gauche, collage de deux images à cadres
- * dorés décalés qui se chevauchent à droite, bannière panoramique en pied.
+ * Expérience — bloc compact « bento » luxe : colonne éditoriale (titre,
+ * intro, 4 engagements en chiffres romains) + mosaïque serrée 2×2
+ * (1 grande image portrait, 2 tuiles) alignée, hauteur maîtrisée.
  */
 const ROMANS = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 
@@ -25,7 +25,6 @@ export default function Experience() {
               </h2>
               <p className="os-exp__intro">{e.intro}</p>
             </Reveal>
-
             <Reveal>
               <ol className="os-exp__sig">
                 {e.bullets.map((b, i) => (
@@ -38,31 +37,24 @@ export default function Experience() {
             </Reveal>
           </div>
 
-          {/* Collage — cadres dorés décalés qui se chevauchent */}
-          <div className="os-exp__collage">
-            <Reveal>
-              <figure className="os-exp__fig os-exp__fig--main">
+          {/* Bento compact : 1 grande + 2 tuiles, tout aligné */}
+          <Reveal>
+            <div className="os-exp__bento">
+              <figure className="os-exp__cell os-exp__cell--tall">
                 <img src="/why-interior.webp" alt={e.cards.interior} loading="lazy" />
                 <figcaption><i>01</i>{e.cards.interior}</figcaption>
               </figure>
-            </Reveal>
-            <Reveal>
-              <figure className="os-exp__fig os-exp__fig--over">
+              <figure className="os-exp__cell">
                 <img src="/why-vip.webp" alt={e.cards.vip} loading="lazy" />
                 <figcaption><i>02</i>{e.cards.vip}</figcaption>
               </figure>
-            </Reveal>
-          </div>
+              <figure className="os-exp__cell">
+                <img src="/why-map.webp" alt={e.cards.map} loading="lazy" />
+                <figcaption><i>03</i>{e.cards.map}</figcaption>
+              </figure>
+            </div>
+          </Reveal>
         </div>
-
-        {/* Bannière panoramique */}
-        <Reveal>
-          <figure className="os-exp__wide">
-            <img src="/why-map.webp" alt={e.cards.map} loading="lazy" />
-            <div className="os-exp__wide-scrim" aria-hidden />
-            <figcaption><i>03</i>{e.cards.map}</figcaption>
-          </figure>
-        </Reveal>
       </div>
     </section>
   );
