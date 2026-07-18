@@ -1,64 +1,69 @@
+import { useRef, useState } from 'react';
 import { useI18n } from '@/i18n';
 import Reveal from '@/components/ui/Reveal';
 import { usePublished } from '@/lib/cms';
+import { useAutoScroll } from '@/lib/useAutoScroll';
 import './sections.css';
 
-/** Bandeau Événements — image de fond fixe + voile noir, aside "verre fumé". */
+/** Événements & Congrès — split éditorial : image expressive encadrée + texte. */
 export function Events({ onQuote }: { onQuote: () => void }) {
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
   return (
     <>
-      <section
-        className="os-section relative overflow-hidden border-y border-gold-deep/20 bg-cover bg-fixed bg-center"
-        style={{ backgroundImage: "url('/why-paris-night.webp')" }}
-        id="events"
-      >
-        <div className="absolute inset-0 bg-night/82" aria-hidden />
-        <div className="absolute inset-0 bg-gradient-to-r from-night via-night/70 to-transparent" aria-hidden />
-        <div className="os-container os-band__grid relative">
-          <Reveal>
-            <p className="os-eyebrow">{t.events.eyebrow}</p>
-            <h2>{t.events.title}</h2>
-            <p className="os-lead">{t.events.lead}</p>
-            <button className="os-btn os-btn--gold" onClick={onQuote}>{t.events.cta}</button>
-          </Reveal>
-          <Reveal>
-            <div className="os-events__aside">
-              <p className="os-events__asidetitle">{t.events.coordinateTitle}</p>
-              <ul className="os-events__list">
-                {t.events.coordinate.map((c) => <li key={c}>{c}</li>)}
-              </ul>
-            </div>
-          </Reveal>
+      <section className="os-section os-ev" id="events">
+        <div className="os-container">
+          <div className="os-ev__grid">
+            <Reveal>
+              <figure className="os-ev__media">
+                <img src="/why-paris-night.webp" alt={t.events.title} loading="lazy" />
+                <figcaption><i>✦</i>{lang === 'fr' ? 'Paris, un soir de sommet' : 'Paris, summit night'}</figcaption>
+              </figure>
+            </Reveal>
+            <Reveal>
+              <div className="os-ev__content">
+                <p className="os-eyebrow">{t.events.eyebrow}</p>
+                <h2 className="os-ev__title">{t.events.title}</h2>
+                <p className="os-lead os-ev__lead">{t.events.lead}</p>
+                <ul className="os-ev__list">
+                  {t.events.coordinate.map((c, i) => (
+                    <li key={c}><i>{String(i + 1).padStart(2, '0')}</i>{c}</li>
+                  ))}
+                </ul>
+                <button className="os-btn os-btn--gold" onClick={onQuote}>{t.events.cta}</button>
+              </div>
+            </Reveal>
+          </div>
         </div>
       </section>
 
       <FashionWeeks />
-      <DmcBand />
+      <DmcBand onQuote={onQuote} />
     </>
   );
 }
 
-/** Section dédiée Fashion Weeks (retirée du menu) — image de fond + éditorial. */
+/** Fashion Weeks — split miroir : texte à gauche, image expressive encadrée à droite. */
 function FashionWeeks() {
-  const { t } = useI18n();
+  const { lang, t } = useI18n();
   return (
-    <section
-      className="os-section os-fashion relative overflow-hidden bg-cover bg-center"
-      style={{ backgroundImage: "url('/why-vip.webp')" }}
-      id="fashion"
-    >
-      <div className="absolute inset-0 bg-night/78" aria-hidden />
-      <div className="absolute inset-0 bg-gradient-to-t from-night via-night/55 to-night/85" aria-hidden />
-      <div className="os-container relative">
-        <div className="os-fashion__inner">
+    <section className="os-section os-fw" id="fashion">
+      <div className="os-container">
+        <div className="os-fw__grid">
           <Reveal>
-            <p className="os-eyebrow">{t.fashion.eyebrow}</p>
-            <h2 className="os-fashion__title">{t.fashion.title}</h2>
-            <p className="os-lead os-fashion__lead">{t.fashion.lead}</p>
-            <ul className="os-fashion__points">
-              {t.fashion.points.map((p) => <li key={p}>{p}</li>)}
-            </ul>
+            <div className="os-fw__content">
+              <p className="os-eyebrow">{t.fashion.eyebrow}</p>
+              <h2 className="os-fw__title">{t.fashion.title}</h2>
+              <p className="os-lead os-fw__lead">{t.fashion.lead}</p>
+              <ul className="os-fw__points">
+                {t.fashion.points.map((p) => <li key={p}>{p}</li>)}
+              </ul>
+            </div>
+          </Reveal>
+          <Reveal>
+            <figure className="os-fw__media">
+              <img src="/why-vip.webp" alt={t.fashion.title} loading="lazy" />
+              <figcaption><i>✦</i>{lang === 'fr' ? 'Backstage, minute par minute' : 'Backstage, minute by minute'}</figcaption>
+            </figure>
           </Reveal>
         </div>
       </div>
@@ -66,9 +71,35 @@ function FashionWeeks() {
   );
 }
 
+/** Fiches Corporate & Institutions (rail auto + popup d'information). */
+interface CorpItem { src: string; fr: string; en: string; descFr: string; descEn: string }
+const CORP_ITEMS: CorpItem[] = [
+  { src: '/corp-embassy.webp', fr: 'Ambassades & Délégations', en: 'Embassies & Delegations',
+    descFr: 'Protocole, sécurité et discrétion pour délégations officielles : cortèges coordonnés, chauffeurs habilités, gestion des préséances et liaison avec les services de sécurité.',
+    descEn: 'Protocol, security and discretion for official delegations: coordinated motorcades, vetted chauffeurs, precedence management and liaison with security services.' },
+  { src: '/corp-corporate.webp', fr: 'Comptes Entreprises', en: 'Corporate Accounts',
+    descFr: 'Facturation centralisée, reporting mensuel, politiques de voyage et interlocuteur dédié : la mobilité de vos équipes, sans friction administrative.',
+    descEn: 'Centralised billing, monthly reporting, travel policies and a dedicated account manager: your teams’ mobility without administrative friction.' },
+  { src: '/corp-travel.webp', fr: 'Agences de voyage & DMC', en: 'Travel Agencies & DMCs',
+    descFr: 'Partenariats en marque blanche pour agences et DMC : tarifs négociés, disponibilité garantie et exécution irréprochable sous votre nom.',
+    descEn: 'White-label partnerships for agencies and DMCs: negotiated rates, guaranteed availability and flawless execution under your name.' },
+  { src: '/corp-aviation.webp', fr: 'Aviation Privée & d’Affaires', en: 'Private & Business Aviation',
+    descFr: 'Assistance FBO, opérations au Bourget et coordination sol-air : vos passagers passent du jet au salon sans la moindre friction.',
+    descEn: 'FBO assistance, Le Bourget operations and ground-to-air coordination: passengers move from jet to lounge without friction.' },
+  { src: '/corp-hotel.webp', fr: 'Hôtels & Hospitality', en: 'Hotels & Hospitality',
+    descFr: 'Partenariats palaces et gestion des flux clients VIP : voituriers, transferts invités et navettes événementielles au standard de votre maison.',
+    descEn: 'Palace partnerships and VIP guest flows: valets, guest transfers and event shuttles to your house’s standard.' },
+  { src: '/corp-chauffeur.webp', fr: 'Chauffeurs dédiés', en: 'Dedicated Chauffeurs',
+    descFr: 'Un chauffeur attitré à la semaine ou au mois : mêmes visages, mêmes standards, connaissance intime de vos habitudes et de vos adresses.',
+    descEn: 'A dedicated chauffeur by the week or month: same faces, same standards, intimate knowledge of your habits and addresses.' },
+];
+
 /** Bande Destination Management + Aviation Privée & Conciergerie (cartes image corp-*). */
-function DmcBand() {
+function DmcBand({ onQuote }: { onQuote: () => void }) {
   const { lang, t } = useI18n();
+  const corpRef = useRef<HTMLDivElement>(null);
+  const [corpInfo, setCorpInfo] = useState<CorpItem | null>(null);
+  useAutoScroll(corpRef, { speed: 0.45, paused: corpInfo !== null });
   const dmcPoints = lang === 'fr'
     ? [
         'Organisation locale & logistique de terrain',
@@ -82,12 +113,6 @@ function DmcBand() {
         'Hotel selection, palaces & hospitality',
         'Embassy protocol & official delegations',
       ];
-
-  const corpTiles = [
-    { src: '/corp-embassy.webp', label: t.corporate.embassy },
-    { src: '/corp-corporate.webp', label: t.corporate.accounts },
-    { src: '/corp-travel.webp', label: t.corporate.travel },
-  ];
 
   return (
     <section className="os-section" id="dmc-band">
@@ -125,29 +150,53 @@ function DmcBand() {
           </Reveal>
         </div>
 
-        {/* Bande Corporate & Institutions — tuiles image */}
-        <Reveal>
-          <div className="mt-16">
-            <p className="os-eyebrow">{t.corporate.eyebrow}</p>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              {corpTiles.map((c) => (
-                <figure key={c.src} className="group relative m-0 aspect-[16/9] overflow-hidden rounded-2xl border border-gold-deep/20">
-                  <img
-                    src={c.src}
-                    alt={c.label}
-                    loading="lazy"
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-night/90 via-night/20 to-transparent" aria-hidden />
-                  <figcaption className="absolute inset-x-4 bottom-3 font-display text-[1.1rem] text-ivory">
-                    {c.label}
-                  </figcaption>
-                </figure>
-              ))}
+      </div>
+
+      {/* Corporate & Institutions — vitrine large à défilement automatique */}
+      <Reveal>
+        <div className="os-container mt-16">
+          <div className="os-pk__head">
+            <p className="os-eyebrow" style={{ marginBottom: 0 }}>{t.corporate.eyebrow}</p>
+            <span className="os-pk__hint">{lang === 'fr' ? 'Cliquez sur une fiche' : 'Click a card'}</span>
+          </div>
+        </div>
+        <div className="os-pk__rail os-pk__rail--wide os-pk__rail--corp" ref={corpRef}>
+          {[...CORP_ITEMS, ...CORP_ITEMS].map((c, i) => (
+            <article key={`${c.src}-${i}`} className="os-pk__card os-pk__card--corp" onClick={() => setCorpInfo(c)}
+              role="button" tabIndex={i < CORP_ITEMS.length ? 0 : -1}
+              onKeyDown={(e) => e.key === 'Enter' && setCorpInfo(c)}>
+              <img src={c.src} alt={lang === 'fr' ? c.fr : c.en} loading="lazy" />
+              <div className="os-pk__scrim" aria-hidden />
+              <span className="os-pk__num">{String((i % CORP_ITEMS.length) + 1).padStart(2, '0')}</span>
+              <div className="os-pk__body">
+                <h3 className="os-pk__route">{lang === 'fr' ? c.fr : c.en}</h3>
+                <span className="os-pk__book">{lang === 'fr' ? 'En savoir plus' : 'Learn more'} →</span>
+              </div>
+            </article>
+          ))}
+        </div>
+      </Reveal>
+
+      {/* Popup fiche corporate */}
+      {corpInfo && (
+        <div className="os-dpop" role="dialog" aria-modal onClick={() => setCorpInfo(null)}>
+          <div className="os-dpop__panel" onClick={(e) => e.stopPropagation()}>
+            <button className="os-dpop__close" onClick={() => setCorpInfo(null)} aria-label={t.common.close}>×</button>
+            <div className="os-dpop__media">
+              <img src={corpInfo.src} alt={lang === 'fr' ? corpInfo.fr : corpInfo.en} />
+              <span className="os-dpop__chip">{t.corporate.eyebrow}</span>
+            </div>
+            <div className="os-dpop__body">
+              <h3 className="os-dpop__title">{lang === 'fr' ? corpInfo.fr : corpInfo.en}</h3>
+              <p className="os-dpop__desc">{lang === 'fr' ? corpInfo.descFr : corpInfo.descEn}</p>
+              <button className="os-btn os-btn--gold os-dpop__cta"
+                onClick={() => { setCorpInfo(null); onQuote(); }}>
+                {t.events.cta}
+              </button>
             </div>
           </div>
-        </Reveal>
-      </div>
+        </div>
+      )}
     </section>
   );
 }

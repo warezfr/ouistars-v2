@@ -18,7 +18,8 @@ import './pricing-tables.css';
 
 interface Props { onBook: (prefill?: string) => void; }
 
-const CATEGORY_ORDER: RouteCategory[] = ['airport', 'city', 'station', 'tour', 'riviera', 'city-to-city'];
+/** City-to-city en tête (consigne), puis le reste de la grille. */
+const CATEGORY_ORDER: RouteCategory[] = ['city-to-city', 'airport', 'city', 'station', 'tour', 'riviera'];
 const CLASSES: VehicleClass[] = ['E', 'V', 'S'];
 
 /** Format €/km avec décimales (formatEUR arrondit à l'euro). */

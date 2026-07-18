@@ -17,7 +17,10 @@ export default function Footer({ onJoin }: Props) {
     <footer className="os-footer" id="contact">
       <div className="os-container os-footer__grid">
         <div>
-          <div className="os-footer__brand">{brand.slice(0, 3)}<span>{brand.slice(3)}</span></div>
+          <div className="os-footer__brand">
+            <img src="/logo-ouistars.png" alt="" className="os-footer__logo" loading="lazy" />
+            <span className="os-footer__brandtext">{brand.slice(0, 3)}<span>{brand.slice(3)}</span></span>
+          </div>
           <p className="os-footer__tag">{(st.tagline as string) || t.footer.tagline}</p>
           <button className="os-btn os-btn--ghost" onClick={onJoin}>{t.nav.join}</button>
         </div>
