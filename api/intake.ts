@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { ROUTE_RATES, HOURLY_RATES, HOURLY_MIN_HOURS, PER_KM_RATES, type VehicleClass } from '../src/data/pricing.js';
+import { ROUTE_RATES, HOURLY_RATES, HOURLY_MIN_HOURS, PER_KM_RATES, MEET_GREET_RATES, type VehicleClass } from '../src/data/pricing.js';
 import { sendMail, opsEmail } from '../server/email/mailer.js';
 
 /**
@@ -59,6 +59,32 @@ const QuoteData = z.object({
   vehicles_count: z.coerce.number().int().min(1).max(200).optional(),
   details: z.string().max(4000).optional(),
 }).strip();
+
+const GreeterData = z.object({
+  service_type: z.enum(['arrival', 'transit', 'departure']),
+  airport_id: z.string().max(40).default('other'),
+  airport_label: z.string().max(160).default(''),
+  first_name: z.string().max(80).default(''),
+  last_name: z.string().max(80).default(''),
+  phone: z.string().max(40).default(''),
+  email: z.string().email().max(160).optional().or(z.literal('')),
+  travel_date: z.string().max(20).optional().or(z.literal('')),
+  travel_time: z.string().max(20).optional().or(z.literal('')),
+  flight_number: z.string().max(30).optional().or(z.literal('')),
+  passengers: z.coerce.number().int().min(1).max(20).default(1),
+  notes: z.string().max(2000).optional(),
+}).strip();
+
+/** Prix Meet & Greeter officiel (base + supplément par pax au-delà de l'inclus). */
+function greeterPrice(airportId: string, passengers: number): number | null {
+  const rate = MEET_GREET_RATES.find((r) => r.id === airportId);
+  if (!rate || rate.base == null) return null;
+  return rate.base + Math.max(0, passengers - rate.includedPax) * (rate.extraPaxSurcharge ?? 0);
+}
+
+const GREETER_LABELS: Record<string, string> = {
+  arrival: 'Arrivée', transit: 'Transit', departure: 'Départ',
+};
 
 const ChauffeurData = z.object({
   first_name: z.string().max(80).optional(),
@@ -188,6 +214,68 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
       return res.status(200).json({ success: true, reference, amount });
+    }
+
+    if (type === 'greeter') {
+      const data = GreeterData.parse(body.data ?? {});
+      const amount = greeterPrice(data.airport_id, data.passengers);
+      const ref = `GR-${Date.now().toString(36).toUpperCase().slice(-5)}${Math.floor(Math.random() * 36).toString(36).toUpperCase()}`;
+      const svc = GREETER_LABELS[data.service_type] ?? data.service_type;
+      const airport = data.airport_label ||
+        MEET_GREET_RATES.find((r) => r.id === data.airport_id)?.airport || 'Aéroport';
+
+      const notes = [
+        `Meet & Greeter — ${svc}`,
+        data.flight_number ? `Vol ${data.flight_number}` : '',
+        amount == null ? 'Tarif : sur devis' : '',
+        data.notes ?? '',
+      ].filter(Boolean).join(' · ');
+
+      if (supabase) {
+        const { error } = await insertResilient(supabase, 'website_bookings', {
+          reference: ref, channel,
+          first_name: data.first_name, last_name: data.last_name,
+          phone: data.phone, email: data.email || null,
+          pickup: airport,
+          destination: `Meet & Greeter (${svc})`,
+          travel_date: data.travel_date || null,
+          travel_time: data.travel_time || null,
+          passengers: data.passengers,
+          notes,
+          price_amount: amount,
+          route_id: `greeter-${data.airport_id}`,
+        });
+        if (error) throw error;
+      }
+
+      const summary = `Meet & Greeter ${svc} · ${airport}` +
+        ` · ${data.travel_date ?? ''} ${data.travel_time ?? ''}` +
+        `${data.flight_number ? ` · vol ${data.flight_number}` : ''}` +
+        ` · ${data.passengers} pax · ${amount != null ? `${amount} €` : 'sur devis'}`;
+
+      if (data.email) {
+        await sendMail({
+          to: data.email,
+          subject: `Votre demande Meet & Greeter ${ref} — Oui Stars`,
+          html: `<p>Bonjour ${esc(data.first_name)},</p>
+            <p>Nous avons bien reçu votre demande Meet & Greeter <strong>${ref}</strong> :</p>
+            <p>${esc(summary)}</p>
+            <p><em>Le tarif du service Meet & Greeter n'inclut ni le véhicule ni le chauffeur ;
+            le transport se réserve et se facture séparément.</em></p>
+            <p>Notre équipe la confirme dans les meilleurs délais (24/7).</p>
+            <p>Oui Stars — Premium Chauffeur Service<br/>+33 6 51 03 03 06 · info@ouistars.com</p>`,
+        });
+      }
+      if (ops) {
+        await sendMail({
+          to: ops,
+          subject: `🛬 Meet & Greeter ${ref} — ${svc} ${airport}`,
+          html: `<p><strong>${esc(data.first_name)} ${esc(data.last_name)}</strong> — ${esc(data.phone)} ${data.email ? '· ' + esc(data.email) : ''} · canal ${esc(channel)}</p>
+            <p>${esc(summary)}</p><p>${esc(data.notes ?? '')}</p>
+            <p><a href="https://ouistars-v2.vercel.app/admin/bookings">Ouvrir le back-office</a></p>`,
+        });
+      }
+      return res.status(200).json({ success: true, reference: ref, amount });
     }
 
     if (type === 'quote') {

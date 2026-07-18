@@ -1,11 +1,20 @@
+import { useState } from 'react';
 import { useI18n } from '@/i18n';
 import { MEET_GREET_RATES, MEET_GREET_INCLUDES, MEET_GREET_DISCLAIMER } from '@/data/pricing';
 import { formatEUR } from '@/lib/pricing';
 import Reveal from '@/components/ui/Reveal';
+import MeetGreetWizard from './MeetGreetWizard';
 import './sections.css';
+import './meetgreet.css';
 
+/**
+ * Section Meet & Greeter : un seul bloc (prestations + disclaimer + CTA).
+ * La réservation se fait dans un wizard popup (type → aéroport → formulaire).
+ */
 export default function MeetGreeter() {
   const { t } = useI18n();
+  const [wizardOpen, setWizardOpen] = useState(false);
+
   return (
     <section className="os-section os-mg" id="meet-greet">
       <div className="os-container">
@@ -14,37 +23,36 @@ export default function MeetGreeter() {
           <h2>{t.meetGreet.title}</h2>
         </Reveal>
 
-        <div className="os-mg__grid">
-          <Reveal>
-            <div className="os-mg__rates">
-              {MEET_GREET_RATES.map((r) => (
-                <div key={r.id} className="os-card os-mg__rate">
-                  <div className="os-mg__airport">{r.airport}</div>
-                  <div className="os-mg__price">{r.base != null ? formatEUR(r.base) : '—'}</div>
-                  <div className="os-mg__meta">
-                    {t.meetGreet.upTo} {r.includedPax} {t.meetGreet.paxBags}
-                    {r.extraPaxSurcharge != null && (
-                      <span> · +{formatEUR(r.extraPaxSurcharge)} {t.meetGreet.surcharge}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-
-          <Reveal>
-            <div className="os-card os-mg__includes">
+        <Reveal>
+          <div className="os-mg2">
+            <div className="os-mg2__body">
               <h3>{t.meetGreet.includes}</h3>
               <ul>
                 {MEET_GREET_INCLUDES.map((i) => (
                   <li key={i}>{i}</li>
                 ))}
               </ul>
-              <p className="os-mg__disclaimer">⚠️ {MEET_GREET_DISCLAIMER}</p>
+              <p className="os-mg2__disclaimer">⚠️ {MEET_GREET_DISCLAIMER}</p>
+              <button className="os-btn os-btn--gold os-mg2__cta" onClick={() => setWizardOpen(true)}>
+                {t.meetGreet.cta} →
+              </button>
             </div>
-          </Reveal>
-        </div>
+
+            <div className="os-mg2__visual" style={{ backgroundImage: 'url(/meet-greet.webp)' }}>
+              <div className="os-mg2__prices">
+                {MEET_GREET_RATES.map((r) => (
+                  <div key={r.id} className="os-mg2__pricecard">
+                    <span>{r.airport}</span>
+                    <b>{r.base != null ? formatEUR(r.base) : t.meetGreet.onQuote}</b>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Reveal>
       </div>
+
+      <MeetGreetWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
     </section>
   );
 }
