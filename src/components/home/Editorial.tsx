@@ -115,6 +115,7 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
       ];
 
   return (
+    <>
     <section className="os-section" id="dmc-band">
       <div className="os-container">
         <div className="os-band__grid">
@@ -151,12 +152,19 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
         </div>
 
       </div>
+    </section>
 
-      {/* Corporate & Institutions — vitrine large à défilement automatique */}
+    {/* Corporate & Institutions — section à part entière, vitrine auto-défilante */}
+    <section className="os-section" id="corporate">
       <Reveal>
-        <div className="os-container mt-16">
+        <div className="os-container">
           <div className="os-pk__head">
-            <p className="os-eyebrow" style={{ marginBottom: 0 }}>{t.corporate.eyebrow}</p>
+            <div>
+              <p className="os-eyebrow">{t.corporate.eyebrow}</p>
+              <h2 className="os-pk__title">
+                {lang === 'fr' ? 'Des partenariats à la hauteur de vos exigences' : 'Partnerships that meet your standards'}
+              </h2>
+            </div>
             <span className="os-pk__hint">{lang === 'fr' ? 'Cliquez sur une fiche' : 'Click a card'}</span>
           </div>
         </div>
@@ -198,6 +206,7 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
         </div>
       )}
     </section>
+    </>
   );
 }
 
