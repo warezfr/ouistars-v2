@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { MEET_GREET_RATES } from '@/data/pricing';
 import { computeMeetGreet, formatEUR } from '@/lib/pricing';
+import { DateField, TimeField } from '@/components/booking/pickers';
 import { useI18n } from '@/i18n';
 import './meetgreet.css';
 
@@ -89,7 +90,7 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
 
   async function submit(channelKind: 'email' | 'whatsapp') {
     setErrMsg('');
-    if (!form.first_name.trim() || !form.phone.trim()) { setErrMsg(mg.needFields); return; }
+    if (!form.first_name.trim() || !form.phone.trim() || !form.travel_date) { setErrMsg(mg.needFields); return; }
     if (channelKind === 'email' && !form.email.trim()) { setErrMsg(mg.needEmail); return; }
     setSending(channelKind);
 
@@ -216,26 +217,40 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
             )}
 
             <div className="os-mgw__form">
-              <input className="os-mgw__input" placeholder={`${mg.firstName} *`} value={form.first_name}
-                onChange={(e) => set('first_name', e.target.value)} />
-              <input className="os-mgw__input" placeholder={mg.lastName} value={form.last_name}
-                onChange={(e) => set('last_name', e.target.value)} />
-              <input className="os-mgw__input" placeholder={`${mg.phone} *`} type="tel" value={form.phone}
-                onChange={(e) => set('phone', e.target.value)} />
-              <input className="os-mgw__input" placeholder={mg.email} type="email" value={form.email}
-                onChange={(e) => set('email', e.target.value)} />
               <label className="os-mgw__labeled">
-                <span>{mg.date}</span>
-                <input className="os-mgw__input" type="date" value={form.travel_date}
-                  onChange={(e) => set('travel_date', e.target.value)} />
+                <span>{mg.firstName} <i className="os-mgw__req">*</i></span>
+                <input className="os-mgw__input" value={form.first_name}
+                  onChange={(e) => set('first_name', e.target.value)} />
               </label>
               <label className="os-mgw__labeled">
+                <span>{mg.lastName}</span>
+                <input className="os-mgw__input" value={form.last_name}
+                  onChange={(e) => set('last_name', e.target.value)} />
+              </label>
+              <label className="os-mgw__labeled">
+                <span>{mg.phone} <i className="os-mgw__req">*</i></span>
+                <input className="os-mgw__input" type="tel" placeholder="+33 6 …" value={form.phone}
+                  onChange={(e) => set('phone', e.target.value)} />
+              </label>
+              <label className="os-mgw__labeled">
+                <span>{mg.email}</span>
+                <input className="os-mgw__input" type="email" placeholder="vous@exemple.com" value={form.email}
+                  onChange={(e) => set('email', e.target.value)} />
+              </label>
+              <div className="os-mgw__labeled">
+                <span>{mg.date} <i className="os-mgw__req">*</i></span>
+                <DateField value={form.travel_date} min={new Date().toISOString().slice(0, 10)}
+                  locale={lang} onChange={(iso) => set('travel_date', iso)} />
+              </div>
+              <div className="os-mgw__labeled">
                 <span>{mg.time}</span>
-                <input className="os-mgw__input" type="time" value={form.travel_time}
-                  onChange={(e) => set('travel_time', e.target.value)} />
+                <TimeField value={form.travel_time} locale={lang} onChange={(v) => set('travel_time', v)} />
+              </div>
+              <label className="os-mgw__labeled">
+                <span>{mg.flight}</span>
+                <input className="os-mgw__input" placeholder="AF 1234" value={form.flight_number}
+                  onChange={(e) => set('flight_number', e.target.value)} />
               </label>
-              <input className="os-mgw__input" placeholder={mg.flight} value={form.flight_number}
-                onChange={(e) => set('flight_number', e.target.value)} />
               <label className="os-mgw__labeled">
                 <span>{mg.pax}</span>
                 <input className="os-mgw__input" type="number" min={1} max={20} value={form.passengers}
@@ -245,6 +260,7 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
                 value={form.notes} onChange={(e) => set('notes', e.target.value)} />
             </div>
 
+            <p className="os-mgw__legend"><i className="os-mgw__req">*</i> {mg.requiredNote}</p>
             {errMsg && <p className="os-mgw__err">{errMsg}</p>}
 
             <div className="os-mgw__actions">

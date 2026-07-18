@@ -32,22 +32,27 @@ export default function MeetGreeter() {
                   <li key={i}>{i}</li>
                 ))}
               </ul>
-              <p className="os-mg2__disclaimer">⚠️ {MEET_GREET_DISCLAIMER}</p>
+
+              <div className="os-mg2__tarifs">
+                {MEET_GREET_RATES.map((r) => (
+                  <div key={r.id} className="os-mg2__tarif">
+                    <span className="os-mg2__tairport">{r.airport}</span>
+                    <span className="os-mg2__tprice">{r.base != null ? formatEUR(r.base) : t.meetGreet.onQuote}</span>
+                    <span className="os-mg2__tmeta">
+                      {t.meetGreet.upTo} {r.includedPax} {t.meetGreet.paxBags}
+                      {r.extraPaxSurcharge != null && <> · +{formatEUR(r.extraPaxSurcharge)}/pax</>}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="os-mg2__disclaimer">{MEET_GREET_DISCLAIMER}</p>
               <button className="os-btn os-btn--gold os-mg2__cta" onClick={() => setWizardOpen(true)}>
                 {t.meetGreet.cta} →
               </button>
             </div>
 
-            <div className="os-mg2__visual" style={{ backgroundImage: 'url(/meet-greet.webp)' }}>
-              <div className="os-mg2__prices">
-                {MEET_GREET_RATES.map((r) => (
-                  <div key={r.id} className="os-mg2__pricecard">
-                    <span>{r.airport}</span>
-                    <b>{r.base != null ? formatEUR(r.base) : t.meetGreet.onQuote}</b>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <div className="os-mg2__visual" style={{ backgroundImage: 'url(/meet-greet.webp)' }} />
           </div>
         </Reveal>
       </div>
