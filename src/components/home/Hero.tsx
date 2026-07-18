@@ -2,13 +2,14 @@ import { useI18n } from '@/i18n';
 import FareCalculator from './FareCalculator';
 import './hero.css';
 
-interface Props { onBook: (prefill?: string) => void; onQuote: () => void; }
-
-/** Hero vidéo plein écran — imagerie luxe, voile noir → transparent + halo doré. */
-export default function Hero({ onBook, onQuote }: Props) {
+/** Hero vidéo plein écran — imagerie luxe, voile noir → transparent + halo doré.
+    Le calculateur (barre horizontale) vit dans le hero : le contenu au-dessus
+    reste compact (titre + chips services). */
+export default function Hero() {
   const { t } = useI18n();
+  const services = t.hero.subtitle.split('•').map((s) => s.trim()).filter(Boolean);
   return (
-    <section className="relative flex min-h-screen items-center overflow-hidden pb-16 pt-32" id="top">
+    <section className="relative flex min-h-screen items-center overflow-hidden pb-10 pt-28" id="top">
       <video
         className="absolute inset-0 h-full w-full object-cover"
         src="/herolast.mp4"
@@ -28,7 +29,7 @@ export default function Hero({ onBook, onQuote }: Props) {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[1560px] flex-col gap-12 px-[clamp(18px,3vw,44px)]">
+      <div className="relative z-10 mx-auto flex w-full max-w-[1560px] flex-col gap-8 px-[clamp(18px,3vw,44px)]">
         <div>
           <p className="os-eyebrow">{t.hero.eyebrow}</p>
           <h1 className="os-title-hero font-display font-semibold text-ivory">
@@ -36,10 +37,11 @@ export default function Hero({ onBook, onQuote }: Props) {
             <span className="italic text-gold-soft">{t.hero.titleAccent}</span>
           </h1>
           <a className="os-hero__pricing-link" href="#tarifs">{t.hero.pricingLink}</a>
-          <p className="os-lead os-hero__sub max-w-[62ch]">{t.hero.subtitle}</p>
-          <div className="flex flex-wrap gap-3.5">
-            <button className="os-btn os-btn--gold" onClick={() => onBook()}>{t.hero.ctaBook}</button>
-            <button className="os-btn os-btn--ghost" onClick={onQuote}>{t.hero.ctaQuote}</button>
+          {/* Services en chips perlées — compact, laisse la place au calculateur */}
+          <div className="os-hero__chips">
+            {services.map((s) => (
+              <span key={s} className="os-hero__chip">{s}</span>
+            ))}
           </div>
         </div>
 

@@ -26,7 +26,7 @@ export default function HomePage() {
       <GoldWaves />
       <Nav onBook={() => openBooking()} />
       <main>
-        <Hero onBook={openBooking} onQuote={() => setQuote(true)} />
+        <Hero />
         <Services />
         <MeetGreeter />
         <Fleet />
