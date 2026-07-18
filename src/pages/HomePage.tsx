@@ -6,6 +6,7 @@ import Services from '@/components/home/Services';
 import Fleet from '@/components/home/Fleet';
 import Experience from '@/components/home/Experience';
 import GoldWaves from '@/components/ui/GoldWaves';
+import SepDune from '@/components/ui/SepDune';
 import MeetGreeter from '@/components/home/MeetGreeter';
 import Packages from '@/components/home/Packages';
 import PricingTables from '@/components/home/PricingTables';
@@ -28,14 +29,19 @@ export default function HomePage() {
       <main>
         <Hero />
         <Services />
+        <SepDune />
         <MeetGreeter />
+        <SepDune />
         <Fleet />
         <Experience />
+        <SepDune />
         <Packages onBook={openBooking} />
         <PricingTables onBook={openBooking} />
+        <SepDune />
         <Events onQuote={() => setQuote(true)} />
         <PrestigiousAddresses />
         <About />
+        <SepDune />
         <Faq />
       </main>
       <Footer onJoin={() => setChauffeur(true)} />
