@@ -38,7 +38,7 @@ function Card({ title, sub, right, children }: { title: string; sub?: string; ri
     <div className="card card-outline card-warning mb-4">
       <div className="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
         <div>
-          <h3 className="card-title mb-0">{title}</h3>
+          <h3 className="card-title mb-0" style={{ float: 'none', display: 'block' }}>{title}</h3>
           {sub && <small className="text-muted d-block">{sub}</small>}
         </div>
         {right}
