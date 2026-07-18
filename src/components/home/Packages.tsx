@@ -70,7 +70,8 @@ export default function Packages({ onBook }: Props) {
   const routes = ROUTE_RATES.filter((r) => FEATURED.includes(r.id));
   const railRef = useRef<HTMLDivElement>(null);
   const [info, setInfo] = useState<RouteRate | null>(null);
-  useAutoScroll(railRef, { speed: 0.5, paused: info !== null });
+  const [allOpen, setAllOpen] = useState(false);
+  useAutoScroll(railRef, { speed: 0.5, paused: info !== null || allOpen });
 
   // Contenu doublé → boucle sans couture du défilement automatique.
   const loop = [...routes, ...routes];
@@ -84,7 +85,13 @@ export default function Packages({ onBook }: Props) {
               <p className="os-eyebrow">{t.packages.eyebrow}</p>
               <h2 className="os-pk__title">{t.packages.title}</h2>
             </div>
-            <span className="os-pk__hint">{lang === 'fr' ? 'Cliquez sur une destination' : 'Click a destination'}</span>
+            <div className="os-pk__headright">
+              <span className="os-pk__hint">{lang === 'fr' ? 'Cliquez sur une destination' : 'Click a destination'}</span>
+              <button type="button" className="os-gal__openbtn" onClick={() => setAllOpen(true)}>
+                {lang === 'fr' ? 'Tout afficher' : 'View all'}
+                <i>{String(routes.length).padStart(2, '0')}</i>
+              </button>
+            </div>
           </div>
         </Reveal>
       </div>
@@ -114,6 +121,47 @@ export default function Packages({ onBook }: Props) {
           ))}
         </div>
       </Reveal>
+
+      {/* Galerie « Tout afficher » — l'index complet des itinéraires */}
+      {allOpen && (
+        <div className="os-gal" role="dialog" aria-modal onClick={() => setAllOpen(false)}>
+          <div className="os-gal__panel" onClick={(e) => e.stopPropagation()}>
+            <button className="os-dpop__close" onClick={() => setAllOpen(false)} aria-label={t.common.close}>×</button>
+            <header className="os-gal__head">
+              <div>
+                <p className="os-eyebrow">{t.packages.eyebrow}</p>
+                <h3 className="os-gal__title">{t.packages.title}</h3>
+              </div>
+              <span className="os-gal__count">{String(routes.length).padStart(2, '0')} {lang === 'fr' ? 'itinéraires' : 'itineraries'}</span>
+            </header>
+            <div className="os-gal__grid">
+              {routes.map((r, i) => (
+                <article key={r.id} className="os-gal__card" style={{ animationDelay: `${i * 70}ms` }}
+                  onClick={() => { setAllOpen(false); setInfo(r); }} role="button" tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && (setAllOpen(false), setInfo(r))}>
+                  <div className="os-gal__media">
+                    <img src={ROUTE_IMAGES[r.id] ?? FALLBACK_IMAGE} alt={r.label} loading="lazy" />
+                    <span className="os-gal__num">{String(i + 1).padStart(2, '0')}</span>
+                  </div>
+                  <div className="os-gal__body">
+                    <h4>{r.label}</h4>
+                    <p className="os-gal__desc">{ROUTE_INFO[r.id]?.[lang] ?? ''}</p>
+                    <div className="os-gal__prices">
+                      {(['E', 'V', 'S'] as const).map((c) => (
+                        <span key={c}><small>{VEHICLE_CLASSES[c].name}</small><b>{formatEUR(r.prices[c])}</b></span>
+                      ))}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <footer className="os-gal__foot">
+              <span>{lang === 'fr' ? 'Prix TTC, par transfert dans un sens ou dans l’autre.' : 'Prices incl. VAT, per one-way transfer.'}</span>
+              <a href="#tarifs" onClick={() => setAllOpen(false)}>{lang === 'fr' ? 'Voir la grille complète →' : 'See the full price list →'}</a>
+            </footer>
+          </div>
+        </div>
+      )}
 
       {/* Popup destination */}
       {info && (

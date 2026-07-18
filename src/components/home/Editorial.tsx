@@ -99,7 +99,8 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
   const { lang, t } = useI18n();
   const corpRef = useRef<HTMLDivElement>(null);
   const [corpInfo, setCorpInfo] = useState<CorpItem | null>(null);
-  useAutoScroll(corpRef, { speed: 0.45, paused: corpInfo !== null });
+  const [corpAllOpen, setCorpAllOpen] = useState(false);
+  useAutoScroll(corpRef, { speed: 0.45, paused: corpInfo !== null || corpAllOpen });
   const dmcPoints = lang === 'fr'
     ? [
         'Organisation locale & logistique de terrain',
@@ -165,7 +166,13 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
                 {lang === 'fr' ? 'Des partenariats à la hauteur de vos exigences' : 'Partnerships that meet your standards'}
               </h2>
             </div>
-            <span className="os-pk__hint">{lang === 'fr' ? 'Cliquez sur une fiche' : 'Click a card'}</span>
+            <div className="os-pk__headright">
+              <span className="os-pk__hint">{lang === 'fr' ? 'Cliquez sur une fiche' : 'Click a card'}</span>
+              <button type="button" className="os-gal__openbtn" onClick={() => setCorpAllOpen(true)}>
+                {lang === 'fr' ? 'Tout afficher' : 'View all'}
+                <i>{String(CORP_ITEMS.length).padStart(2, '0')}</i>
+              </button>
+            </div>
           </div>
         </div>
         <div className="os-pk__rail os-pk__rail--wide os-pk__rail--corp" ref={corpRef}>
@@ -184,6 +191,45 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
           ))}
         </div>
       </Reveal>
+
+      {/* Galerie « Tout afficher » — l'index complet des partenariats */}
+      {corpAllOpen && (
+        <div className="os-gal" role="dialog" aria-modal onClick={() => setCorpAllOpen(false)}>
+          <div className="os-gal__panel" onClick={(e) => e.stopPropagation()}>
+            <button className="os-dpop__close" onClick={() => setCorpAllOpen(false)} aria-label={t.common.close}>×</button>
+            <header className="os-gal__head">
+              <div>
+                <p className="os-eyebrow">{t.corporate.eyebrow}</p>
+                <h3 className="os-gal__title">
+                  {lang === 'fr' ? 'Des partenariats à la hauteur de vos exigences' : 'Partnerships that meet your standards'}
+                </h3>
+              </div>
+              <span className="os-gal__count">{String(CORP_ITEMS.length).padStart(2, '0')} {lang === 'fr' ? 'expertises' : 'areas of expertise'}</span>
+            </header>
+            <div className="os-gal__grid">
+              {CORP_ITEMS.map((c, i) => (
+                <article key={c.src} className="os-gal__card" style={{ animationDelay: `${i * 70}ms` }}
+                  onClick={() => { setCorpAllOpen(false); setCorpInfo(c); }} role="button" tabIndex={0}
+                  onKeyDown={(e) => e.key === 'Enter' && (setCorpAllOpen(false), setCorpInfo(c))}>
+                  <div className="os-gal__media">
+                    <img src={c.src} alt={lang === 'fr' ? c.fr : c.en} loading="lazy" />
+                    <span className="os-gal__num">{String(i + 1).padStart(2, '0')}</span>
+                  </div>
+                  <div className="os-gal__body">
+                    <h4>{lang === 'fr' ? c.fr : c.en}</h4>
+                    <p className="os-gal__desc">{lang === 'fr' ? c.descFr : c.descEn}</p>
+                    <span className="os-gal__more">{lang === 'fr' ? 'En savoir plus' : 'Learn more'} →</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <footer className="os-gal__foot">
+              <span>{lang === 'fr' ? 'Chaque partenariat s’accompagne d’un interlocuteur dédié.' : 'Every partnership comes with a dedicated account manager.'}</span>
+              <a href="#corporate" onClick={() => { setCorpAllOpen(false); onQuote(); }}>{t.events.cta} →</a>
+            </footer>
+          </div>
+        </div>
+      )}
 
       {/* Popup fiche corporate */}
       {corpInfo && (
