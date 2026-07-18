@@ -2,64 +2,66 @@ import { useI18n } from '@/i18n';
 import Reveal from '@/components/ui/Reveal';
 import './sections.css';
 
-/** Clés des cartes de la mosaïque (images réelles /public/why-*.webp). */
-type ExperienceCardKey = 'interior' | 'vip' | 'airport' | 'map';
+/**
+ * Expérience — collage éditorial luxe : texte + liste « signature » en
+ * chiffres romains (filets or) à gauche, collage de deux images à cadres
+ * dorés décalés qui se chevauchent à droite, bannière panoramique en pied.
+ */
+const ROMANS = ['I', 'II', 'III', 'IV', 'V', 'VI'];
 
-interface MosaicCard {
-  key: ExperienceCardKey;
-  src: string;
-  className: string;
-}
-
-const MOSAIC: MosaicCard[] = [
-  { key: 'interior', src: '/why-interior.webp', className: 'row-span-2 min-h-[320px] sm:min-h-[420px]' },
-  { key: 'vip', src: '/why-vip.webp', className: 'aspect-[4/3]' },
-  { key: 'airport', src: '/why-airport.webp', className: 'aspect-[4/3]' },
-  { key: 'map', src: '/why-map.webp', className: 'col-span-2 aspect-[21/8]' },
-];
-
-/** Section « Expérience » — grille éditoriale + puces de réassurance. */
 export default function Experience() {
   const { t } = useI18n();
+  const e = t.experience;
   return (
-    <section className="os-section" id="experience">
-      <div className="os-container grid items-center gap-14 lg:grid-cols-[0.85fr_1.15fr]">
-        <Reveal>
-          <p className="os-eyebrow">{t.experience.eyebrow}</p>
-          <h2>
-            {t.experience.title}{' '}
-            <span className="italic text-gold-soft">{t.experience.titleAccent}</span>
-          </h2>
-          <p className="os-lead">{t.experience.intro}</p>
-          <ul className="mt-8 grid list-none gap-4 p-0">
-            {t.experience.bullets.map((b) => (
-              <li key={b} className="flex items-baseline gap-3 text-[0.95rem] text-ivory/85">
-                <span className="text-[0.6rem] text-gold" aria-hidden>✦</span>
-                {b}
-              </li>
-            ))}
-          </ul>
-        </Reveal>
-        <Reveal>
-          <div className="grid grid-cols-2 gap-4">
-            {MOSAIC.map((c) => (
-              <figure
-                key={c.key}
-                className={`group relative m-0 overflow-hidden rounded-2xl border border-gold-deep/20 ${c.className}`}
-              >
-                <img
-                  src={c.src}
-                  alt={t.experience.cards[c.key]}
-                  loading="lazy"
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-night/85 via-transparent to-transparent" aria-hidden />
-                <figcaption className="absolute inset-x-4 bottom-3 font-display text-[1.05rem] italic text-ivory/95">
-                  {t.experience.cards[c.key]}
-                </figcaption>
-              </figure>
-            ))}
+    <section className="os-section os-exp" id="experience">
+      <div className="os-container">
+        <div className="os-exp__layout">
+          {/* Colonne éditoriale */}
+          <div className="os-exp__text">
+            <Reveal>
+              <p className="os-eyebrow">{e.eyebrow}</p>
+              <h2 className="os-exp__title">
+                {e.title} <span className="italic text-gold-soft">{e.titleAccent}</span>
+              </h2>
+              <p className="os-exp__intro">{e.intro}</p>
+            </Reveal>
+
+            <Reveal>
+              <ol className="os-exp__sig">
+                {e.bullets.map((b, i) => (
+                  <li key={b} className="os-exp__sigrow">
+                    <span className="os-exp__signum">{ROMANS[i]}</span>
+                    <span className="os-exp__sigtext">{b}</span>
+                  </li>
+                ))}
+              </ol>
+            </Reveal>
           </div>
+
+          {/* Collage — cadres dorés décalés qui se chevauchent */}
+          <div className="os-exp__collage">
+            <Reveal>
+              <figure className="os-exp__fig os-exp__fig--main">
+                <img src="/why-interior.webp" alt={e.cards.interior} loading="lazy" />
+                <figcaption><i>01</i>{e.cards.interior}</figcaption>
+              </figure>
+            </Reveal>
+            <Reveal>
+              <figure className="os-exp__fig os-exp__fig--over">
+                <img src="/why-vip.webp" alt={e.cards.vip} loading="lazy" />
+                <figcaption><i>02</i>{e.cards.vip}</figcaption>
+              </figure>
+            </Reveal>
+          </div>
+        </div>
+
+        {/* Bannière panoramique */}
+        <Reveal>
+          <figure className="os-exp__wide">
+            <img src="/why-map.webp" alt={e.cards.map} loading="lazy" />
+            <div className="os-exp__wide-scrim" aria-hidden />
+            <figcaption><i>03</i>{e.cards.map}</figcaption>
+          </figure>
         </Reveal>
       </div>
     </section>
