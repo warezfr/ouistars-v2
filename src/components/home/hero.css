@@ -53,3 +53,45 @@
 /* Titre hero réduit (demande client) — élargi pour le layout horizontal :
    tout le hero (titre + chips + calculateur) doit tenir au-dessus de la ligne de flottaison */
 .os-title-hero { font-size: clamp(1.7rem, 2.9vw, 2.7rem); line-height: 1.14; max-width: 40ch; }
+
+/* ————— Hero « Palace » : composition centrée, ornements, or dégradé ————— */
+.os-goldgrad {
+  background: linear-gradient(100deg, #b8923a, #f0dca2 45%, #d9b665 65%, #b8923a);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.65));
+}
+.os-hero__palace { text-align: center; margin-top: clamp(8px, 2vw, 26px); }
+.os-hero__deco {
+  display: flex; align-items: center; justify-content: center; gap: 18px;
+  margin-bottom: 20px; color: var(--os-gold);
+}
+.os-hero__deco::before, .os-hero__deco::after {
+  content: ''; width: clamp(60px, 10vw, 140px); height: 1px;
+}
+.os-hero__deco::before { background: linear-gradient(90deg, transparent, var(--os-gold)); }
+.os-hero__deco::after { background: linear-gradient(90deg, var(--os-gold), transparent); }
+.os-hero__deco span {
+  font-size: 0.62rem; letter-spacing: 0.38em; text-transform: uppercase;
+  color: var(--os-gold-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 70vw;
+}
+.os-title-hero--center { margin-inline: auto; max-width: 24ch; }
+.os-hero__palace .os-hero__pricing-link { margin-top: 16px; }
+
+/* Bandeau de stats — preuves de maison */
+.os-hero__stats {
+  display: flex; justify-content: center;
+  border-block: 1px solid rgba(201, 162, 75, 0.22);
+  background: rgba(11, 12, 16, 0.35); backdrop-filter: blur(6px);
+}
+.os-hero__stats div {
+  flex: 1; max-width: 260px; text-align: center; padding: 12px 10px;
+  border-right: 1px solid rgba(201, 162, 75, 0.18);
+}
+.os-hero__stats div:first-child { border-left: 1px solid rgba(201, 162, 75, 0.18); }
+.os-hero__stats b { display: block; font-family: var(--os-font-display); font-weight: 500; font-size: 1.45rem; line-height: 1.15; }
+.os-hero__stats span { font-size: 0.56rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--os-mut); }
+@media (max-width: 760px) {
+  .os-hero__stats { flex-wrap: wrap; }
+  .os-hero__stats div { flex: 1 1 40%; max-width: none; border-left: 0 !important; }
+}

@@ -150,3 +150,18 @@
   .os-calc--h .os-calc__search { width: 100%; }
   .os-calc__quote--h .os-calc__prices { margin-left: 0; flex-wrap: wrap; }
 }
+
+/* ————— Cadre « palace » du calculateur (coins dorés) ————— */
+.os-calc--h { position: relative; }
+.os-calc--h::before, .os-calc--h::after {
+  content: ''; position: absolute; width: 26px; height: 26px; pointer-events: none;
+}
+.os-calc--h::before { top: -7px; left: -7px; border-top: 1px solid var(--os-gold); border-left: 1px solid var(--os-gold); }
+.os-calc--h::after { bottom: -7px; right: -7px; border-bottom: 1px solid var(--os-gold); border-right: 1px solid var(--os-gold); }
+/* Bouton Rechercher en or dégradé « feuille d'or » */
+.os-calc--h .os-calc__search {
+  background: linear-gradient(120deg, #8f7126, #c9a24b 45%, #e7cf8e);
+  color: #14161c; border: 0; font-weight: 600; letter-spacing: 0.04em;
+}
+.os-calc--h .os-calc__search:hover { filter: brightness(1.08); }
+.os-calc--h .os-calc__search:disabled { filter: grayscale(0.4); }

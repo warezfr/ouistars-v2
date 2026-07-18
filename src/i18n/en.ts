@@ -120,6 +120,12 @@ export const en: typeof fr = {
       'Absolute confidentiality, guaranteed discretion',
       '24/7 assistance & concierge, across France',
     ],
+    ritual: [
+      { t: 'The preparation', d: 'Flight tracked, route checked, vehicle prepared an hour before your arrival.' },
+      { t: 'The welcome', d: 'A name board, a hand for your luggage, the door held open.' },
+      { t: 'The journey', d: 'Silence, fresh water, daily press and Wi-Fi — time belongs to you.' },
+      { t: 'The attention', d: '24/7 concierge, adjustments en route, absolute discretion.' },
+    ] as { t: string; d: string }[],
     cards: {
       interior: 'First-class interiors',
       vip: 'VIP & red-carpet welcome',

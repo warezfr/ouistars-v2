@@ -118,6 +118,12 @@ export const fr = {
       'Confidentialité absolue, discrétion garantie',
       'Assistance & conciergerie 24/7, partout en France',
     ],
+    ritual: [
+      { t: 'La préparation', d: 'Vol suivi, itinéraire vérifié, véhicule préparé une heure avant votre arrivée.' },
+      { t: 'L’accueil', d: 'Pancarte à votre nom, main tendue pour les bagages, portière ouverte.' },
+      { t: 'Le trajet', d: 'Silence, eau fraîche, presse du jour et Wi-Fi — le temps vous appartient.' },
+      { t: 'L’attention', d: 'Conciergerie 24/7, ajustements en route, discrétion absolue.' },
+    ] as { t: string; d: string }[],
     cards: {
       interior: 'Intérieurs première classe',
       vip: 'Accueil VIP & tapis rouge',
