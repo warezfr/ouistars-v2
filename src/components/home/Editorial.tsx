@@ -219,19 +219,37 @@ export function Faq() {
   const { lang } = useI18n();
   const items = usePublished<{ q: string; a: string }>('faq', FAQ_ITEMS);
   return (
-    <section className="os-section" id="faq">
+    <section className="os-section os-faq2" id="faq">
       <div className="os-container">
-        <Reveal>
-          <p className="os-eyebrow">FAQ</p>
-          <h2>{lang === 'fr' ? 'Questions fréquentes' : 'Frequently asked'}</h2>
-        </Reveal>
-        <div style={{ marginTop: 30, maxWidth: 760 }}>
-          {items.map((f) => (
-            <details key={f.q} className="os-faq__item">
-              <summary className="os-faq__q">{f.q}<span>+</span></summary>
-              <p className="os-faq__a">{f.a}</p>
-            </details>
-          ))}
+        <div className="os-faq2__layout">
+          <Reveal>
+            <div className="os-faq2__intro">
+              <p className="os-eyebrow">FAQ</p>
+              <h2 className="os-faq2__title">{lang === 'fr' ? 'Questions fréquentes' : 'Frequently asked'}</h2>
+              <p className="os-faq2__hint">
+                {lang === 'fr'
+                  ? 'Une autre question ? Notre conciergerie répond 24/7.'
+                  : 'Another question? Our concierge answers 24/7.'}
+              </p>
+              <a className="os-faq2__contact" href="https://wa.me/33651030306" target="_blank" rel="noreferrer">
+                WhatsApp · +33 6 51 03 03 06 →
+              </a>
+            </div>
+          </Reveal>
+          <Reveal>
+            <div className="os-faq2__list">
+              {items.map((f, i) => (
+                <details key={f.q} className="os-faq2__item">
+                  <summary>
+                    <i>{String(i + 1).padStart(2, '0')}</i>
+                    <span className="os-faq2__q">{f.q}</span>
+                    <span className="os-faq2__plus" aria-hidden>+</span>
+                  </summary>
+                  <p className="os-faq2__a">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </Reveal>
         </div>
       </div>
     </section>
