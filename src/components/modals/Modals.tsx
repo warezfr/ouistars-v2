@@ -144,10 +144,27 @@ export function ChauffeurModal({ open, onClose }: { open: boolean; onClose: () =
   );
 }
 
+/** Bouton conciergerie — un majordome (nœud papillon, plateau) qui ouvre WhatsApp. */
 export function WhatsAppCTA() {
   return (
-    <a className="os-wa" href="https://wa.me/33651030306" target="_blank" rel="noreferrer" aria-label="WhatsApp">
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M20 4A10 10 0 0 0 3.6 15.6L2 22l6.6-1.6A10 10 0 1 0 20 4zM12 20a8 8 0 0 1-4.1-1.1l-.3-.2-3.9.9.9-3.8-.2-.3A8 8 0 1 1 12 20zm4.5-6c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.6 6.6 0 0 1-3.2-2.8c-.2-.4.2-.4.6-1.2a.5.5 0 0 0 0-.5c0-.1-.6-1.5-.8-2s-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3A2.8 2.8 0 0 0 6 8.4a4.9 4.9 0 0 0 1 2.6 11 11 0 0 0 4.3 3.8c2 .9 2.1.6 2.5.6a2.5 2.5 0 0 0 1.6-1.2 2 2 0 0 0 .1-1.1c0-.1-.3-.2-.5-.3z"/></svg>
+    <a className="os-wa" href="https://wa.me/33651030306" target="_blank" rel="noreferrer"
+      aria-label="Conciergerie WhatsApp" title="Notre majordome vous répond sur WhatsApp — 24/7">
+      <svg viewBox="0 0 24 24" width="27" height="27" fill="none" stroke="currentColor"
+        strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        {/* tête */}
+        <circle cx="12" cy="6.1" r="2.9" />
+        {/* nœud papillon */}
+        <path d="M9.6 11.6 12 12.7l2.4-1.1-.5 2.2h-3.8z" fill="currentColor" stroke="none" />
+        {/* épaules & veste (revers en V) */}
+        <path d="M4.6 20.5c.6-4.1 3.4-6.4 7.4-6.4s6.8 2.3 7.4 6.4" />
+        <path d="M9.4 14.6 12 17.4l2.6-2.8" />
+        {/* plateau du majordome */}
+        <path d="M16.4 4.4h4.4" />
+        <path d="M18.6 4.4v-.9" />
+      </svg>
+      <span className="os-wa__badge" aria-hidden>
+        <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M20 4A10 10 0 0 0 3.6 15.6L2 22l6.6-1.6A10 10 0 1 0 20 4zM12 20a8 8 0 0 1-4.1-1.1l-.3-.2-3.9.9.9-3.8-.2-.3A8 8 0 1 1 12 20zm4.5-6c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.6 6.6 0 0 1-3.2-2.8c-.2-.4.2-.4.6-1.2a.5.5 0 0 0 0-.5c0-.1-.6-1.5-.8-2s-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3A2.8 2.8 0 0 0 6 8.4a4.9 4.9 0 0 0 1 2.6 11 11 0 0 0 4.3 3.8c2 .9 2.1.6 2.5.6a2.5 2.5 0 0 0 1.6-1.2 2 2 0 0 0 .1-1.1c0-.1-.3-.2-.5-.3z"/></svg>
+      </span>
     </a>
   );
 }

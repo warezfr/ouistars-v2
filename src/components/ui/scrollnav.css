@@ -1,0 +1,38 @@
+/* Flèches de défilement (sections) + retour en haut — noir & or. */
+.os-scrollnav {
+  position: fixed; right: 20px; top: 50%; transform: translateY(-50%); z-index: 140;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.os-scrollnav__btn {
+  width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center;
+  background: rgba(11, 12, 16, 0.66); backdrop-filter: blur(6px);
+  border: 1px solid rgba(201, 162, 75, 0.4); color: var(--os-gold-soft);
+  transition: border-color 0.25s var(--os-ease), color 0.25s, background 0.25s, transform 0.25s;
+}
+.os-scrollnav__btn:hover {
+  border-color: var(--os-gold); color: #14161c;
+  background: linear-gradient(120deg, var(--os-gold), var(--os-gold-soft));
+  transform: scale(1.06);
+}
+.os-scrollnav__rule { width: 1px; height: 22px; background: linear-gradient(180deg, transparent, rgba(201, 162, 75, 0.55), transparent); }
+
+.os-totop {
+  position: fixed; right: 22px; bottom: 92px; z-index: 150;
+  width: 46px; height: 46px; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center;
+  background: rgba(11, 12, 16, 0.72); backdrop-filter: blur(6px);
+  border: 1px solid rgba(201, 162, 75, 0.45); color: var(--os-gold-soft);
+  opacity: 0; pointer-events: none; transform: translateY(8px);
+  transition: opacity 0.35s var(--os-ease), transform 0.35s var(--os-ease), border-color 0.25s, color 0.25s, background 0.25s;
+}
+.os-totop.is-visible { opacity: 1; pointer-events: auto; transform: none; }
+.os-totop:hover {
+  border-color: var(--os-gold); color: #14161c;
+  background: linear-gradient(120deg, var(--os-gold), var(--os-gold-soft));
+}
+
+@media (max-width: 900px) {
+  .os-scrollnav { display: none; } /* tactile : on garde seulement le retour en haut */
+  .os-totop { bottom: 88px; right: 18px; }
+}

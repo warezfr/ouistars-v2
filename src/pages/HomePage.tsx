@@ -7,6 +7,7 @@ import Fleet from '@/components/home/Fleet';
 import Experience from '@/components/home/Experience';
 import GoldWaves from '@/components/ui/GoldWaves';
 import SepDune from '@/components/ui/SepDune';
+import ScrollNav from '@/components/ui/ScrollNav';
 import MeetGreeter from '@/components/home/MeetGreeter';
 import Packages from '@/components/home/Packages';
 import PricingTables from '@/components/home/PricingTables';
@@ -45,6 +46,7 @@ export default function HomePage() {
         <Faq />
       </main>
       <Footer onJoin={() => setChauffeur(true)} />
+      <ScrollNav />
       <WhatsAppCTA />
       <BookingModal open={booking} prefill={prefill} onClose={() => setBooking(false)} />
       <QuoteModal open={quote} onClose={() => setQuote(false)} />
