@@ -37,31 +37,34 @@ export default function FareCalculator() {
   const ready = Boolean(from && to);
 
   return (
-    <div className="os-calc" id="mobility">
+    <div className="os-calc os-calc--h" id="mobility">
       <div className="os-calc__head">
         <strong>{c.title}</strong>
         <span>{c.subtitleShort}</span>
       </div>
 
-      <div className="os-calc__od">
+      <div className="os-calc__bar">
         <Autocomplete
           label={c.fromLabel} placeholder={c.fromPlaceholder}
           selected={from} noResults={c.noResults} searching={c.searching}
           onClear={() => setFrom(null)} onSelect={setFrom} locatable
         />
-        <span className="os-calc__od-arrow" aria-hidden>→</span>
+        <span className="os-calc__bar-arrow" aria-hidden>→</span>
         <Autocomplete
           label={c.toLabel} placeholder={c.toPlaceholder}
           selected={to} noResults={c.noResults} searching={c.searching}
           onClear={() => setTo(null)} onSelect={setTo}
         />
+        <button className="os-btn os-btn--gold os-calc__search" onClick={() => ready && setWizardOpen(true)} disabled={!ready}>
+          {c.search}
+        </button>
       </div>
 
       {ready && (
         estimating ? (
-          <p className="os-calc__hint">{c.calculating}</p>
+          <p className="os-calc__hint os-calc__hint--h">{c.calculating}</p>
         ) : estimate && (
-          <div className="os-calc__quote">
+          <div className="os-calc__quote os-calc__quote--h">
             <div className="os-calc__quote-dist">
               <span>{c.estDistance}</span>
               <strong>≈ {estimate.distanceKm} {c.km}</strong>
@@ -78,10 +81,6 @@ export default function FareCalculator() {
           </div>
         )
       )}
-
-      <button className="os-btn os-btn--gold os-calc__search" onClick={() => ready && setWizardOpen(true)} disabled={!ready}>
-        {c.search}
-      </button>
 
       {from && to && (
         <BookingWizard open={wizardOpen} onClose={() => setWizardOpen(false)} ctx={{ from, to, estimate }} />

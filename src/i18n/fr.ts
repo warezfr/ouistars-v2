@@ -25,7 +25,7 @@ export const fr = {
     searching: 'Recherche…',
     calculating: 'Calcul de l’itinéraire…',
     pickRoute: 'Choisir un trajet…',
-    tabOneWay: 'Aller simple',
+    tabOneWay: 'Transfert',
     tabHourly: 'Mise à disposition',
     date: 'Date',
     time: 'Heure',
@@ -205,6 +205,12 @@ export const fr = {
     modeOneWaySub: 'Un trajet d’un point A à un point B.',
     modeHourlySub: 'Chauffeur à disposition, à votre rythme.',
     recapMode: 'Formule',
+    tripOne: 'Aller simple',
+    tripRound: 'Aller-retour',
+    tripRoundNote: 'Retour inclus — facturé comme deux transferts.',
+    returnDate: 'Date retour',
+    returnTime: 'Heure retour',
+    recapReturn: 'Retour',
 
     steps: { vehicle: 'Véhicule', contact: 'Coordonnées', payment: 'Paiement' },
     // Étape 1

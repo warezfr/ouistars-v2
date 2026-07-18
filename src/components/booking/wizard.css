@@ -209,3 +209,16 @@
 /* ——— Overlay séparé (fermeture infaillible : clic hors panneau uniquement) ——— */
 .osw__overlay { position: absolute; inset: 0; z-index: 0; }
 .osw__panel { position: relative; z-index: 1; }
+
+/* ————— Aller simple / Aller-retour ————— */
+.osw__trip-type { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 16px; }
+.osw__tt {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-family: inherit;
+  font-size: 0.86rem; font-weight: 600; color: var(--os-mut);
+  background: rgba(11, 12, 16, 0.55); border: 1px solid var(--os-line); border-radius: 999px;
+  padding: 9px 18px; transition: color 0.25s var(--os-ease), border-color 0.25s, background 0.25s;
+}
+.osw__tt:hover { color: var(--os-ivory); border-color: var(--os-gold-deep); }
+.osw__tt.is-active { color: var(--os-gold-soft); border-color: var(--os-gold); background: rgba(201, 162, 75, 0.1); }
+.osw__tt-note { flex-basis: 100%; font-size: 0.76rem; color: var(--os-mut-2); }
+@media (min-width: 900px) { .osw__tt-note { flex-basis: auto; margin-left: 4px; } }

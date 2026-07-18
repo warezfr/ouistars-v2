@@ -28,7 +28,7 @@ export default function Hero({ onBook, onQuote }: Props) {
         aria-hidden
       />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-[1560px] items-center gap-14 px-[clamp(18px,3vw,44px)] lg:grid-cols-[1.22fr_0.86fr]">
+      <div className="relative z-10 mx-auto flex w-full max-w-[1560px] flex-col gap-12 px-[clamp(18px,3vw,44px)]">
         <div>
           <p className="os-eyebrow">{t.hero.eyebrow}</p>
           <h1 className="os-title-hero font-display font-semibold text-ivory">
@@ -43,7 +43,7 @@ export default function Hero({ onBook, onQuote }: Props) {
           </div>
         </div>
 
-        {/* Calculateur en carte « verre fumé » (voir calculator.css) */}
+        {/* Calculateur — barre horizontale pleine largeur (voir calculator.css) */}
         <FareCalculator />
       </div>
     </section>

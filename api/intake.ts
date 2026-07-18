@@ -33,6 +33,8 @@ const BookingData = z.object({
   destination: z.string().max(300).default(''),
   travel_date: z.string().max(20).optional().or(z.literal('')),
   travel_time: z.string().max(20).optional().or(z.literal('')),
+  return_date: z.string().max(20).optional().or(z.literal('')),
+  return_time: z.string().max(20).optional().or(z.literal('')),
   passengers: z.coerce.number().int().min(1).max(60).default(1),
   vehicle_class: z.enum(['E', 'V', 'S']).optional(),
   prefill: z.string().max(500).optional(),
@@ -42,6 +44,7 @@ const BookingData = z.object({
 
 const Pricing = z.object({
   mode: z.enum(['oneway', 'hourly']),
+  roundTrip: z.coerce.boolean().optional(),
   routeId: z.string().max(80).nullable().optional(),
   distanceKm: z.coerce.number().min(0).max(3000).nullable().optional(),
   hours: z.coerce.number().min(1).max(72).nullable().optional(),
@@ -96,19 +99,21 @@ const ChauffeurData = z.object({
   message: z.string().max(2000).optional(),
 }).strip();
 
-/** Prix officiel recalculé serveur (source de vérité : la grille). */
+/** Prix officiel recalculé serveur (source de vérité : la grille).
+    Aller-retour = deux transferts distincts → prix × 2 (règle tarifaire). */
 function serverPrice(p: z.infer<typeof Pricing>): number | null {
   const vc = (p.vehicleClass ?? 'E') as VehicleClass;
   if (p.mode === 'hourly') {
     const h = Math.max(p.hours ?? HOURLY_MIN_HOURS, HOURLY_MIN_HOURS);
     return h * HOURLY_RATES[vc];
   }
+  const factor = p.roundTrip ? 2 : 1;
   if (p.routeId) {
     const r = ROUTE_RATES.find((x) => x.id === p.routeId);
-    if (r) return r.prices[vc];
+    if (r) return r.prices[vc] * factor;
   }
   if (p.distanceKm && p.distanceKm > 0) {
-    return Math.max(100, Math.round((p.distanceKm * PER_KM_RATES[vc]) / 5) * 5);
+    return Math.max(100, Math.round((p.distanceKm * PER_KM_RATES[vc]) / 5) * 5) * factor;
   }
   return null;
 }
@@ -190,8 +195,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (error) throw error;
       }
 
-      const summary = `${data.pickup} → ${data.destination} · ${data.travel_date ?? ''} ${data.travel_time ?? ''}` +
-        ` · ${data.passengers} pax · Classe ${data.vehicle_class ?? '—'}${amount != null ? ` · ${amount} €` : ''}`;
+      const summary = `${data.pickup} ${pricing?.roundTrip ? '⇄' : '→'} ${data.destination} · ${data.travel_date ?? ''} ${data.travel_time ?? ''}` +
+        `${pricing?.roundTrip && data.return_date ? ` · retour ${data.return_date} ${data.return_time ?? ''}` : ''}` +
+        ` · ${data.passengers} pax · Classe ${data.vehicle_class ?? '—'}${amount != null ? ` · ${amount} €${pricing?.roundTrip ? ' (A/R)' : ''}` : ''}`;
 
       if (data.email) {
         await sendMail({

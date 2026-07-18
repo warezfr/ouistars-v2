@@ -55,8 +55,11 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
 
   const [phase, setPhase] = useState<Phase>('setup');
   const [mode, setMode] = useState<Mode>('oneway');
+  const [roundTrip, setRoundTrip] = useState(false);
   const [date, setDate] = useState(todayISO);
   const [time, setTime] = useState('10:00');
+  const [returnDate, setReturnDate] = useState('');
+  const [returnTime, setReturnTime] = useState('18:00');
   const [hours, setHours] = useState(HOURLY_MIN_HOURS);
   const [estimate, setEstimate] = useState<OneWayEstimate | null>(null);
   const [estimating, setEstimating] = useState(false);
@@ -80,7 +83,8 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
   // Réinitialise UNIQUEMENT à l'ouverture + verrouille le scroll.
   useEffect(() => {
     if (!open) return;
-    setPhase('setup'); setMode('oneway'); setDate(todayISO()); setTime('10:00'); setHours(HOURLY_MIN_HOURS);
+    setPhase('setup'); setMode('oneway'); setRoundTrip(false); setDate(todayISO()); setTime('10:00');
+    setReturnDate(''); setReturnTime('18:00'); setHours(HOURLY_MIN_HOURS);
     setEstimate(null); setEstimating(false);
     setStep(1); setVehicle(null); setSubmit('idle'); setShowErrors(false);
     const prev = document.body.style.overflow;
@@ -90,10 +94,13 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
     return () => { document.body.style.overflow = prev; window.removeEventListener('keydown', onKey); };
   }, [open]);
 
+  // Aller-retour = deux transferts (règle tarifaire officielle) → prix × 2.
+  const isRound = mode === 'oneway' && roundTrip;
   const prices = useMemo(() => {
-    if (mode === 'hourly') return estimateHourly(hours).prices;
-    return estimate?.prices ?? null;
-  }, [mode, hours, estimate]);
+    const base = mode === 'hourly' ? estimateHourly(hours).prices : estimate?.prices ?? null;
+    if (!base || !isRound) return base;
+    return { E: base.E * 2, V: base.V * 2, S: base.S * 2 };
+  }, [mode, hours, estimate, isRound]);
 
   const amount = vehicle && prices ? prices[vehicle] : 0;
   const vehicleName = vehicle ? VEHICLE_CLASSES[vehicle].name : '';
@@ -145,7 +152,7 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
     const first_name = parts.shift() ?? '';
     const last_name = parts.join(' ');
     const prefill =
-      `${estimate?.routeLabel ?? ''} — ${vehicleName} — ${amount}€${mode === 'hourly' ? ` — ${hours}h` : ''}`;
+      `${estimate?.routeLabel ?? ''} — ${vehicleName} — ${amount}€${mode === 'hourly' ? ` — ${hours}h` : ''}${isRound ? ' — A/R' : ''}`;
     const payload = {
       type: 'booking', channel: 'siteweb',
       website: '', // honeypot anti-bot (doit rester vide)
@@ -154,12 +161,17 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
         pickup: ctx.from.label,
         destination: mode === 'oneway' ? (ctx.to?.label ?? '') : w.onDemand,
         travel_date: date, travel_time: time,
-        passengers: form.passengers, vehicle_class: vehicle, prefill, notes: form.notes,
+        return_date: isRound ? returnDate : '',
+        return_time: isRound ? returnTime : '',
+        passengers: form.passengers, vehicle_class: vehicle, prefill,
+        notes: [isRound ? `${w.tripRound} — ${w.recapReturn} ${returnDate} ${returnTime}` : '', form.notes]
+          .filter(Boolean).join(' · '),
         route_id: mode === 'oneway' ? (ctx.estimate?.routeId ?? null) : null,
         price_amount: amount, // indicatif — le serveur recalcule depuis la grille
       },
       pricing: {
         mode,
+        roundTrip: isRound,
         routeId: mode === 'oneway' ? (ctx.estimate?.routeId ?? null) : null,
         distanceKm: mode === 'oneway' ? (ctx.estimate?.distanceKm ?? null) : null,
         hours: mode === 'hourly' ? hours : null,
@@ -210,9 +222,29 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
               </button>
             </div>
 
+            {mode === 'oneway' && (
+              <div className="osw__trip-type" role="radiogroup" aria-label={w.recapMode}>
+                <button type="button" className={`osw__tt${!roundTrip ? ' is-active' : ''}`}
+                  onClick={() => setRoundTrip(false)} aria-pressed={!roundTrip}>
+                  → {w.tripOne}
+                </button>
+                <button type="button" className={`osw__tt${roundTrip ? ' is-active' : ''}`}
+                  onClick={() => { setRoundTrip(true); if (!returnDate) setReturnDate(date); }} aria-pressed={roundTrip}>
+                  ⇄ {w.tripRound}
+                </button>
+                {roundTrip && <small className="osw__tt-note">{w.tripRoundNote}</small>}
+              </div>
+            )}
+
             <div className="osw__setup-grid">
               <DateField label={c.date} value={date} min={todayISO()} locale={lang} onChange={setDate} />
               <TimeField label={c.time} value={time} locale={lang} onChange={setTime} />
+              {isRound && (
+                <>
+                  <DateField label={w.returnDate} value={returnDate} min={date} locale={lang} onChange={setReturnDate} />
+                  <TimeField label={w.returnTime} value={returnTime} locale={lang} onChange={setReturnTime} />
+                </>
+              )}
               {mode === 'hourly' && (
                 <label className="osw__field">
                   <span>{c.duration}</span>
@@ -375,9 +407,10 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
                   </div>
                 )}
                 <ul className="osw__recap-list">
-                  <li><span>{w.recapMode}</span><strong>{mode === 'oneway' ? c.tabOneWay : c.tabHourly}</strong></li>
+                  <li><span>{w.recapMode}</span><strong>{mode === 'hourly' ? c.tabHourly : isRound ? w.tripRound : w.tripOne}</strong></li>
                   <li><span>{w.recapDate}</span><strong>{dateLabel}</strong></li>
                   <li><span>{w.recapTime}</span><strong>{time}</strong></li>
+                  {isRound && <li><span>{w.recapReturn}</span><strong>{returnDate} · {returnTime}</strong></li>}
                   {mode === 'oneway' && distanceKm != null && (
                     <li><span>{w.recapDistance}</span><strong>≈ {distanceKm} {c.km}</strong></li>
                   )}
