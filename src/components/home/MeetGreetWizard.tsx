@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MEET_GREET_RATES } from '@/data/pricing';
+import { usePricingSync } from '@/lib/livePricing';
 import { computeMeetGreet, formatEUR } from '@/lib/pricing';
 import { parseFlightNumber } from '@/data/airlines';
 import { DateField, TimeField } from '@/components/booking/pickers';
@@ -53,6 +54,7 @@ const SvcIcon = ({ kind }: { kind: ServiceType }) => {
 };
 
 export default function MeetGreetWizard({ open, onClose }: { open: boolean; onClose: () => void }) {
+  usePricingSync(); // tarifs synchronisés depuis le Salon de tarification
   const { t, lang } = useI18n();
   const mg = t.meetGreet;
 

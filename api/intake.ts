@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
-import { ROUTE_RATES, HOURLY_RATES, HOURLY_MIN_HOURS, PER_KM_RATES, MEET_GREET_RATES, type VehicleClass } from '../src/data/pricing.js';
+import { type VehicleClass } from '../src/data/pricing.js';
+import { getLivePricing } from '../server/pricing/live.js';
 import { sendMail, opsEmail } from '../server/email/mailer.js';
 
 /**
@@ -78,9 +79,10 @@ const GreeterData = z.object({
   notes: z.string().max(2000).optional(),
 }).strip();
 
-/** Prix Meet & Greeter officiel (base + supplément par pax au-delà de l'inclus). */
-function greeterPrice(airportId: string, passengers: number): number | null {
-  const rate = MEET_GREET_RATES.find((r) => r.id === airportId);
+/** Prix Meet & Greeter officiel — tarifs vivants du Salon de tarification. */
+async function greeterPrice(airportId: string, passengers: number): Promise<number | null> {
+  const { greeter } = await getLivePricing();
+  const rate = greeter.find((r) => r.id === airportId);
   if (!rate || rate.base == null) return null;
   return rate.base + Math.max(0, passengers - rate.includedPax) * (rate.extraPaxSurcharge ?? 0);
 }
@@ -99,21 +101,23 @@ const ChauffeurData = z.object({
   message: z.string().max(2000).optional(),
 }).strip();
 
-/** Prix officiel recalculé serveur (source de vérité : la grille).
+/** Prix officiel recalculé serveur — source de vérité : le Salon de
+    tarification du back-office (repli : grille statique embarquée).
     Aller-retour = deux transferts distincts → prix × 2 (règle tarifaire). */
-function serverPrice(p: z.infer<typeof Pricing>): number | null {
+async function serverPrice(p: z.infer<typeof Pricing>): Promise<number | null> {
+  const { routes, hourly, perKm, minHours } = await getLivePricing();
   const vc = (p.vehicleClass ?? 'E') as VehicleClass;
   if (p.mode === 'hourly') {
-    const h = Math.max(p.hours ?? HOURLY_MIN_HOURS, HOURLY_MIN_HOURS);
-    return h * HOURLY_RATES[vc];
+    const h = Math.max(p.hours ?? minHours, minHours);
+    return h * hourly[vc];
   }
   const factor = p.roundTrip ? 2 : 1;
   if (p.routeId) {
-    const r = ROUTE_RATES.find((x) => x.id === p.routeId);
+    const r = routes.find((x) => x.id === p.routeId);
     if (r) return r.prices[vc] * factor;
   }
   if (p.distanceKm && p.distanceKm > 0) {
-    return Math.max(100, Math.round((p.distanceKm * PER_KM_RATES[vc]) / 5) * 5) * factor;
+    return Math.max(100, Math.round((p.distanceKm * perKm[vc]) / 5) * 5) * factor;
   }
   return null;
 }
@@ -183,7 +187,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (type === 'booking') {
       const data = BookingData.parse(body.data ?? {});
       const pricing = body.pricing ? Pricing.parse(body.pricing) : null;
-      const amount = pricing ? serverPrice(pricing) : null;
+      const amount = pricing ? await serverPrice(pricing) : null;
 
       if (supabase) {
         const { error } = await insertResilient(supabase, 'website_bookings', {
@@ -224,11 +228,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (type === 'greeter') {
       const data = GreeterData.parse(body.data ?? {});
-      const amount = greeterPrice(data.airport_id, data.passengers);
+      const amount = await greeterPrice(data.airport_id, data.passengers);
       const ref = `GR-${Date.now().toString(36).toUpperCase().slice(-5)}${Math.floor(Math.random() * 36).toString(36).toUpperCase()}`;
       const svc = GREETER_LABELS[data.service_type] ?? data.service_type;
       const airport = data.airport_label ||
-        MEET_GREET_RATES.find((r) => r.id === data.airport_id)?.airport || 'Aéroport';
+        (await getLivePricing()).greeter.find((r) => r.id === data.airport_id)?.airport || 'Aéroport';
 
       const notes = [
         `Meet & Greeter — ${svc}`,

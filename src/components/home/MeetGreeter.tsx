@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useI18n } from '@/i18n';
 import { MEET_GREET_RATES, MEET_GREET_INCLUDES, MEET_GREET_DISCLAIMER } from '@/data/pricing';
+import { usePricingSync } from '@/lib/livePricing';
 import { formatEUR } from '@/lib/pricing';
 import Reveal from '@/components/ui/Reveal';
 import MeetGreetWizard from './MeetGreetWizard';
@@ -12,6 +13,7 @@ import './meetgreet.css';
  * La réservation se fait dans un wizard popup (type → aéroport → formulaire).
  */
 export default function MeetGreeter() {
+  usePricingSync(); // re-rend quand le Salon de tarification a synchronisé les tarifs
   const { t } = useI18n();
   const [wizardOpen, setWizardOpen] = useState(false);
 

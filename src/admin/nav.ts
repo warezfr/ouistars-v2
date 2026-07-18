@@ -47,9 +47,8 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: 'Offre & tarifs',
     items: [
-      { label: 'Trajets & prix', icon: 'bi-signpost-split', collection: 'route' },
-      { label: 'Grille tarifaire (vue)', icon: 'bi-cash-coin', to: '/admin/pricing' },
-      { label: 'Tarifs horaires / km', icon: 'bi-clock-history', to: '/admin/singleton/rates' },
+      { label: 'Salon de tarification', icon: 'bi-gem', to: '/admin/pricing' },
+      { label: 'Trajets & prix (fiches)', icon: 'bi-signpost-split', collection: 'route' },
       { label: 'Forfaits', icon: 'bi-box-seam', collection: 'package' },
       { label: 'Catég. forfaits', icon: 'bi-boxes', collection: 'package_category' },
       { label: 'Destinations', icon: 'bi-geo-alt', collection: 'destination' },

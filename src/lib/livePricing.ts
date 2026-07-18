@@ -1,6 +1,9 @@
 import { useSyncExternalStore } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ROUTE_RATES, HOURLY_RATES, PER_KM_RATES, type RouteRate, type VehicleClass, type RouteCategory } from '@/data/pricing';
+import {
+  ROUTE_RATES, HOURLY_RATES, PER_KM_RATES, MEET_GREET_RATES,
+  type RouteRate, type VehicleClass, type RouteCategory, type MeetGreetRate,
+} from '@/data/pricing';
 
 /**
  * Synchronisation de la grille tarifaire avec le back-office (CMS Supabase).
@@ -23,11 +26,14 @@ export async function initLivePricing(): Promise<void> {
   if (started || !supabase) return;
   started = true;
   try {
-    const [routes, rates] = await Promise.all([
+    const [routes, rates, greeter] = await Promise.all([
       supabase.from('cms_entries').select('data, position')
         .eq('collection', 'route').eq('status', 'published')
         .order('position', { ascending: true }),
       supabase.from('cms_singletons').select('data').eq('key', 'rates').maybeSingle(),
+      supabase.from('cms_entries').select('data, position')
+        .eq('collection', 'greeter_rate').eq('status', 'published')
+        .order('position', { ascending: true }),
     ]);
 
     if (!routes.error && routes.data && routes.data.length > 0) {
@@ -57,6 +63,24 @@ export async function initLivePricing(): Promise<void> {
       if (rd.kmE) PER_KM_RATES.E = Number(rd.kmE);
       if (rd.kmV) PER_KM_RATES.V = Number(rd.kmV);
       if (rd.kmS) PER_KM_RATES.S = Number(rd.kmS);
+    }
+
+    // Tarifs Meet & Greeter — remplacement in-place (section + wizard + serveur).
+    if (!greeter.error && greeter.data && greeter.data.length > 0) {
+      const mg: MeetGreetRate[] = [];
+      for (const g of greeter.data) {
+        const d = g.data as { airport?: string; rateId?: string; base?: number | null; includedPax?: number; extraPaxSurcharge?: number | null };
+        if (!d?.rateId || !d.airport) continue;
+        mg.push({
+          id: d.rateId,
+          airport: d.airport,
+          base: d.base != null && d.base !== ('' as unknown) ? Number(d.base) : null,
+          includedPax: d.includedPax != null ? Number(d.includedPax) : 3,
+          includedBags: d.includedPax != null ? Number(d.includedPax) : 3,
+          extraPaxSurcharge: d.extraPaxSurcharge != null && d.extraPaxSurcharge !== ('' as unknown) ? Number(d.extraPaxSurcharge) : null,
+        });
+      }
+      if (mg.length > 0) MEET_GREET_RATES.splice(0, MEET_GREET_RATES.length, ...mg);
     }
   } catch {
     /* repli statique silencieux */

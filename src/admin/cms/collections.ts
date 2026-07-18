@@ -230,6 +230,19 @@ export const COLLECTIONS: Record<string, Collection> = {
     ],
   },
 
+  /* ————— Tarifs Meet & Greeter (gérés dans le Salon de tarification) ————— */
+  greeter_rate: {
+    key: 'greeter_rate', label: 'Tarifs Meet & Greeter', singular: 'Tarif aéroport', titleField: 'airport',
+    fields: [
+      { name: 'airport', label: 'Aéroport (affiché)', type: 'text', required: true, placeholder: 'Paris — CDG & ORY' },
+      { name: 'rateId', label: 'Id technique', type: 'text', required: true,
+        help: 'Relie ce tarif au site et à l’API (cdg-ory, nce, lbg…). Ne pas modifier sans raison.' },
+      { name: 'base', label: 'Prix de base (€) — vide = sur devis', type: 'number' },
+      { name: 'includedPax', label: 'Passagers inclus', type: 'number' },
+      { name: 'extraPaxSurcharge', label: 'Supplément par passager (€)', type: 'number' },
+    ],
+  },
+
   /* ————— Chauffeurs ————— */
   driver: {
     key: 'driver', label: 'Chauffeurs', singular: 'Chauffeur', titleField: 'name', thumbField: 'image',
