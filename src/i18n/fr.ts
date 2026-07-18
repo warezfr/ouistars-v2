@@ -3,13 +3,13 @@ export const fr = {
   nav: { book: 'Réserver un Chauffeur', quote: 'Solutions Entreprises & Événements', join: 'Rejoindre notre réseau de partenaires', lang: 'EN' },
   hero: {
     eyebrow: 'Mobilité Premium • Destination Management • Opérations Nationales',
-    title: 'Mobilité Premium, Destination Management & Solutions Événementielles',
+    title: 'Mobilité Premium & Solutions Événementielles',
     titleAccent: 'à travers la France',
     subtitle:
       'Transport de luxe • Gestion de flotte • Destination Management • Événements & Congrès • Fashion Weeks • Meet & Greeter Aéroports • Aviation Privée & d’Affaires • Conciergerie • Mobilité Corporate',
     ctaBook: 'Réserver un Chauffeur',
     ctaQuote: 'Solutions Entreprises & Événements',
-    pricingLink: 'Voir la grille tarifaire complète ↓',
+    pricingLink: 'Voir la grille tarifaire complète',
   },
   calculator: {
     title: 'Estimation de votre transfert',

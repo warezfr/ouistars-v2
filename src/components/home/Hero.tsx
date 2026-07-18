@@ -38,7 +38,7 @@ export default function Hero() {
             {t.hero.title}{' '}
             <span className="os-goldgrad italic">{t.hero.titleAccent}</span>
           </h1>
-          <a className="os-hero__pricing-link" href="#tarifs">{t.hero.pricingLink}</a>
+          <a className="os-btn os-btn--gold os-hero__cta" href="#tarifs">{t.hero.pricingLink}</a>
         </div>
 
         {/* Calé en bas du hero : la vidéo reste visible au centre */}

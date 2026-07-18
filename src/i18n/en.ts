@@ -5,13 +5,13 @@ export const en: typeof fr = {
   nav: { book: 'Book Your Chauffeur', quote: 'Corporate & Event Solutions', join: 'Join our partner network', lang: 'FR' },
   hero: {
     eyebrow: 'Premium Mobility • Destination Management • Nationwide Operations',
-    title: 'Premium Mobility, Destination Management & Event Solutions',
+    title: 'Premium Mobility & Event Solutions',
     titleAccent: 'Across France',
     subtitle:
       'Luxury Transportation • Fleet Operations • Destination Management • Events & Congresses • Fashion Weeks • Airport Meet & Greeter • Private & Business Aviation • Concierge • Corporate Mobility',
     ctaBook: 'Book Your Chauffeur',
     ctaQuote: 'Corporate & Event Solutions',
-    pricingLink: 'View the full rate card ↓',
+    pricingLink: 'View the full rate card',
   },
   calculator: {
     title: 'Estimate your transfer',

@@ -26,6 +26,12 @@
 /* Le pic est un peu plus haut pour laisser respirer le sommet */
 .os-sepdune--pic { height: clamp(104px, 12.5vw, 168px); }
 
+/* Mobile : séparateurs bas — le rythme prime sur le décor. */
+@media (max-width: 640px) {
+  .os-sepdune { height: 58px; margin: -10px 0; }
+  .os-sepdune--pic { height: 70px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .os-sepdune__l, .os-sepdune__crest, .os-sepdune__star { animation: none; }
 }

@@ -30,6 +30,12 @@
 
 /* Prestigious addresses */
 .os-addresses { text-align: center; background: linear-gradient(180deg, var(--os-black), var(--os-night)); }
+/* Tête de section singulière : titre centré entre deux filets or */
+.os-addresses h2 { display: flex; align-items: center; justify-content: center; gap: clamp(14px, 2.5vw, 30px); }
+.os-addresses h2::before, .os-addresses h2::after { content: ''; height: 1px; flex: 0 1 clamp(40px, 11vw, 170px); }
+.os-addresses h2::before { background: linear-gradient(90deg, transparent, var(--os-gold-deep)); }
+.os-addresses h2::after { background: linear-gradient(90deg, var(--os-gold-deep), transparent); }
+@media (max-width: 700px) { .os-addresses h2 { display: block; } }
 .os-addresses__list { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 28px; margin-top: 34px; }
 .os-addresses__item { font-family: var(--os-font-display); font-size: 1.2rem; color: var(--os-mut); letter-spacing: 0.02em; }
 .os-addresses__item::after { content: '✦'; color: var(--os-gold-deep); margin-left: 28px; font-size: 0.7rem; vertical-align: middle; }
@@ -322,6 +328,16 @@
 /* ————————————————————————————————————————————————
    La maison — About éditorial deux colonnes
    ———————————————————————————————————————————————— */
+.os-about { position: relative; overflow: hidden; }
+/* Mot fantôme display géant — signature typographique de la section */
+.os-about__ghost {
+  position: absolute; right: -2vw; top: 4%; z-index: 0; pointer-events: none; user-select: none;
+  font-family: var(--os-font-display); font-style: italic; font-weight: 500;
+  font-size: clamp(7rem, 17vw, 17rem); line-height: 1; letter-spacing: 0.02em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(201, 162, 75, 0.13);
+}
+.os-about .os-container { position: relative; z-index: 1; }
 .os-about__grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: clamp(28px, 5vw, 64px); align-items: center; }
 .os-about__media { margin: 0; overflow: hidden; border-radius: 3px 60px 3px 60px; border: 1px solid rgba(201, 162, 75, 0.2); }
 .os-about__media img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; }
@@ -563,9 +579,12 @@
   background: linear-gradient(0deg, rgba(11, 12, 16, 0.92) 6%, rgba(11, 12, 16, 0.35) 46%, rgba(11, 12, 16, 0.12) 100%);
 }
 .os-pk__num {
-  position: absolute; top: 12px; left: 14px;
-  font-family: var(--os-font-display); font-style: italic; font-size: 1.05rem;
-  color: var(--os-gold-soft); text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+  position: absolute; top: 10px; left: 12px;
+  display: grid; place-items: center; min-width: 34px; height: 34px; padding-inline: 6px;
+  font-family: var(--os-font-display); font-style: italic; font-size: 1rem;
+  color: var(--os-gold-soft); border-radius: 999px;
+  background: rgba(11, 12, 16, 0.62); backdrop-filter: blur(4px);
+  border: 1px solid rgba(201, 162, 75, 0.35);
 }
 .os-pk__body { position: absolute; inset-inline: 16px; bottom: 14px; }
 .os-pk__route {
@@ -787,6 +806,14 @@
 .os-gal__grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 22px;
 }
+/* Carte « featured » — composition magazine : la première fiche s'étend */
+@media (min-width: 900px) {
+  .os-gal__card--feat { grid-column: span 2; display: grid; grid-template-columns: 1.25fr 1fr; }
+  .os-gal__card--feat .os-gal__media { aspect-ratio: auto; height: 100%; min-height: 260px; }
+  .os-gal__card--feat .os-gal__body { padding: 22px 24px; display: flex; flex-direction: column; justify-content: center; }
+  .os-gal__card--feat .os-gal__body h4 { font-size: 1.45rem; }
+  .os-gal__card--feat .os-gal__desc { font-size: 0.92rem; }
+}
 .os-gal__card {
   cursor: pointer; overflow: hidden; border-radius: var(--os-radius);
   background: rgba(255, 255, 255, 0.022);
@@ -810,13 +837,12 @@
   background: linear-gradient(200deg, transparent 40%, rgba(11, 12, 16, 0.72));
 }
 .os-gal__num {
-  position: absolute; top: 12px; left: 14px; z-index: 1;
-  font-family: var(--os-font-display); font-style: italic; font-size: 1.05rem;
-  color: var(--os-gold-soft); text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
-}
-.os-gal__num::after {
-  content: ''; display: block; width: 22px; height: 1px; margin-top: 3px;
-  background: linear-gradient(90deg, var(--os-gold), transparent);
+  position: absolute; top: 10px; left: 12px; z-index: 1;
+  display: grid; place-items: center; min-width: 32px; height: 32px; padding-inline: 5px;
+  font-family: var(--os-font-display); font-style: italic; font-size: 0.98rem;
+  color: var(--os-gold-soft); border-radius: 999px;
+  background: rgba(11, 12, 16, 0.62); backdrop-filter: blur(4px);
+  border: 1px solid rgba(201, 162, 75, 0.35);
 }
 .os-gal__body { padding: 16px 18px 18px; }
 .os-gal__body h4 {

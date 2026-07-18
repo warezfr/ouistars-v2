@@ -72,24 +72,24 @@ function FashionWeeks() {
 }
 
 /** Fiches Corporate & Institutions (rail auto + popup d'information). */
-interface CorpItem { src: string; fr: string; en: string; descFr: string; descEn: string }
+interface CorpItem { src: string; fr: string; en: string; descFr: string; descEn: string; tagFr: string; tagEn: string }
 const CORP_ITEMS: CorpItem[] = [
-  { src: '/corp-embassy.webp', fr: 'Ambassades & Délégations', en: 'Embassies & Delegations',
+  { src: '/corp-embassy.webp', fr: 'Ambassades & Délégations', en: 'Embassies & Delegations', tagFr: 'Protocole & préséances', tagEn: 'Protocol & precedence',
     descFr: 'Protocole, sécurité et discrétion pour délégations officielles : cortèges coordonnés, chauffeurs habilités, gestion des préséances et liaison avec les services de sécurité.',
     descEn: 'Protocol, security and discretion for official delegations: coordinated motorcades, vetted chauffeurs, precedence management and liaison with security services.' },
-  { src: '/corp-corporate.webp', fr: 'Comptes Entreprises', en: 'Corporate Accounts',
+  { src: '/corp-corporate.webp', fr: 'Comptes Entreprises', en: 'Corporate Accounts', tagFr: 'Facturation centralisée', tagEn: 'Centralised billing',
     descFr: 'Facturation centralisée, reporting mensuel, politiques de voyage et interlocuteur dédié : la mobilité de vos équipes, sans friction administrative.',
     descEn: 'Centralised billing, monthly reporting, travel policies and a dedicated account manager: your teams’ mobility without administrative friction.' },
-  { src: '/corp-travel.webp', fr: 'Agences de voyage & DMC', en: 'Travel Agencies & DMCs',
+  { src: '/corp-travel.webp', fr: 'Agences de voyage & DMC', en: 'Travel Agencies & DMCs', tagFr: 'Marque blanche', tagEn: 'White label',
     descFr: 'Partenariats en marque blanche pour agences et DMC : tarifs négociés, disponibilité garantie et exécution irréprochable sous votre nom.',
     descEn: 'White-label partnerships for agencies and DMCs: negotiated rates, guaranteed availability and flawless execution under your name.' },
-  { src: '/corp-aviation.webp', fr: 'Aviation Privée & d’Affaires', en: 'Private & Business Aviation',
+  { src: '/corp-aviation.webp', fr: 'Aviation Privée & d’Affaires', en: 'Private & Business Aviation', tagFr: 'FBO · Le Bourget', tagEn: 'FBO · Le Bourget',
     descFr: 'Assistance FBO, opérations au Bourget et coordination sol-air : vos passagers passent du jet au salon sans la moindre friction.',
     descEn: 'FBO assistance, Le Bourget operations and ground-to-air coordination: passengers move from jet to lounge without friction.' },
-  { src: '/corp-hotel.webp', fr: 'Hôtels & Hospitality', en: 'Hotels & Hospitality',
+  { src: '/corp-hotel.webp', fr: 'Hôtels & Hospitality', en: 'Hotels & Hospitality', tagFr: 'Palaces & voituriers', tagEn: 'Palaces & valets',
     descFr: 'Partenariats palaces et gestion des flux clients VIP : voituriers, transferts invités et navettes événementielles au standard de votre maison.',
     descEn: 'Palace partnerships and VIP guest flows: valets, guest transfers and event shuttles to your house’s standard.' },
-  { src: '/corp-chauffeur.webp', fr: 'Chauffeurs dédiés', en: 'Dedicated Chauffeurs',
+  { src: '/corp-chauffeur.webp', fr: 'Chauffeurs dédiés', en: 'Dedicated Chauffeurs', tagFr: 'À la semaine ou au mois', tagEn: 'Weekly or monthly',
     descFr: 'Un chauffeur attitré à la semaine ou au mois : mêmes visages, mêmes standards, connaissance intime de vos habitudes et de vos adresses.',
     descEn: 'A dedicated chauffeur by the week or month: same faces, same standards, intimate knowledge of your habits and addresses.' },
 ];
@@ -185,7 +185,7 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
               <span className="os-pk__num">{String((i % CORP_ITEMS.length) + 1).padStart(2, '0')}</span>
               <div className="os-pk__body">
                 <h3 className="os-pk__route">{lang === 'fr' ? c.fr : c.en}</h3>
-                <span className="os-pk__book">{lang === 'fr' ? 'En savoir plus' : 'Learn more'} →</span>
+                <span className="os-pk__book">{lang === 'fr' ? c.tagFr : c.tagEn} →</span>
               </div>
             </article>
           ))}
@@ -208,7 +208,8 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
             </header>
             <div className="os-gal__grid">
               {CORP_ITEMS.map((c, i) => (
-                <article key={c.src} className="os-gal__card" style={{ animationDelay: `${i * 70}ms` }}
+                <article key={c.src} className={`os-gal__card${i === 0 ? ' os-gal__card--feat' : ''}`}
+                  style={{ animationDelay: `${i * 70}ms` }}
                   onClick={() => { setCorpAllOpen(false); setCorpInfo(c); }} role="button" tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && (setCorpAllOpen(false), setCorpInfo(c))}>
                   <div className="os-gal__media">
@@ -218,7 +219,7 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
                   <div className="os-gal__body">
                     <h4>{lang === 'fr' ? c.fr : c.en}</h4>
                     <p className="os-gal__desc">{lang === 'fr' ? c.descFr : c.descEn}</p>
-                    <span className="os-gal__more">{lang === 'fr' ? 'En savoir plus' : 'Learn more'} →</span>
+                    <span className="os-gal__more">{lang === 'fr' ? c.tagFr : c.tagEn} →</span>
                   </div>
                 </article>
               ))}
@@ -281,6 +282,7 @@ export function About() {
   const { t } = useI18n();
   return (
     <section className="os-section os-about" id="about">
+      <span className="os-about__ghost" aria-hidden>Maison</span>
       <div className="os-container">
         <div className="os-about__grid">
           <Reveal>

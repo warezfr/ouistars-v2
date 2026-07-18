@@ -36,7 +36,7 @@ export interface ServiceItem {
  * retirée. Chaque service porte une image de fond dédiée.
  */
 export const SERVICES: ServiceItem[] = [
-  { id: 'fleet-ops', fr: 'Gestion de Flotte', en: 'Fleet Operations', icon: 'fleet', image: '/why-fleet.webp',
+  { id: 'fleet-ops', fr: 'Gestion de Flotte', en: 'Fleet Operations', icon: 'fleet', image: '/corp-chauffeur.webp',
     descFr: 'Coordination de flottes pour délégations, tournées et opérations d’envergure.',
     descEn: 'Fleet coordination for delegations, tours and large-scale operations.' },
   { id: 'dmc', fr: 'Destination Management', en: 'Destination Management', icon: 'globe', image: '/why-map.webp',
