@@ -85,11 +85,36 @@ export default function Pricing() {
   const setGreeterField = (id: string, k: keyof GreeterRow, v: unknown) =>
     setGreeters((gs) => gs.map((g) => g.id === id ? { ...g, data: { ...g.data, [k]: v } } : g));
 
+  /** Pousse UN trajet vers les rate cards de l'API partenaires (si mappé). */
+  async function syncEtgRoute(d: RouteRow): Promise<number> {
+    if (!supabase || !d.routeId) return 0;
+    const prefixes = ETG_MAP[d.routeId];
+    if (!prefixes) return 0;
+    let updated = 0;
+    for (const prefix of prefixes) {
+      for (const [cls, cat] of Object.entries(CLASS_TO_ETG)) {
+        const price = d[`price${cls}` as 'priceE'];
+        if (price == null) continue;
+        const { data: rows } = await supabase
+          .from('etg_rate_cards')
+          .update({ base_price: price })
+          .eq('route_key', `${prefix}-${cat === 'business' ? 'business' : cat === 'business_van' ? 'business-van' : 'first'}`)
+          .select('id');
+        updated += rows?.length ?? 0;
+      }
+    }
+    return updated;
+  }
+
   async function saveRoute(r: CmsEntry) {
     setSaving(r.id);
     try {
       await updateEntry(r.id, { data: r.data, title: (r.data as RouteRow).label ?? null, status: 'published' });
-      notice('✓ Trajet enregistré — répliqué sur le site et les montants serveur.');
+      // Synchronisation automatique de l'API partenaires pour ce trajet.
+      const pushed = await syncEtgRoute(r.data as RouteRow).catch(() => 0);
+      notice(pushed > 0
+        ? `✓ Trajet enregistré — site, montants serveur et API partenaires (${pushed} rate cards) alignés.`
+        : '✓ Trajet enregistré — répliqué sur le site et les montants serveur.');
     } catch (e) { notice(`Erreur : ${(e as Error).message}`); }
     finally { setSaving(null); }
   }
@@ -121,8 +146,9 @@ export default function Pricing() {
           data: { label: r.label, routeId: r.id, category: r.category, priceE: r.prices.E, priceV: r.prices.V, priceS: r.prices.S, note: r.note ?? '' },
         });
       }
-      notice(`✓ ${ROUTE_RATES.length} trajets importés — la grille est maintenant pilotée d'ici.`);
+      notice(`✓ ${ROUTE_RATES.length} trajets importés — la grille est maintenant pilotée depuis cette page.`);
       await loadAll();
+      await syncEtg(); // aligne aussi l'API partenaires dans la foulée
     } catch (e) { notice(`Erreur : ${(e as Error).message}`); }
     finally { setSaving(null); }
   }
@@ -219,12 +245,14 @@ export default function Pricing() {
           <strong><i className="bi bi-gem me-2 text-warning" />Tarification globale — grille {PRICE_LIST_VERSION}</strong>
           <div className="small text-muted">
             Source unique de TOUS les prix. Chaque enregistrement est répliqué automatiquement :
-            site public (calculateur, grille, itinéraires, Meet & Greeter) <b>et</b> montants officiels
-            calculés par le serveur (réservations, greeter). L'API partenaires s'aligne via le bouton ci-contre.
+            site public (calculateur, grille, itinéraires, Meet & Greeter), montants officiels
+            calculés par le serveur (réservations, greeter) <b>et API partenaires (ETG)</b> pour les
+            trajets mappés. Le bouton ci-contre force une resynchronisation complète si besoin.
           </div>
         </div>
-        <button className="btn btn-sm btn-dark" onClick={syncEtg} disabled={syncing || !writable}>
-          <i className={`bi ${syncing ? 'bi-hourglass-split' : 'bi-arrow-repeat'} me-1`} />Synchroniser l’API ETG
+        <button className="btn btn-sm btn-outline-secondary" onClick={syncEtg} disabled={syncing || !writable}
+          title="Repousse toute la grille vers les rate cards de l'API partenaires">
+          <i className={`bi ${syncing ? 'bi-hourglass-split' : 'bi-arrow-repeat'} me-1`} />Resynchroniser tout (API ETG)
         </button>
       </div>
       {flash && <div className="alert alert-info py-2">{flash}</div>}
