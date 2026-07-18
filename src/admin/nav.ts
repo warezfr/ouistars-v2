@@ -47,12 +47,10 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: 'Offre & tarifs',
     items: [
-      { label: 'Salon de tarification', icon: 'bi-gem', to: '/admin/pricing' },
+      { label: 'Tarification globale', icon: 'bi-gem', to: '/admin/pricing' },
       { label: 'Trajets & prix (fiches)', icon: 'bi-signpost-split', collection: 'route' },
-      { label: 'Forfaits', icon: 'bi-box-seam', collection: 'package' },
-      { label: 'Catég. forfaits', icon: 'bi-boxes', collection: 'package_category' },
-      { label: 'Destinations', icon: 'bi-geo-alt', collection: 'destination' },
-      { label: 'Catég. destinations', icon: 'bi-bookmarks', collection: 'destination_category' },
+      /* Forfaits & Destinations retirés : le front s'appuie désormais sur la
+         grille des trajets (Itinéraires signature) — plus d'utilité. */
     ],
   },
   {

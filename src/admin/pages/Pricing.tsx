@@ -6,7 +6,7 @@ import type { CmsEntry } from '../cms/types';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
 
 /**
- * SALON DE TARIFICATION — pilotage centralisé de TOUS les prix du site :
+ * TARIFICATION GLOBALE — pilotage centralisé de TOUS les prix du site :
  *   · Grille des trajets (E/V/S) — collection « route »
  *   · Tarifs horaires / au km / minimum d'heures — singleton « rates »
  *   · Tarifs Meet & Greeter — collection « greeter_rate »
@@ -59,6 +59,11 @@ export default function Pricing() {
   const [flash, setFlash] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+
+  /* ————— Filtres ————— */
+  const [typeFilter, setTypeFilter] = useState<'all' | 'routes' | 'greeter' | 'rates'>('all');
+  const [catFilter, setCatFilter] = useState<string>('all');
+  const [q, setQ] = useState('');
 
   const notice = (m: string) => { setFlash(m); window.setTimeout(() => setFlash(null), 4500); };
 
@@ -178,23 +183,43 @@ export default function Pricing() {
   }
 
   const num = (v: unknown): number | '' => (v == null || v === '' ? '' : Number(v));
-  const grouped = routes.reduce<Record<string, CmsEntry[]>>((acc, r) => {
+
+  /* Application des filtres (recherche + catégorie) */
+  const needle = q.trim().toLowerCase();
+  const matchQ = (...vals: (string | undefined)[]) =>
+    !needle || vals.some((v) => (v ?? '').toLowerCase().includes(needle));
+
+  const filteredRoutes = routes.filter((r) => {
+    const d = r.data as RouteRow;
+    if (catFilter !== 'all' && (d.category || 'city-to-city') !== catFilter) return false;
+    return matchQ(d.label, d.routeId);
+  });
+  const filteredGreeters = greeters.filter((g) => {
+    const d = g.data as GreeterRow;
+    return matchQ(d.airport, d.rateId);
+  });
+
+  const showRoutes = typeFilter === 'all' || typeFilter === 'routes';
+  const showGreeter = typeFilter === 'all' || typeFilter === 'greeter';
+  const showRates = (typeFilter === 'all' || typeFilter === 'rates') && !needle;
+
+  const grouped = filteredRoutes.reduce<Record<string, CmsEntry[]>>((acc, r) => {
     const cat = ((r.data as RouteRow).category as string) || 'city-to-city';
     (acc[cat] ||= []).push(r);
     return acc;
   }, {});
 
-  if (loading) return <div className="card"><div className="card-body text-muted">Chargement du salon de tarification…</div></div>;
+  if (loading) return <div className="card"><div className="card-body text-muted">Chargement de la tarification globale…</div></div>;
 
   return (
     <>
-      {/* En-tête : la promesse du salon */}
+      {/* En-tête */}
       <div className="alert alert-light border d-flex flex-wrap align-items-center justify-content-between gap-2">
         <div>
-          <strong><i className="bi bi-gem me-2 text-warning" />Salon de tarification — grille {PRICE_LIST_VERSION}</strong>
+          <strong><i className="bi bi-gem me-2 text-warning" />Tarification globale — grille {PRICE_LIST_VERSION}</strong>
           <div className="small text-muted">
             Source unique de TOUS les prix. Chaque enregistrement est répliqué automatiquement :
-            site public (calculateur, grille, forfaits, Meet & Greeter) <b>et</b> montants officiels
+            site public (calculateur, grille, itinéraires, Meet & Greeter) <b>et</b> montants officiels
             calculés par le serveur (réservations, greeter). L'API partenaires s'aligne via le bouton ci-contre.
           </div>
         </div>
@@ -205,7 +230,46 @@ export default function Pricing() {
       {flash && <div className="alert alert-info py-2">{flash}</div>}
       {!writable && <div className="alert alert-warning py-2">Lecture seule — votre rôle ne permet pas la modification.</div>}
 
+      {/* ————— Filtres ————— */}
+      <div className="card mb-4">
+        <div className="card-body py-3 d-flex flex-wrap align-items-center gap-2">
+          <div className="btn-group btn-group-sm" role="group" aria-label="Type de tarifs">
+            {([['all', 'Tous les tarifs'], ['routes', 'Grille des trajets'], ['greeter', 'Meet & Greeter'], ['rates', 'Horaires & km']] as const).map(([v, l]) => (
+              <button key={v} type="button"
+                className={`btn ${typeFilter === v ? 'btn-warning' : 'btn-outline-secondary'}`}
+                onClick={() => setTypeFilter(v)}>
+                {l}
+              </button>
+            ))}
+          </div>
+          <select className="form-select form-select-sm" style={{ maxWidth: 190 }}
+            value={catFilter} onChange={(e) => setCatFilter(e.target.value)}
+            disabled={typeFilter === 'greeter' || typeFilter === 'rates'}
+            aria-label="Catégorie de trajets">
+            <option value="all">Toutes les catégories</option>
+            {Object.entries(CATS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+          </select>
+          <div className="input-group input-group-sm" style={{ maxWidth: 280 }}>
+            <span className="input-group-text"><i className="bi bi-search" /></span>
+            <input className="form-control" placeholder="Rechercher un trajet, un aéroport…"
+              value={q} onChange={(e) => setQ(e.target.value)} />
+            {q && <button className="btn btn-outline-secondary" onClick={() => setQ('')}>×</button>}
+          </div>
+          {(typeFilter !== 'all' || catFilter !== 'all' || q) && (
+            <span className="small text-muted ms-auto">
+              {showRoutes ? `${filteredRoutes.length} trajet(s)` : ''}
+              {showRoutes && showGreeter ? ' · ' : ''}
+              {showGreeter ? `${filteredGreeters.length} tarif(s) M&G` : ''}
+              <button className="btn btn-link btn-sm p-0 ms-2" onClick={() => { setTypeFilter('all'); setCatFilter('all'); setQ(''); }}>
+                Réinitialiser
+              </button>
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* ————— 1 · Grille des trajets ————— */}
+      {showRoutes && (
       <Card title="Grille des trajets (E / V / S)"
         sub={routes.length ? `${routes.length} trajets pilotés depuis ce salon` : 'Aucun trajet en base — la grille statique du code fait foi'}
         right={routes.length === 0 && writable ? (
@@ -268,9 +332,14 @@ export default function Pricing() {
             répliqué en direct sur le site et les montants serveur.
           </div>
         )}
+        {routes.length > 0 && filteredRoutes.length === 0 && (
+          <div className="p-3 text-muted small">Aucun trajet ne correspond aux filtres.</div>
+        )}
       </Card>
+      )}
 
       {/* ————— 2 · Meet & Greeter ————— */}
+      {showGreeter && (
       <Card title="Tarifs Meet & Greeter (hors véhicule / chauffeur)"
         sub={greeters.length ? `${greeters.length} aéroports — base vide = « sur devis »` : 'Aucun tarif en base — les tarifs statiques du code font foi'}
         right={writable && (greeters.length === 0 ? (
@@ -287,7 +356,7 @@ export default function Pricing() {
             <table className="table table-hover align-middle mb-0">
               <thead><tr><th style={{ minWidth: 240 }}>Aéroport</th><th>Base € (vide = devis)</th><th>Pax inclus</th><th>Suppl. / pax €</th><th /></tr></thead>
               <tbody>
-                {greeters.map((g) => {
+                {filteredGreeters.map((g) => {
                   const d = g.data as GreeterRow;
                   return (
                     <tr key={g.id}>
@@ -328,8 +397,10 @@ export default function Pricing() {
           </div>
         )}
       </Card>
+      )}
 
       {/* ————— 3 · Horaires, kilomètre, minimum ————— */}
+      {showRates && (
       <Card title="Mise à disposition & au kilomètre"
         sub="Tarifs horaires (E/V/S), minimum d'heures et €/km — utilisés par le calculateur, le wizard et le serveur"
         right={writable && (
@@ -357,6 +428,7 @@ export default function Pricing() {
           </small>
         </div>
       </Card>
+      )}
     </>
   );
 }
