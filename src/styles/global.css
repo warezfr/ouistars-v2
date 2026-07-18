@@ -93,22 +93,44 @@ p { margin: 0 0 1em; color: var(--os-mut); }
 
 /* Vagues dorées animées (composant GoldWaves) */
 @keyframes os-wave-drift-a {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(-2.6%, 1.3%, 0); }
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-46px); }
 }
 @keyframes os-wave-drift-b {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(2.2%, -1.5%, 0); }
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(38px); }
 }
 @keyframes os-wave-drift-c {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(-1.7%, -1%, 0); }
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-30px); }
 }
-.os-wave-1 { animation: os-wave-drift-a 34s ease-in-out infinite; }
-.os-wave-2 { animation: os-wave-drift-b 26s ease-in-out infinite; }
-.os-wave-3 { animation: os-wave-drift-c 42s ease-in-out infinite; }
+.os-wave-1 { animation: os-wave-drift-a 30s ease-in-out infinite; }
+.os-wave-2 { animation: os-wave-drift-b 24s ease-in-out infinite; }
+.os-wave-3 { animation: os-wave-drift-c 38s ease-in-out infinite; }
+
+/* Fond « or vivant » : parallaxe pilotée par --wx/--wy (souris, lissé rAF) */
+.os-waves { --wx: 0; --wy: 0; --gx: 50%; --gy: 40%; }
+.os-waves__layer { position: absolute; inset: -3%; width: 106%; height: 106%; will-change: transform; }
+.os-waves__layer--back { transform: translate(calc(var(--wx) * 10px), calc(var(--wy) * 7px)); }
+.os-waves__layer--front {
+  transform: translate(calc(var(--wx) * 26px), calc(var(--wy) * 16px));
+  filter: drop-shadow(0 0 6px rgba(201, 162, 75, 0.35));
+}
+.os-waves__glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(560px circle at var(--gx) var(--gy), rgba(201, 162, 75, 0.085), transparent 70%);
+  transition: none;
+}
+@keyframes os-dust-twinkle {
+  0%, 100% { opacity: 0.06; }
+  50% { opacity: 0.5; }
+}
+.os-dust { opacity: 0.1; animation: os-dust-twinkle 6s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
-  .os-wave-1, .os-wave-2, .os-wave-3 { animation: none; }
+  .os-wave-1, .os-wave-2, .os-wave-3, .os-dust { animation: none; }
+  .os-waves__layer { transform: none; }
+  .os-waves__glow { display: none; }
 }
 
 /* Micro-utilitaires maison — hors layer Tailwind, pour primer
