@@ -12,8 +12,10 @@ export default defineConfig({
     ],
   },
   test: {
+    globals: true, // auto-cleanup de @testing-library/react entre les tests
     environment: 'node',
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
+    setupFiles: ['tests/setup.ts'],
     coverage: {
       provider: 'v8',
       include: ['src/lib/**', 'server/**', 'api/**', 'src/data/pricing.ts'],
