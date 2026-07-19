@@ -1,0 +1,37 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`cohérence de la grille officielle > snapshot des taux horaires / km / plancher 1`] = `
+{
+  "HOURLY_MIN_HOURS": 3,
+  "HOURLY_RATES": {
+    "E": 80,
+    "S": 110,
+    "V": 90,
+  },
+  "PER_KM_RATES": {
+    "E": 3.5,
+    "S": 4.5,
+    "V": 3.5,
+  },
+}
+`;
+
+exports[`cohérence de la grille officielle > snapshot des totaux par classe (diff de PR si un prix change) 1`] = `
+[
+  {
+    "class": "E",
+    "count": 21,
+    "total": 8440,
+  },
+  {
+    "class": "V",
+    "count": 21,
+    "total": 8610,
+  },
+  {
+    "class": "S",
+    "count": 21,
+    "total": 11150,
+  },
+]
+`;
