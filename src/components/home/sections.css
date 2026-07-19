@@ -157,7 +157,7 @@
 }
 .os-svx__num {
   grid-area: num; align-self: start;
-  font-size: 0.74rem; letter-spacing: 0.14em; color: var(--os-mut-2);
+  font-size: 0.74rem; letter-spacing: 0.14em; color: #939ba9; /* AA sur fond nuit */
   padding-top: 8px;
   transition: color 0.3s var(--os-ease);
 }
@@ -391,7 +391,7 @@
 }
 .os-flx__railclass {
   font-size: 0.64rem; letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--os-mut-2); transition: color 0.3s;
+  color: #939ba9; /* AA sur fond nuit */ transition: color 0.3s;
 }
 .os-flx__railname {
   font-family: var(--os-font-display); font-size: 1.14rem; color: var(--os-mut);

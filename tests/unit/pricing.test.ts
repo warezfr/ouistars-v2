@@ -92,6 +92,6 @@ describe('findRoute / formatEUR', () => {
   it('formatEUR formate en euros français sans décimales', () => {
     const s = formatEUR(1620);
     expect(s).toContain('€');
-    expect(s.replace(/ | | /g, '')).toBe('1620€');
+    expect(s.replace(/[\s\u00a0\u202f]/g, '')).toBe('1620€');
   });
 });

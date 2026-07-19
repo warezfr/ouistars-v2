@@ -194,7 +194,7 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
 
       {/* Galerie « Tout afficher » — l'index complet des partenariats */}
       {corpAllOpen && (
-        <div className="os-gal" role="dialog" aria-modal onClick={() => setCorpAllOpen(false)}>
+        <div className="os-gal" role="dialog" aria-modal aria-label={t.corporate.eyebrow} onClick={() => setCorpAllOpen(false)}>
           <div className="os-gal__panel" onClick={(e) => e.stopPropagation()}>
             <button className="os-dpop__close" onClick={() => setCorpAllOpen(false)} aria-label={t.common.close}>×</button>
             <header className="os-gal__head">
@@ -234,7 +234,7 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
 
       {/* Popup fiche corporate */}
       {corpInfo && (
-        <div className="os-dpop" role="dialog" aria-modal onClick={() => setCorpInfo(null)}>
+        <div className="os-dpop" role="dialog" aria-modal aria-label={lang === 'fr' ? corpInfo.fr : corpInfo.en} onClick={() => setCorpInfo(null)}>
           <div className="os-dpop__panel" onClick={(e) => e.stopPropagation()}>
             <button className="os-dpop__close" onClick={() => setCorpInfo(null)} aria-label={t.common.close}>×</button>
             <div className="os-dpop__media">

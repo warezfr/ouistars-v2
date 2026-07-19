@@ -22,7 +22,7 @@ function Shell({ open, onClose, title, children }: { open: boolean; onClose: () 
   }, [open, onClose]);
   if (!open) return null;
   return (
-    <div className="os-modal" role="dialog" aria-modal onClick={onClose}>
+    <div className="os-modal" role="dialog" aria-modal aria-label={title} onClick={onClose}>
       <div className="os-modal__panel" onClick={(e) => e.stopPropagation()}>
         <button className="os-modal__close" onClick={onClose} aria-label={t.common.close}>×</button>
         <h3>{title}</h3>

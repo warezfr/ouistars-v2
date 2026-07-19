@@ -198,7 +198,7 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
   const stepTitles = [mg.chooseService, mg.chooseAirport, mg.yourDetails];
 
   return (
-    <div className="os-mgw" role="dialog" aria-modal onClick={onClose}>
+    <div className="os-mgw" role="dialog" aria-modal aria-label={mg.wizTitle} onClick={onClose}>
       <div className="os-mgw__panel" onClick={(e) => e.stopPropagation()}>
         <button className="os-mgw__close" onClick={onClose} aria-label={t.common.close}>×</button>
 

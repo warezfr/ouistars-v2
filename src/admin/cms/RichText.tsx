@@ -68,7 +68,6 @@ export default function RichText({ value, onChange, disabled }: Props) {
   const exec = (cmd: string, arg?: string) => {
     if (disabled) return;
     ref.current?.focus();
-    // eslint-disable-next-line deprecation/deprecation
     document.execCommand(cmd, false, arg);
     emit();
   };

@@ -124,7 +124,7 @@ export default function Packages({ onBook }: Props) {
 
       {/* Galerie « Tout afficher » — l'index complet des itinéraires */}
       {allOpen && (
-        <div className="os-gal" role="dialog" aria-modal onClick={() => setAllOpen(false)}>
+        <div className="os-gal" role="dialog" aria-modal aria-label={t.packages.title} onClick={() => setAllOpen(false)}>
           <div className="os-gal__panel" onClick={(e) => e.stopPropagation()}>
             <button className="os-dpop__close" onClick={() => setAllOpen(false)} aria-label={t.common.close}>×</button>
             <header className="os-gal__head">
@@ -165,7 +165,7 @@ export default function Packages({ onBook }: Props) {
 
       {/* Popup destination */}
       {info && (
-        <div className="os-dpop" role="dialog" aria-modal onClick={() => setInfo(null)}>
+        <div className="os-dpop" role="dialog" aria-modal aria-label={info.label} onClick={() => setInfo(null)}>
           <div className="os-dpop__panel" onClick={(e) => e.stopPropagation()}>
             <button className="os-dpop__close" onClick={() => setInfo(null)} aria-label={t.common.close}>×</button>
             <div className="os-dpop__media">
