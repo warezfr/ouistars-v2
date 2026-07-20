@@ -55,6 +55,21 @@ const TXT: Record<string, L5> = {
   },
 };
 
+/** Libellés d'affichage des routes — 5 langues (le préremplissage du
+    formulaire conserve le libellé français de la grille pour le back-office). */
+const ROUTE_LABELS: Record<string, L5> = {
+  'cdg-ory-lbg-paris': {
+    fr: 'Aéroports Paris (CDG • ORY • LBG) ⇄ Paris', en: 'Paris Airports (CDG • ORY • LBG) ⇄ Paris',
+    es: 'Aeropuertos de París (CDG • ORY • LBG) ⇄ París', ru: 'Аэропорты Парижа (CDG • ORY • LBG) ⇄ Париж',
+    ar: 'مطارات باريس (CDG • ORY • LBG) ⇄ باريس',
+  },
+  'paris-disneyland': { fr: 'Paris ⇄ Disneyland', en: 'Paris ⇄ Disneyland', es: 'París ⇄ Disneyland', ru: 'Париж ⇄ Диснейленд', ar: 'باريس ⇄ ديزني لاند' },
+  'nce-monaco': { fr: 'Nice (NCE) ⇄ Monaco', en: 'Nice (NCE) ⇄ Monaco', es: 'Niza (NCE) ⇄ Mónaco', ru: 'Ницца (NCE) ⇄ Монако', ar: 'نيس (NCE) ⇄ موناكو' },
+  'paris-versailles': { fr: 'Paris ⇄ Versailles', en: 'Paris ⇄ Versailles', es: 'París ⇄ Versalles', ru: 'Париж ⇄ Версаль', ar: 'باريس ⇄ فرساي' },
+  'nice-st-tropez': { fr: 'Nice ⇄ Saint-Tropez', en: 'Nice ⇄ Saint-Tropez', es: 'Niza ⇄ Saint-Tropez', ru: 'Ницца ⇄ Сен-Тропе', ar: 'نيس ⇄ سان-تروبيه' },
+  'paris-mont-saint-michel': { fr: 'Paris ⇄ Mont-Saint-Michel', en: 'Paris ⇄ Mont-Saint-Michel', es: 'París ⇄ Mont-Saint-Michel', ru: 'Париж ⇄ Мон-Сен-Мишель', ar: 'باريس ⇄ جبل سان-ميشيل' },
+};
+
 /** Notices destination (popup d'information) — 5 langues. */
 const ROUTE_INFO: Record<string, L5> = {
   'cdg-ory-lbg-paris': {
@@ -111,6 +126,8 @@ export default function Packages({ onBook }: Props) {
   const [allOpen, setAllOpen] = useState(false);
   useAutoScroll(railRef, { speed: 0.5, paused: info !== null || allOpen });
 
+  const routeLabel = (r: RouteRate) => (ROUTE_LABELS[r.id] ? pickL(lang, ROUTE_LABELS[r.id]) : r.label);
+
   // Contenu doublé → boucle sans couture du défilement automatique.
   const loop = [...routes, ...routes];
 
@@ -141,11 +158,11 @@ export default function Packages({ onBook }: Props) {
             <article key={`${r.id}-${i}`} className="os-pk__card" onClick={() => setInfo(r)}
               role="button" tabIndex={i < routes.length ? 0 : -1}
               onKeyDown={(e) => e.key === 'Enter' && setInfo(r)}>
-              <img src={ROUTE_IMAGES[r.id] ?? FALLBACK_IMAGE} alt={r.label} loading="lazy" />
+              <img src={ROUTE_IMAGES[r.id] ?? FALLBACK_IMAGE} alt={routeLabel(r)} loading="lazy" />
               <div className="os-pk__scrim" aria-hidden />
               <span className="os-pk__num">{String((i % routes.length) + 1).padStart(2, '0')}</span>
               <div className="os-pk__body">
-                <h3 className="os-pk__route">{r.label}</h3>
+                <h3 className="os-pk__route">{routeLabel(r)}</h3>
                 <p className="os-pk__desc">{ROUTE_INFO[r.id] ? pickL(lang, ROUTE_INFO[r.id]) : ''}</p>
                 <span className="os-pk__book">{t.cta.book} →</span>
               </div>
@@ -172,11 +189,11 @@ export default function Packages({ onBook }: Props) {
                   onClick={() => { setAllOpen(false); setInfo(r); }} role="button" tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && (setAllOpen(false), setInfo(r))}>
                   <div className="os-gal__media">
-                    <img src={ROUTE_IMAGES[r.id] ?? FALLBACK_IMAGE} alt={r.label} loading="lazy" />
+                    <img src={ROUTE_IMAGES[r.id] ?? FALLBACK_IMAGE} alt={routeLabel(r)} loading="lazy" />
                     <span className="os-gal__num">{String(i + 1).padStart(2, '0')}</span>
                   </div>
                   <div className="os-gal__body">
-                    <h4>{r.label}</h4>
+                    <h4>{routeLabel(r)}</h4>
                     <p className="os-gal__desc">{ROUTE_INFO[r.id] ? pickL(lang, ROUTE_INFO[r.id]) : ''}</p>
                     <span className="os-gal__more">{t.cta.book} →</span>
                   </div>
@@ -196,11 +213,11 @@ export default function Packages({ onBook }: Props) {
           <div className="os-dpop__panel" onClick={(e) => e.stopPropagation()}>
             <button className="os-dpop__close" onClick={() => setInfo(null)} aria-label={t.common.close}>×</button>
             <div className="os-dpop__media">
-              <img src={ROUTE_IMAGES[info.id] ?? FALLBACK_IMAGE} alt={info.label} />
+              <img src={ROUTE_IMAGES[info.id] ?? FALLBACK_IMAGE} alt={routeLabel(info)} />
               <span className="os-dpop__chip">{t.pricingTables.categories[info.category]}</span>
             </div>
             <div className="os-dpop__body">
-              <h3 className="os-dpop__title">{info.label}</h3>
+              <h3 className="os-dpop__title">{routeLabel(info)}</h3>
               <p className="os-dpop__desc">{ROUTE_INFO[info.id] ? pickL(lang, ROUTE_INFO[info.id]) : ''}</p>
               <p className="os-dpop__note">{pickL(lang, TXT.note)}</p>
               <button className="os-btn os-btn--gold os-dpop__cta"

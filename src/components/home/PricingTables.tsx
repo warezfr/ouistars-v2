@@ -153,7 +153,7 @@ export default function PricingTables({ onBook }: Props) {
         <Reveal>
           <header className="os-dst__head">
             <div>
-              <p className="os-eyebrow">Destinations</p>
+              <p className="os-eyebrow">{pickL(lang, { fr: 'Destinations', en: 'Destinations', es: 'Destinos', ru: 'Направления', ar: 'الوجهات' })}</p>
               <h2 className="os-dst__title">
                 {pickL(lang, { fr: 'La France, porte à porte', en: 'France, door to door', es: 'Francia, puerta a puerta', ru: 'Франция — от двери до двери', ar: 'فرنسا، من الباب إلى الباب' })}
               </h2>

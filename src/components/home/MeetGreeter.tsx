@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useI18n } from '@/i18n';
-import { MEET_GREET_RATES, MEET_GREET_INCLUDES, MEET_GREET_DISCLAIMER } from '@/data/pricing';
+import { MEET_GREET_RATES, MEET_GREET_INCLUDES_I18N, MEET_GREET_DISCLAIMER_I18N } from '@/data/pricing';
 import { usePricingSync } from '@/lib/livePricing';
 import { formatEUR } from '@/lib/pricing';
 import Reveal from '@/components/ui/Reveal';
@@ -14,7 +14,7 @@ import './meetgreet.css';
  */
 export default function MeetGreeter() {
   usePricingSync(); // re-rend quand le Salon de tarification a synchronisé les tarifs
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [wizardOpen, setWizardOpen] = useState(false);
 
   return (
@@ -30,7 +30,7 @@ export default function MeetGreeter() {
             <div className="os-mg2__body">
               <h3>{t.meetGreet.includes}</h3>
               <ul>
-                {MEET_GREET_INCLUDES.map((i) => (
+                {MEET_GREET_INCLUDES_I18N[lang].map((i) => (
                   <li key={i}>{i}</li>
                 ))}
               </ul>
@@ -48,7 +48,7 @@ export default function MeetGreeter() {
                 ))}
               </div>
 
-              <p className="os-mg2__disclaimer">{MEET_GREET_DISCLAIMER}</p>
+              <p className="os-mg2__disclaimer">{MEET_GREET_DISCLAIMER_I18N[lang]}</p>
               <button className="os-btn os-btn--gold os-mg2__cta" onClick={() => setWizardOpen(true)}>
                 {t.meetGreet.cta} →
               </button>

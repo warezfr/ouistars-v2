@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useI18n } from '@/i18n';
-import { FLEET, type FleetVehicle } from '@/data/fleet';
+import { useI18n, pickL } from '@/i18n';
+import { FLEET, FLEET_I18N, type FleetVehicle } from '@/data/fleet';
 import { usePublished } from '@/lib/cms';
 import Reveal from '@/components/ui/Reveal';
 import './sections.css';
@@ -15,7 +15,7 @@ interface CmsVehicle {
     (lettrage fantôme doré, socle lumineux) + fiche specs en filets or.
     Contenu piloté par le back-office (collection vehicle). */
 export default function Fleet() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [selected, setSelected] = useState<FleetVehicle | null>(null);
   const [idx, setIdx] = useState(0);
 
@@ -33,7 +33,11 @@ export default function Fleet() {
           luggage: v.luggage ?? 3,
           descFr: v.descFr ?? '',
         }))
-    : FLEET;
+    : FLEET.map((v) => ({
+        ...v,
+        name: FLEET_I18N[v.id] ? FLEET_I18N[v.id].name[lang] : v.name,
+        descFr: FLEET_I18N[v.id] ? FLEET_I18N[v.id].desc[lang] : v.descFr,
+      }));
 
   const cur = list[Math.min(idx, list.length - 1)] ?? list[0];
 
@@ -46,7 +50,7 @@ export default function Fleet() {
               <p className="os-eyebrow">{t.fleet.eyebrow}</p>
               <h2 className="os-flx__title">{t.fleet.title}</h2>
             </div>
-            <span className="os-flx__count">{String(list.length).padStart(2, '0')} véhicules</span>
+            <span className="os-flx__count">{String(list.length).padStart(2, '0')} {pickL(lang, { fr: 'véhicules', en: 'vehicles', es: 'vehículos', ru: 'автомобилей', ar: 'سيارات' })}</span>
           </div>
         </Reveal>
 

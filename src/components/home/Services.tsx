@@ -15,10 +15,17 @@ export default function Services() {
   const { lang, t } = useI18n();
   const services = usePublished<ServiceItem>('service', SERVICES);
   const [active, setActive] = useState(0);
-  const svcName = (x: ServiceItem) =>
-    (({ fr: x.fr, en: x.en, es: x.es, ru: x.ru, ar: x.ar } as Record<Lang, string | undefined>)[lang]) ?? x.en;
-  const svcDesc = (x: ServiceItem) =>
-    (({ fr: x.descFr, en: x.descEn, es: x.descEs, ru: x.descRu, ar: x.descAr } as Record<Lang, string | undefined>)[lang]) ?? x.descEn;
+  // Les fiches publiées par le CMS ne portent que fr/en : pour es/ru/ar on
+  // retombe sur la traduction du catalogue statique (même id), puis sur l'anglais.
+  const staticById = new Map(SERVICES.map((x) => [x.id, x]));
+  const svcName = (x: ServiceItem) => {
+    const st = staticById.get(x.id ?? '');
+    return (({ fr: x.fr, en: x.en, es: x.es ?? st?.es, ru: x.ru ?? st?.ru, ar: x.ar ?? st?.ar } as Record<Lang, string | undefined>)[lang]) ?? x.en;
+  };
+  const svcDesc = (x: ServiceItem) => {
+    const st = staticById.get(x.id ?? '');
+    return (({ fr: x.descFr, en: x.descEn, es: x.descEs ?? st?.descEs, ru: x.descRu ?? st?.descRu, ar: x.descAr ?? st?.descAr } as Record<Lang, string | undefined>)[lang]) ?? x.descEn;
+  };
   const current = services[active] ?? services[0];
 
   return (

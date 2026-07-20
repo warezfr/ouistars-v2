@@ -332,18 +332,66 @@ export function About() {
   );
 }
 
-const FAQ_ITEMS = [
-  { q: 'Les tarifs affichés sont-ils TTC ?', a: 'Oui, tous les prix de la grille 2026-2027 sont affichés TTC, par transfert dans un sens ou dans l’autre.' },
-  { q: 'Un aller-retour, comment est-il facturé ?', a: 'Un aller-retour est facturé comme deux transferts distincts.' },
-  { q: 'Le Meet & Greeter inclut-il le véhicule ?', a: 'Non. Le service Meet & Greeter n’inclut ni le véhicule ni le chauffeur : le transport se réserve et se facture séparément.' },
-  { q: 'Quelle est la durée minimale d’une mise à disposition ?', a: 'Les mises à disposition horaires requièrent un minimum de 3 heures consécutives.' },
-  { q: 'Des suppléments peuvent-ils s’appliquer ?', a: 'Oui. L’attente supplémentaire, les arrêts additionnels, le parking, les péages, les services de nuit et les périodes d’événements peuvent entraîner des frais additionnels, toujours annoncés en amont.' },
-  { q: 'Opérez-vous partout en France ?', a: 'Oui — nos opérations sont nationales : Paris et Île-de-France, Côte d’Azur, et l’ensemble du territoire pour vos transferts, tournées et événements.' },
+/** FAQ statique — 5 langues (le CMS, rédigé en français, ne remplace que le FR). */
+const FAQ_I18N: { q: L5; a: L5 }[] = [
+  {
+    q: { fr: 'Les tarifs affichés sont-ils TTC ?', en: 'Are the displayed prices inclusive of VAT?', es: '¿Los precios mostrados incluyen IVA?', ru: 'Указаны ли цены с НДС?', ar: 'هل الأسعار المعروضة شاملة الضريبة؟' },
+    a: { fr: 'Oui, tous les prix de la grille 2026-2027 sont affichés TTC, par transfert dans un sens ou dans l’autre.',
+         en: 'Yes — every price in the 2026-2027 grid includes VAT, per transfer in either direction.',
+         es: 'Sí, todos los precios de la tarifa 2026-2027 incluyen IVA, por traslado en cualquier sentido.',
+         ru: 'Да — все цены сетки 2026-2027 указаны с НДС, за один трансфер в любую сторону.',
+         ar: 'نعم — جميع أسعار تعرفة 2026-2027 شاملة الضريبة، لكل توصيلة في أي اتجاه.' },
+  },
+  {
+    q: { fr: 'Un aller-retour, comment est-il facturé ?', en: 'How is a round trip billed?', es: '¿Cómo se factura un viaje de ida y vuelta?', ru: 'Как оплачивается поездка туда-обратно?', ar: 'كيف تُحتسب رحلة الذهاب والإياب؟' },
+    a: { fr: 'Un aller-retour est facturé comme deux transferts distincts.',
+         en: 'A round trip is billed as two separate transfers.',
+         es: 'Un viaje de ida y vuelta se factura como dos traslados distintos.',
+         ru: 'Поездка туда-обратно оплачивается как два отдельных трансфера.',
+         ar: 'تُحتسب رحلة الذهاب والإياب كتوصيلتين منفصلتين.' },
+  },
+  {
+    q: { fr: 'Le Meet & Greeter inclut-il le véhicule ?', en: 'Does the Meet & Greeter include the vehicle?', es: '¿El Meet & Greeter incluye el vehículo?', ru: 'Входит ли автомобиль в услугу Meet & Greeter?', ar: 'هل تشمل خدمة الاستقبال والمرافقة السيارة؟' },
+    a: { fr: 'Non. Le service Meet & Greeter n’inclut ni le véhicule ni le chauffeur : le transport se réserve et se facture séparément.',
+         en: 'No. The Meet & Greeter service includes neither the vehicle nor the chauffeur: transport is booked and billed separately.',
+         es: 'No. El servicio Meet & Greeter no incluye ni el vehículo ni el chófer: el transporte se reserva y factura por separado.',
+         ru: 'Нет. Услуга Meet & Greeter не включает ни автомобиль, ни шофёра: транспорт бронируется и оплачивается отдельно.',
+         ar: 'لا. لا تشمل خدمة الاستقبال والمرافقة السيارة ولا السائق: يُحجز النقل ويُدفع بشكل منفصل.' },
+  },
+  {
+    q: { fr: 'Quelle est la durée minimale d’une mise à disposition ?', en: 'What is the minimum duration for hourly hire?', es: '¿Cuál es la duración mínima de la disposición por horas?', ru: 'Какова минимальная длительность почасовой аренды?', ar: 'ما الحد الأدنى لمدة الخدمة بالساعة؟' },
+    a: { fr: 'Les mises à disposition horaires requièrent un minimum de 3 heures consécutives.',
+         en: 'Hourly hire requires a minimum of 3 consecutive hours.',
+         es: 'La disposición por horas requiere un mínimo de 3 horas consecutivas.',
+         ru: 'Почасовая аренда — минимум 3 часа подряд.',
+         ar: 'تتطلب الخدمة بالساعة ثلاث ساعات متواصلة كحد أدنى.' },
+  },
+  {
+    q: { fr: 'Des suppléments peuvent-ils s’appliquer ?', en: 'Can surcharges apply?', es: '¿Pueden aplicarse suplementos?', ru: 'Возможны ли доплаты?', ar: 'هل يمكن أن تُطبَّق رسوم إضافية؟' },
+    a: { fr: 'Oui. L’attente supplémentaire, les arrêts additionnels, le parking, les péages, les services de nuit et les périodes d’événements peuvent entraîner des frais additionnels, toujours annoncés en amont.',
+         en: 'Yes. Extra waiting, additional stops, parking, tolls, night service and event periods may incur additional fees — always announced in advance.',
+         es: 'Sí. La espera adicional, paradas extra, parking, peajes, servicios nocturnos y períodos de eventos pueden conllevar cargos adicionales, siempre anunciados de antemano.',
+         ru: 'Да. Дополнительное ожидание, лишние остановки, парковка, платные дороги, ночные поездки и периоды мероприятий могут повлечь доплаты — всегда объявляемые заранее.',
+         ar: 'نعم. قد يترتب على الانتظار الإضافي والتوقفات الإضافية ومواقف السيارات ورسوم الطرق والخدمة الليلية وفترات الفعاليات رسوم إضافية — يُعلن عنها دائماً مسبقاً.' },
+  },
+  {
+    q: { fr: 'Opérez-vous partout en France ?', en: 'Do you operate throughout France?', es: '¿Operan en toda Francia?', ru: 'Работаете ли вы по всей Франции?', ar: 'هل تعملون في جميع أنحاء فرنسا؟' },
+    a: { fr: 'Oui — nos opérations sont nationales : Paris et Île-de-France, Côte d’Azur, et l’ensemble du territoire pour vos transferts, tournées et événements.',
+         en: 'Yes — our operations are nationwide: Paris and Île-de-France, the Riviera, and the whole territory for your transfers, tours and events.',
+         es: 'Sí — nuestras operaciones son nacionales: París e Île-de-France, la Costa Azul y todo el territorio para sus traslados, giras y eventos.',
+         ru: 'Да — мы работаем по всей стране: Париж и Иль-де-Франс, Лазурный берег и вся территория для ваших трансферов, туров и мероприятий.',
+         ar: 'نعم — عملياتنا وطنية: باريس وإيل-دو-فرانس والريفييرا وكامل الأراضي الفرنسية لتوصيلاتكم وجولاتكم وفعالياتكم.' },
+  },
 ];
+
+const FAQ_ITEMS = FAQ_I18N.map((f) => ({ q: f.q.fr, a: f.a.fr }));
 
 export function Faq() {
   const { lang } = useI18n();
-  const items = usePublished<{ q: string; a: string }>('faq', FAQ_ITEMS);
+  const cmsItems = usePublished<{ q: string; a: string }>('faq', FAQ_ITEMS);
+  // Le CMS est rédigé en français → il ne remplace la FAQ qu'en FR ;
+  // les autres langues affichent les traductions embarquées.
+  const items = lang === 'fr' ? cmsItems : FAQ_I18N.map((f) => ({ q: pickL(lang, f.q), a: pickL(lang, f.a) }));
   return (
     <section className="os-section os-faq2" id="faq">
       <div className="os-container">

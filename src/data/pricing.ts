@@ -102,6 +102,51 @@ export const MEET_GREET_INCLUDES = [
 export const MEET_GREET_DISCLAIMER =
   'Le tarif du service Meet & Greeter n’inclut ni le véhicule ni le chauffeur. Le transport doit être réservé et facturé séparément.';
 
+/** Version multilingue de la liste incluse + avertissement (affichage front). */
+export const MEET_GREET_INCLUDES_I18N: Record<'fr' | 'en' | 'es' | 'ru' | 'ar', string[]> = {
+  fr: MEET_GREET_INCLUDES,
+  en: [
+    'Welcome directly at the aircraft door',
+    'Priority Fast Track access',
+    'Assistance through border police controls',
+    'Assistance with luggage retrieval',
+    'Escort of passengers to the terminal exit',
+    'Coordination with the separately booked transport service',
+  ],
+  es: [
+    'Recibimiento directamente en la puerta del avión',
+    'Acceso prioritario Fast Track',
+    'Asistencia en los controles de la policía de fronteras',
+    'Asistencia en la recogida del equipaje',
+    'Acompañamiento de los pasajeros hasta la salida de la terminal',
+    'Coordinación con el servicio de transporte reservado por separado',
+  ],
+  ru: [
+    'Встреча прямо у трапа самолёта',
+    'Приоритетный проход Fast Track',
+    'Сопровождение при прохождении пограничного контроля',
+    'Помощь с получением багажа',
+    'Сопровождение пассажиров до выхода из терминала',
+    'Координация с отдельно забронированным транспортом',
+  ],
+  ar: [
+    'استقبال مباشرة عند باب الطائرة',
+    'دخول أولوية عبر المسار السريع',
+    'مساعدة عند عبور مراقبة شرطة الحدود',
+    'مساعدة في استلام الأمتعة',
+    'مرافقة الركاب حتى مخرج الصالة',
+    'تنسيق مع خدمة النقل المحجوزة بشكل منفصل',
+  ],
+};
+
+export const MEET_GREET_DISCLAIMER_I18N: Record<'fr' | 'en' | 'es' | 'ru' | 'ar', string> = {
+  fr: MEET_GREET_DISCLAIMER,
+  en: 'The Meet & Greeter fare includes neither the vehicle nor the chauffeur. Transport must be booked and billed separately.',
+  es: 'La tarifa del servicio Meet & Greeter no incluye ni el vehículo ni el chófer. El transporte debe reservarse y facturarse por separado.',
+  ru: 'Тариф услуги Meet & Greeter не включает ни автомобиль, ни шофёра. Транспорт бронируется и оплачивается отдельно.',
+  ar: 'سعر خدمة الاستقبال والمرافقة لا يشمل السيارة ولا السائق. يجب حجز النقل ودفعه بشكل منفصل.',
+};
+
 export const PRICING_NOTES = [
   'Tous les prix affichés sont TTC.',
   'Chaque prix s’applique à un transfert dans un sens ou dans l’autre.',
