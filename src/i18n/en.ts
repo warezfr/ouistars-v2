@@ -11,7 +11,7 @@ export const en: typeof fr = {
       'Luxury Transportation • Fleet Operations • Destination Management • Events & Congresses • Fashion Weeks • Airport Meet & Greeter • Private & Business Aviation • Concierge • Corporate Mobility',
     ctaBook: 'Book Your Chauffeur',
     ctaQuote: 'Corporate & Event Solutions',
-    pricingLink: 'View the full rate card',
+    pricingLink: 'Discover our destinations',
   },
   calculator: {
     title: 'Estimate your transfer',
@@ -208,7 +208,7 @@ export const en: typeof fr = {
     rights: 'All rights reserved',
     terms: 'Terms', privacy: 'Privacy', cookies: 'Cookies',
     contact: 'Contact', address: '78 Av. des Champs-Élysées, 75008 Paris',
-    pricingLink: '2026-2027 Rate Card',
+    pricingLink: 'Our destinations',
     meetGreetLink: 'Meet & Greeter',
   },
   wizard: {

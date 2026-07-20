@@ -9,7 +9,7 @@ export const fr = {
       'Transport de luxe • Gestion de flotte • Destination Management • Événements & Congrès • Fashion Weeks • Meet & Greeter Aéroports • Aviation Privée & d’Affaires • Conciergerie • Mobilité Corporate',
     ctaBook: 'Réserver un Chauffeur',
     ctaQuote: 'Solutions Entreprises & Événements',
-    pricingLink: 'Voir la grille tarifaire complète',
+    pricingLink: 'Découvrir nos destinations',
   },
   calculator: {
     title: 'Estimation de votre transfert',
@@ -206,7 +206,7 @@ export const fr = {
     rights: 'Tous droits réservés',
     terms: 'Conditions', privacy: 'Confidentialité', cookies: 'Cookies',
     contact: 'Contact', address: '78 Av. des Champs-Élysées, 75008 Paris',
-    pricingLink: 'Grille tarifaire 2026-2027',
+    pricingLink: 'Nos destinations',
     meetGreetLink: 'Meet & Greeter',
   },
   wizard: {

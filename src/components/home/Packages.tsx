@@ -146,7 +146,6 @@ export default function Packages({ onBook }: Props) {
             </div>
             <footer className="os-gal__foot">
               <span>{lang === 'fr' ? 'Chaque itinéraire se décline en E-Class, V-Class ou S-Class.' : 'Every itinerary is available in E-Class, V-Class or S-Class.'}</span>
-              <a href="#tarifs" onClick={() => setAllOpen(false)}>{lang === 'fr' ? 'Voir la grille tarifaire →' : 'See the price list →'}</a>
             </footer>
           </div>
         </div>

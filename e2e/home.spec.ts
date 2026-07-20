@@ -11,8 +11,8 @@ test('la page d’accueil charge toutes les sections clés', async ({ page }) =>
   for (const id of ['#dmc', '#meet-greet', '#fleet', '#tours', '#tarifs', '#corporate', '#about', '#faq', '#contact']) {
     await expect(page.locator(id).first()).toBeAttached();
   }
-  // Hero : CTA or vers la grille + calculateur présent.
-  await expect(page.getByRole('link', { name: /grille tarifaire complète/i })).toBeVisible();
+  // Hero : CTA or vers les destinations + calculateur présent.
+  await expect(page.getByRole('link', { name: /Découvrir nos destinations/i })).toBeVisible();
   await expect(page.locator('.os-calc')).toBeVisible();
 });
 
@@ -20,7 +20,7 @@ test('bascule FR → EN : navigation et hero traduits', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Réserver' }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Language' }).click();
   await expect(page.getByText('Premium Mobility & Event Solutions')).toBeVisible();
-  await expect(page.getByRole('link', { name: /full rate card/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Discover our destinations/i })).toBeVisible();
 });
 
 test('footer colophon : invitation, registre, signature, légal dégagé', async ({ page }) => {
@@ -34,9 +34,17 @@ test('footer colophon : invitation, registre, signature, légal dégagé', async
   expect(lb && wb && lb.x + lb.width <= wb.x).toBeTruthy();
 });
 
-test('grille tarifaire : prix officiels affichés (City-to-city en premier)', async ({ page }) => {
+test('destinations : mosaïque sans aucun prix, fiche au clic avec Réserver', async ({ page }) => {
   await page.locator('#tarifs').scrollIntoViewIfNeeded();
-  await expect(page.locator('#tarifs').getByRole('tab', { name: 'City-to-city depuis Paris' })).toBeVisible();
-  await expect(page.locator('#tarifs').getByText('Paris ⇄ Mont-Saint-Michel')).toBeVisible();
-  await expect(page.locator('#tarifs').getByText('1 620 €')).toBeVisible(); // S-Class Mont-Saint-Michel
+  const dst = page.locator('#tarifs');
+  await expect(dst.locator('.os-dst__tile')).toHaveCount(9);
+  expect(await dst.textContent()).not.toMatch(/\d+\s*€/); // zéro prix affiché
+
+  // Clic sur Monaco → fiche avec description et bouton Réserver.
+  await dst.locator('.os-dst__tile', { hasText: 'Monaco' }).click();
+  const dpop = page.locator('.os-dpop');
+  await expect(dpop).toBeVisible();
+  await expect(dpop.getByText(/corniche/)).toBeVisible();
+  await dpop.getByRole('button', { name: 'Réserver' }).click();
+  await expect(page.locator('.os-modal input[name="prefill"]')).toHaveValue(/Monaco/);
 });
