@@ -4,7 +4,7 @@ import { usePricingSync } from '@/lib/livePricing';
 import { computeMeetGreet, formatEUR } from '@/lib/pricing';
 import { parseFlightNumber } from '@/data/airlines';
 import { DateField, TimeField } from '@/components/booking/pickers';
-import { useI18n } from '@/i18n';
+import { useI18n, pickL } from '@/i18n';
 import './meetgreet.css';
 
 /**
@@ -146,7 +146,7 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
   const summaryText = () =>
     `${mg.wizTitle} — ${svcLabel} · ${airportLabel}` +
     `${form.travel_date ? ` · ${form.travel_date}` : ''}${form.travel_time ? ` ${form.travel_time}` : ''}` +
-    `${form.flight_number ? ` · ${lang === 'fr' ? 'vol' : 'flight'} ${form.flight_number}` : ''}` +
+    `${form.flight_number ? ` · ${pickL(lang, { fr: 'vol', en: 'flight', es: 'vuelo', ru: 'рейс', ar: 'رحلة' })} ${form.flight_number}` : ''}` +
     ` · ${form.passengers} pax${price != null ? ` · ${formatEUR(price)}` : ` · ${mg.onQuote}`}`;
 
   async function submit(channelKind: 'email' | 'whatsapp') {
@@ -197,7 +197,7 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
     } catch { /* réseau : WhatsApp reste possible ci-dessous */ }
 
     if (channelKind === 'whatsapp') {
-      const txt = `${lang === 'fr' ? 'Bonjour Oui Stars,' : 'Hello Oui Stars,'} ${summaryText()}` +
+      const txt = `${pickL(lang, { fr: 'Bonjour Oui Stars,', en: 'Hello Oui Stars,', es: 'Hola Oui Stars,', ru: 'Здравствуйте, Oui Stars,', ar: 'مرحباً Oui Stars،' })} ${summaryText()}` +
         ` — ${form.first_name} ${form.last_name} · ${form.phone}${ref ? ` · réf ${ref}` : ''}` +
         `${form.notes ? ` · ${form.notes}` : ''}`;
       window.open(`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(txt)}`, '_blank', 'noopener');

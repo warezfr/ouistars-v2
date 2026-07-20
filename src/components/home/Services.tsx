@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useI18n } from '@/i18n';
+import { useI18n, type Lang } from '@/i18n';
 import { SERVICES, type ServiceItem } from '@/data/services';
 import { usePublished } from '@/lib/cms';
 import Reveal from '@/components/ui/Reveal';
@@ -15,6 +15,10 @@ export default function Services() {
   const { lang, t } = useI18n();
   const services = usePublished<ServiceItem>('service', SERVICES);
   const [active, setActive] = useState(0);
+  const svcName = (x: ServiceItem) =>
+    (({ fr: x.fr, en: x.en, es: x.es, ru: x.ru, ar: x.ar } as Record<Lang, string | undefined>)[lang]) ?? x.en;
+  const svcDesc = (x: ServiceItem) =>
+    (({ fr: x.descFr, en: x.descEn, es: x.descEs, ru: x.descRu, ar: x.descAr } as Record<Lang, string | undefined>)[lang]) ?? x.descEn;
   const current = services[active] ?? services[0];
 
   return (
@@ -26,7 +30,7 @@ export default function Services() {
               <p className="os-eyebrow">{t.services.eyebrow}</p>
               <h2 className="os-svx__title">{t.services.title}</h2>
             </div>
-            <span className="os-svx__count">{String(services.length).padStart(2, '0')} expertises</span>
+            <span className="os-svx__count">{String(services.length).padStart(2, '0')} {({ fr: 'expertises', en: 'services', es: 'servicios', ru: 'услуг', ar: 'خدمة' } as Record<Lang, string>)[lang]}</span>
           </div>
         </Reveal>
 
@@ -44,7 +48,7 @@ export default function Services() {
               <div className="os-svx__frame-scrim" />
               <div className="os-svx__caption">
                 <span className="os-svx__caption-num">{String(active + 1).padStart(2, '0')}</span>
-                <span className="os-svx__caption-name">{current ? (lang === 'fr' ? current.fr : current.en) : ''}</span>
+                <span className="os-svx__caption-name">{current ? svcName(current) : ''}</span>
               </div>
             </div>
           </div>
@@ -60,8 +64,8 @@ export default function Services() {
                   tabIndex={0}
                 >
                   <span className="os-svx__num">{String(i + 1).padStart(2, '0')}</span>
-                  <h3 className="os-svx__name">{lang === 'fr' ? s.fr : s.en}</h3>
-                  <p className="os-svx__desc">{lang === 'fr' ? s.descFr : s.descEn}</p>
+                  <h3 className="os-svx__name">{svcName(s)}</h3>
+                  <p className="os-svx__desc">{svcDesc(s)}</p>
                   <span className="os-svx__arrow" aria-hidden>→</span>
                 </div>
               </li>

@@ -42,3 +42,13 @@
   display: grid; place-items: center; background: #25d366; color: #fff;
   border: 2px solid #0e0f14; }
 @media (max-width: 560px) { .os-form__row { grid-template-columns: 1fr; } }
+
+/* Pickers (date & heure) dans les modales — même peau que les inputs */
+.os-form__pickers { align-items: end; }
+.os-form__pickers .osp { width: 100%; }
+.os-form__pickers .osp-label { font-size: 0.72rem; color: var(--os-mut-2); margin-bottom: 4px; display: block; }
+.os-form__pickers .osp-field {
+  width: 100%; background: var(--os-black); border: 1px solid var(--os-line);
+  color: var(--os-ivory); border-radius: var(--os-radius-sm); padding: 12px 14px; font-size: 0.92rem;
+}
+.os-form__pickers .osp-field:focus-visible { border-color: var(--os-gold); }

@@ -1,4 +1,4 @@
-import { useI18n } from '@/i18n';
+import { useI18n, pickL } from '@/i18n';
 import FareCalculator from './FareCalculator';
 import './hero.css';
 
@@ -6,7 +6,7 @@ import './hero.css';
     Le calculateur (barre horizontale) vit dans le hero : le contenu au-dessus
     reste compact (titre + chips services). */
 export default function Hero() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const services = t.hero.subtitle.split('•').map((s) => s.trim()).filter(Boolean);
   return (
     <section className="relative flex min-h-screen flex-col overflow-hidden pb-7 pt-28" id="top">
@@ -48,10 +48,10 @@ export default function Hero() {
 
           {/* Bandeau de preuves — stats de maison */}
           <div className="os-hero__stats" aria-hidden>
-            <div><b className="os-goldgrad">24/7</b><span>Conciergerie</span></div>
+            <div><b className="os-goldgrad">24/7</b><span>{pickL(lang, { fr: 'Conciergerie', en: 'Concierge', es: 'Conserjería', ru: 'Консьерж', ar: 'كونسيرج' })}</span></div>
             <div><b className="os-goldgrad">100 %</b><span>Mercedes-Benz</span></div>
-            <div><b className="os-goldgrad">2026</b><span>Grille officielle</span></div>
-            <div><b className="os-goldgrad">France</b><span>Opérations nationales</span></div>
+            <div><b className="os-goldgrad">2026</b><span>{pickL(lang, { fr: 'Grille officielle', en: 'Official rates', es: 'Tarifa oficial', ru: 'Официальные тарифы', ar: 'التعرفة الرسمية' })}</span></div>
+            <div><b className="os-goldgrad">France</b><span>{pickL(lang, { fr: 'Opérations nationales', en: 'Nationwide operations', es: 'Operaciones nacionales', ru: 'По всей стране', ar: 'عمليات وطنية' })}</span></div>
           </div>
 
           {/* Bandeau défilant des services */}

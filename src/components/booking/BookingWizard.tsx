@@ -109,7 +109,7 @@ export default function BookingWizard({ open, onClose, ctx }: Props) {
   const dateLabel = useMemo(() => {
     const d = new Date(`${date}T00:00:00`);
     if (Number.isNaN(d.getTime())) return date;
-    return d.toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    return d.toLocaleDateString(({ fr: 'fr-FR', en: 'en-GB', es: 'es-ES', ru: 'ru-RU', ar: 'ar' } as Record<typeof lang, string>)[lang], { day: '2-digit', month: 'long', year: 'numeric' });
   }, [date, lang]);
 
   if (!open) return null;

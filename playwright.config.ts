@@ -16,6 +16,7 @@ export default defineConfig({
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: 'http://localhost:4178',
+    locale: 'fr-FR', // la détection de langue suit navigator.language — tests en FR
     trace: 'retain-on-failure',
     ...(exec ? { launchOptions: { executablePath: exec } } : {}),
   },

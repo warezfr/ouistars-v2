@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { fr } from '@/i18n/fr';
 import { en } from '@/i18n/en';
+import { es } from '@/i18n/es';
+import { ru } from '@/i18n/ru';
+import { ar } from '@/i18n/ar';
 
 /** Isomorphisme FR/EN (faille n° 5 de l'audit) : mêmes clés, mêmes formes,
     mêmes longueurs de tableaux — aucune traduction manquante possible. */
@@ -24,16 +27,14 @@ function emptyStrings(o: unknown, path = ''): string[] {
   return [];
 }
 
-describe('dictionnaires i18n', () => {
-  it('fr et en ont exactement la même arborescence de clés', () => {
-    expect(shape(en)).toEqual(shape(fr));
+describe('dictionnaires i18n — 5 langues', () => {
+  const DICTS = { fr, en, es, ru, ar } as const;
+
+  it.each(Object.keys(DICTS).filter((k) => k !== 'fr'))('%s a exactement la même arborescence que fr', (k) => {
+    expect(shape(DICTS[k as keyof typeof DICTS])).toEqual(shape(fr));
   });
 
-  it('aucune chaîne vide dans fr', () => {
-    expect(emptyStrings(fr)).toEqual([]);
-  });
-
-  it('aucune chaîne vide dans en', () => {
-    expect(emptyStrings(en)).toEqual([]);
+  it.each(Object.keys(DICTS))('aucune chaîne vide dans %s', (k) => {
+    expect(emptyStrings(DICTS[k as keyof typeof DICTS])).toEqual([]);
   });
 });

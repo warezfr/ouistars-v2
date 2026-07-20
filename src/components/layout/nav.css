@@ -123,3 +123,25 @@
   .os-nav__links a { font-size: 0.7rem; letter-spacing: 0.14em; }
   .os-nav__actions { flex: 0 0 auto; }
 }
+
+/* ————— Sélecteur de langue (5 langues) ————— */
+.os-nav__langwrap { position: relative; }
+.os-nav__langmenu {
+  position: absolute; top: calc(100% + 8px); inset-inline-end: 0; z-index: 300;
+  list-style: none; margin: 0; padding: 6px; min-width: 170px;
+  background: linear-gradient(180deg, var(--os-surface), var(--os-night));
+  border: 1px solid rgba(201, 162, 75, 0.35); border-radius: 12px;
+  box-shadow: var(--os-shadow); animation: os-fade 0.2s var(--os-ease);
+}
+.os-nav__langmenu button {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: start;
+  background: none; border: 0; cursor: pointer; border-radius: 8px;
+  padding: 9px 12px; color: var(--os-ivory); font-size: 0.88rem;
+  transition: background 0.2s, color 0.2s;
+}
+.os-nav__langmenu button i {
+  font-style: normal; font-size: 0.62rem; letter-spacing: 0.12em;
+  color: var(--os-gold); width: 22px;
+}
+.os-nav__langmenu button:hover { background: rgba(201, 162, 75, 0.1); }
+.os-nav__langmenu button.is-now { color: var(--os-gold-soft); background: rgba(201, 162, 75, 0.08); }

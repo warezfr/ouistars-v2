@@ -19,6 +19,7 @@ test('la page d’accueil charge toutes les sections clés', async ({ page }) =>
 test('bascule FR → EN : navigation et hero traduits', async ({ page }) => {
   await expect(page.getByRole('button', { name: 'Réserver' }).first()).toBeVisible();
   await page.getByRole('button', { name: 'Language' }).click();
+  await page.getByRole('option', { name: /English/ }).click();
   await expect(page.getByText('Premium Mobility & Event Solutions')).toBeVisible();
   await expect(page.getByRole('link', { name: /Discover our destinations/i })).toBeVisible();
 });

@@ -13,8 +13,11 @@ function fillBooking(withEmail = true) {
   fireEvent.change(screen.getByPlaceholderText('Prénom *'), { target: { value: 'Jean' } });
   fireEvent.change(screen.getByPlaceholderText('Nom *'), { target: { value: 'Client' } });
   fireEvent.change(screen.getByPlaceholderText('Téléphone *'), { target: { value: '+33600000000' } });
-  if (withEmail) fireEvent.change(screen.getByPlaceholderText('Email *'), { target: { value: 'jean@ex.fr' } });
-  fireEvent.change(document.querySelector('input[name="travel_date"]')!, { target: { value: '2030-06-15' } });
+  if (withEmail) fireEvent.change(screen.getByPlaceholderText('E-mail *'), { target: { value: 'jean@ex.fr' } });
+  // Date via le calendrier custom : ouvrir le popover puis choisir un jour actif.
+  fireEvent.click(document.querySelector('.os-form__pickers .osp-field')!);
+  const cells = document.querySelectorAll('.osp-cell:not(.is-disabled):not(.osp-cell--empty)');
+  fireEvent.click(cells[cells.length - 1]);
   fireEvent.change(screen.getByPlaceholderText('Départ *'), { target: { value: 'CDG' } });
   fireEvent.change(screen.getByPlaceholderText('Destination *'), { target: { value: 'Paris' } });
 }
@@ -65,7 +68,7 @@ describe('BookingModal', () => {
 
     const prenom = screen.getByPlaceholderText('Prénom *');
     expect(prenom.classList.contains('os-invalid')).toBe(true);
-    expect(screen.getByPlaceholderText('Email *').classList.contains('os-invalid')).toBe(true);
+    expect(screen.getByPlaceholderText('E-mail *').classList.contains('os-invalid')).toBe(true);
     expect(fetchMock).not.toHaveBeenCalled();
 
     // La saisie efface la vibration.
@@ -81,7 +84,7 @@ describe('BookingModal', () => {
     wrap(<BookingModal open onClose={() => {}} />);
     fillBooking(false);
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer par e-mail' }));
-    expect(screen.getByPlaceholderText('Email *').classList.contains('os-invalid')).toBe(true);
+    expect(screen.getByPlaceholderText('E-mail *').classList.contains('os-invalid')).toBe(true);
     expect(fetchMock).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: /Envoyer par WhatsApp/ }));
@@ -127,7 +130,7 @@ describe('QuoteModal', () => {
     wrap(<QuoteModal open onClose={() => {}} />);
     fireEvent.change(screen.getByPlaceholderText('Société *'), { target: { value: 'ACME' } });
     fireEvent.change(screen.getByPlaceholderText('Contact *'), { target: { value: 'Jean' } });
-    fireEvent.change(screen.getByPlaceholderText('Email *'), { target: { value: 'j@acme.fr' } });
+    fireEvent.change(screen.getByPlaceholderText('E-mail *'), { target: { value: 'j@acme.fr' } });
     fireEvent.click(screen.getByRole('button', { name: 'Envoyer par e-mail' }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());

@@ -1,4 +1,4 @@
-import { useI18n } from '@/i18n';
+import { useI18n, pickL } from '@/i18n';
 import { PRESTIGIOUS_ADDRESSES as P } from '@/data/services';
 import { usePublished } from '@/lib/cms';
 import Reveal from '@/components/ui/Reveal';
@@ -17,8 +17,8 @@ export default function PrestigiousAddresses() {
     <section className="os-section os-addresses">
       <div className="os-container">
         <Reveal>
-          <p className="os-eyebrow">{lang === 'fr' ? P.eyebrowFr : P.eyebrowEn}</p>
-          <h2>{lang === 'fr' ? P.titleFr : P.titleEn}</h2>
+          <p className="os-eyebrow">{pickL(lang, P.eyebrow)}</p>
+          <h2>{pickL(lang, P.title)}</h2>
           <div className="os-addresses__list">
             {addresses.map((place, i) => (
               <span key={place.label ?? i} className="os-addresses__item">{place.label}</span>
@@ -28,7 +28,7 @@ export default function PrestigiousAddresses() {
       </div>
 
       <Reveal>
-        <p className="os-marquee__label">{lang === 'fr' ? P.trustFr : P.trustEn}</p>
+        <p className="os-marquee__label">{pickL(lang, P.trust)}</p>
         <div className="os-marquee" aria-hidden>
           <div className="os-marquee__track">
             {loop.map((logo, i) => (

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useI18n } from '@/i18n';
+import { useI18n, pickL, type L5 } from '@/i18n';
 import Reveal from '@/components/ui/Reveal';
 import { usePublished } from '@/lib/cms';
 import { useAutoScroll } from '@/lib/useAutoScroll';
@@ -16,7 +16,7 @@ export function Events({ onQuote }: { onQuote: () => void }) {
             <Reveal>
               <figure className="os-ev__media">
                 <img src="/why-paris-night.webp" alt={t.events.title} loading="lazy" />
-                <figcaption><i>✦</i>{lang === 'fr' ? 'Paris, un soir de sommet' : 'Paris, summit night'}</figcaption>
+                <figcaption><i>✦</i>{pickL(lang, { fr: 'Paris, un soir de sommet', en: 'Paris, summit night', es: 'París, noche de cumbre', ru: 'Париж, вечер саммита', ar: 'باريس، ليلة قمة' })}</figcaption>
               </figure>
             </Reveal>
             <Reveal>
@@ -62,7 +62,7 @@ function FashionWeeks() {
           <Reveal>
             <figure className="os-fw__media">
               <img src="/why-vip.webp" alt={t.fashion.title} loading="lazy" />
-              <figcaption><i>✦</i>{lang === 'fr' ? 'Backstage, minute par minute' : 'Backstage, minute by minute'}</figcaption>
+              <figcaption><i>✦</i>{pickL(lang, { fr: 'Backstage, minute par minute', en: 'Backstage, minute by minute', es: 'Backstage, minuto a minuto', ru: 'Бэкстейдж, минута за минутой', ar: 'الكواليس، دقيقة بدقيقة' })}</figcaption>
             </figure>
           </Reveal>
         </div>
@@ -72,26 +72,40 @@ function FashionWeeks() {
 }
 
 /** Fiches Corporate & Institutions (rail auto + popup d'information). */
-interface CorpItem { src: string; fr: string; en: string; descFr: string; descEn: string; tagFr: string; tagEn: string }
+const CORP_TITLE: L5 = {
+  fr: 'Des partenariats à la hauteur de vos exigences',
+  en: 'Partnerships that meet your standards',
+  es: 'Alianzas a la altura de sus exigencias',
+  ru: 'Партнёрства, достойные ваших требований',
+  ar: 'شراكات بمستوى تطلعاتكم',
+};
+
+interface CorpItem { src: string; name: L5; desc: L5; tag: L5 }
 const CORP_ITEMS: CorpItem[] = [
-  { src: '/corp-embassy.webp', fr: 'Ambassades & Délégations', en: 'Embassies & Delegations', tagFr: 'Protocole & préséances', tagEn: 'Protocol & precedence',
-    descFr: 'Protocole, sécurité et discrétion pour délégations officielles : cortèges coordonnés, chauffeurs habilités, gestion des préséances et liaison avec les services de sécurité.',
-    descEn: 'Protocol, security and discretion for official delegations: coordinated motorcades, vetted chauffeurs, precedence management and liaison with security services.' },
-  { src: '/corp-corporate.webp', fr: 'Comptes Entreprises', en: 'Corporate Accounts', tagFr: 'Facturation centralisée', tagEn: 'Centralised billing',
-    descFr: 'Facturation centralisée, reporting mensuel, politiques de voyage et interlocuteur dédié : la mobilité de vos équipes, sans friction administrative.',
-    descEn: 'Centralised billing, monthly reporting, travel policies and a dedicated account manager: your teams’ mobility without administrative friction.' },
-  { src: '/corp-travel.webp', fr: 'Agences de voyage & DMC', en: 'Travel Agencies & DMCs', tagFr: 'Marque blanche', tagEn: 'White label',
-    descFr: 'Partenariats en marque blanche pour agences et DMC : tarifs négociés, disponibilité garantie et exécution irréprochable sous votre nom.',
-    descEn: 'White-label partnerships for agencies and DMCs: negotiated rates, guaranteed availability and flawless execution under your name.' },
-  { src: '/corp-aviation.webp', fr: 'Aviation Privée & d’Affaires', en: 'Private & Business Aviation', tagFr: 'FBO · Le Bourget', tagEn: 'FBO · Le Bourget',
-    descFr: 'Assistance FBO, opérations au Bourget et coordination sol-air : vos passagers passent du jet au salon sans la moindre friction.',
-    descEn: 'FBO assistance, Le Bourget operations and ground-to-air coordination: passengers move from jet to lounge without friction.' },
-  { src: '/corp-hotel.webp', fr: 'Hôtels & Hospitality', en: 'Hotels & Hospitality', tagFr: 'Palaces & voituriers', tagEn: 'Palaces & valets',
-    descFr: 'Partenariats palaces et gestion des flux clients VIP : voituriers, transferts invités et navettes événementielles au standard de votre maison.',
-    descEn: 'Palace partnerships and VIP guest flows: valets, guest transfers and event shuttles to your house’s standard.' },
-  { src: '/corp-chauffeur.webp', fr: 'Chauffeurs dédiés', en: 'Dedicated Chauffeurs', tagFr: 'À la semaine ou au mois', tagEn: 'Weekly or monthly',
-    descFr: 'Un chauffeur attitré à la semaine ou au mois : mêmes visages, mêmes standards, connaissance intime de vos habitudes et de vos adresses.',
-    descEn: 'A dedicated chauffeur by the week or month: same faces, same standards, intimate knowledge of your habits and addresses.' },
+  { src: '/corp-embassy.webp',
+    name: { fr: 'Ambassades & Délégations', en: 'Embassies & Delegations', es: 'Embajadas & Delegaciones', ru: 'Посольства и делегации', ar: 'السفارات والوفود' },
+    desc: { fr: 'Protocole, sécurité et discrétion pour délégations officielles : cortèges coordonnés, chauffeurs habilités, gestion des préséances et liaison avec les services de sécurité.', en: 'Protocol, security and discretion for official delegations: coordinated motorcades, vetted chauffeurs, precedence management and liaison with security services.', es: 'Protocolo, seguridad y discreción para delegaciones oficiales: comitivas coordinadas, chóferes acreditados, gestión de precedencias y enlace con los servicios de seguridad.', ru: 'Протокол, безопасность и деликатность для официальных делегаций: слаженные кортежи, аккредитованные шофёры, соблюдение старшинства и связь со службами безопасности.', ar: 'بروتوكول وأمن وكتمان للوفود الرسمية: مواكب منسقة، سائقون معتمدون، إدارة الأسبقيات وتنسيق مع الجهات الأمنية.' },
+    tag: { fr: 'Protocole & préséances', en: 'Protocol & precedence', es: 'Protocolo & precedencias', ru: 'Протокол и старшинство', ar: 'البروتوكول والأسبقيات' } },
+  { src: '/corp-corporate.webp',
+    name: { fr: 'Comptes Entreprises', en: 'Corporate Accounts', es: 'Cuentas de Empresa', ru: 'Корпоративные счета', ar: 'حسابات الشركات' },
+    desc: { fr: 'Facturation centralisée, reporting mensuel, politiques de voyage et interlocuteur dédié : la mobilité de vos équipes, sans friction administrative.', en: 'Centralised billing, monthly reporting, travel policies and a dedicated account manager: your teams’ mobility without administrative friction.', es: 'Facturación centralizada, informes mensuales, políticas de viaje y un gestor dedicado: la movilidad de sus equipos, sin fricción administrativa.', ru: 'Единый счёт, ежемесячная отчётность, тревел-политики и персональный менеджер: мобильность ваших команд без административных хлопот.', ar: 'فوترة مركزية، تقارير شهرية، سياسات سفر ومدير حساب مخصص: تنقّل فرقكم دون أي عبء إداري.' },
+    tag: { fr: 'Facturation centralisée', en: 'Centralised billing', es: 'Facturación centralizada', ru: 'Единый счёт', ar: 'فوترة مركزية' } },
+  { src: '/corp-travel.webp',
+    name: { fr: 'Agences de voyage & DMC', en: 'Travel Agencies & DMCs', es: 'Agencias de viaje & DMC', ru: 'Турагентства и DMC', ar: 'وكالات السفر وDMC' },
+    desc: { fr: 'Partenariats en marque blanche pour agences et DMC : tarifs négociés, disponibilité garantie et exécution irréprochable sous votre nom.', en: 'White-label partnerships for agencies and DMCs: negotiated rates, guaranteed availability and flawless execution under your name.', es: 'Alianzas de marca blanca para agencias y DMC: tarifas negociadas, disponibilidad garantizada y una ejecución impecable bajo su nombre.', ru: 'White-label партнёрства для агентств и DMC: согласованные тарифы, гарантированная доступность и безупречное исполнение под вашим именем.', ar: 'شراكات بالعلامة البيضاء للوكالات وDMC: أسعار متفاوض عليها، توافر مضمون وتنفيذ لا تشوبه شائبة باسمكم.' },
+    tag: { fr: 'Marque blanche', en: 'White label', es: 'Marca blanca', ru: 'White label', ar: 'العلامة البيضاء' } },
+  { src: '/corp-aviation.webp',
+    name: { fr: 'Aviation Privée & d’Affaires', en: 'Private & Business Aviation', es: 'Aviación Privada & de Negocios', ru: 'Частная и деловая авиация', ar: 'الطيران الخاص وطيران الأعمال' },
+    desc: { fr: 'Assistance FBO, opérations au Bourget et coordination sol-air : vos passagers passent du jet au salon sans la moindre friction.', en: 'FBO assistance, Le Bourget operations and ground-to-air coordination: passengers move from jet to lounge without friction.', es: 'Asistencia FBO, operaciones en Le Bourget y coordinación tierra-aire: sus pasajeros pasan del jet al salón sin la menor fricción.', ru: 'FBO-сопровождение, операции в Ле-Бурже и координация «земля-воздух»: пассажиры переходят из джета в лаундж без малейших усилий.', ar: 'مساعدة FBO، عمليات في لوبورجيه وتنسيق بري-جوي: ينتقل ركابكم من الطائرة إلى الصالة بلا أدنى عناء.' },
+    tag: { fr: 'FBO · Le Bourget', en: 'FBO · Le Bourget', es: 'FBO · Le Bourget', ru: 'FBO · Ле-Бурже', ar: 'FBO · لوبورجيه' } },
+  { src: '/corp-hotel.webp',
+    name: { fr: 'Hôtels & Hospitality', en: 'Hotels & Hospitality', es: 'Hoteles & Hospitality', ru: 'Отели и гостеприимство', ar: 'الفنادق والضيافة' },
+    desc: { fr: 'Partenariats palaces et gestion des flux clients VIP : voituriers, transferts invités et navettes événementielles au standard de votre maison.', en: 'Palace partnerships and VIP guest flows: valets, guest transfers and event shuttles to your house’s standard.', es: 'Alianzas con grandes hoteles y gestión de flujos VIP: aparcacoches, traslados de huéspedes y lanzaderas para eventos al estándar de su casa.', ru: 'Партнёрства с дворцовыми отелями и потоки VIP-гостей: валет-сервис, трансферы гостей и шаттлы мероприятий по стандартам вашего дома.', ar: 'شراكات مع الفنادق الفاخرة وإدارة تدفق كبار الضيوف: خدمة صف السيارات، نقل النزلاء وحافلات الفعاليات وفق معايير داركم.' },
+    tag: { fr: 'Palaces & voituriers', en: 'Palaces & valets', es: 'Grandes hoteles & valets', ru: 'Отели и валет-сервис', ar: 'فنادق فاخرة وخدمة صف' } },
+  { src: '/corp-chauffeur.webp',
+    name: { fr: 'Chauffeurs dédiés', en: 'Dedicated Chauffeurs', es: 'Chóferes dedicados', ru: 'Персональные шофёры', ar: 'سائقون مخصصون' },
+    desc: { fr: 'Un chauffeur attitré à la semaine ou au mois : mêmes visages, mêmes standards, connaissance intime de vos habitudes et de vos adresses.', en: 'A dedicated chauffeur by the week or month: same faces, same standards, intimate knowledge of your habits and addresses.', es: 'Un chófer asignado por semana o por mes: mismas caras, mismos estándares, conocimiento íntimo de sus hábitos y direcciones.', ru: 'Закреплённый шофёр на неделю или месяц: те же лица, те же стандарты, глубокое знание ваших привычек и адресов.', ar: 'سائق مخصص أسبوعياً أو شهرياً: نفس الوجوه، نفس المعايير، ومعرفة دقيقة بعاداتكم وعناوينكم.' },
+    tag: { fr: 'À la semaine ou au mois', en: 'Weekly or monthly', es: 'Por semana o por mes', ru: 'На неделю или месяц', ar: 'أسبوعياً أو شهرياً' } },
 ];
 
 /** Bande Destination Management + Aviation Privée & Conciergerie (cartes image corp-*). */
@@ -101,19 +115,13 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
   const [corpInfo, setCorpInfo] = useState<CorpItem | null>(null);
   const [corpAllOpen, setCorpAllOpen] = useState(false);
   useAutoScroll(corpRef, { speed: 0.45, paused: corpInfo !== null || corpAllOpen });
-  const dmcPoints = lang === 'fr'
-    ? [
-        'Organisation locale & logistique de terrain',
-        'Itinéraires & expériences sur mesure',
-        'Sélection hôtelière, palaces & hospitality',
-        'Protocole ambassades & délégations officielles',
-      ]
-    : [
-        'Local organisation & ground logistics',
-        'Bespoke itineraries & experiences',
-        'Hotel selection, palaces & hospitality',
-        'Embassy protocol & official delegations',
-      ];
+  const dmcPoints = ({
+    fr: ['Organisation locale & logistique de terrain', 'Itinéraires & expériences sur mesure', 'Sélection hôtelière, palaces & hospitality', 'Protocole ambassades & délégations officielles'],
+    en: ['Local organisation & ground logistics', 'Bespoke itineraries & experiences', 'Hotel selection, palaces & hospitality', 'Embassy protocol & official delegations'],
+    es: ['Organización local & logística de terreno', 'Itinerarios & experiencias a medida', 'Selección hotelera, grandes hoteles & hospitality', 'Protocolo de embajadas & delegaciones oficiales'],
+    ru: ['Локальная организация и логистика на месте', 'Индивидуальные маршруты и впечатления', 'Подбор отелей, дворцовые отели и гостеприимство', 'Протокол посольств и официальных делегаций'],
+    ar: ['تنظيم محلي ولوجستيات ميدانية', 'مسارات وتجارب مصممة خصيصاً', 'اختيار الفنادق، فنادق فاخرة وضيافة', 'بروتوكول السفارات والوفود الرسمية'],
+  } as Record<typeof lang, string[]>)[lang];
 
   return (
     <>
@@ -122,11 +130,15 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
         <div className="os-band__grid">
           <Reveal>
             <p className="os-eyebrow">Destination Management</p>
-            <h2>{lang === 'fr' ? 'Votre partenaire local, partout en France' : 'Your local partner, across France'}</h2>
+            <h2>{pickL(lang, { fr: 'Votre partenaire local, partout en France', en: 'Your local partner, across France', es: 'Su socio local, en toda Francia', ru: 'Ваш локальный партнёр по всей Франции', ar: 'شريككم المحلي في كل أنحاء فرنسا' })}</h2>
             <p className="os-lead">
-              {lang === 'fr'
-                ? 'Oui Stars conçoit et orchestre vos programmes sur place : une seule maison, un seul interlocuteur — de l’arrivée à l’aéroport au dernier dîner.'
-                : 'Oui Stars designs and orchestrates your programmes on the ground: one house, one point of contact — from airport arrival to the final dinner.'}
+              {pickL(lang, {
+                fr: 'Oui Stars conçoit et orchestre vos programmes sur place : une seule maison, un seul interlocuteur — de l’arrivée à l’aéroport au dernier dîner.',
+                en: 'Oui Stars designs and orchestrates your programmes on the ground: one house, one point of contact — from airport arrival to the final dinner.',
+                es: 'Oui Stars diseña y orquesta sus programas sobre el terreno: una sola casa, un solo interlocutor — de la llegada al aeropuerto a la última cena.',
+                ru: 'Oui Stars продумывает и ведёт ваши программы на месте: один дом, один собеседник — от прилёта до последнего ужина.',
+                ar: 'تصمّم Oui Stars برامجكم وتديرها ميدانياً: دار واحدة ومحاور واحد — من الوصول إلى المطار حتى العشاء الأخير.',
+              })}
             </p>
             <ul className="os-dmcband__list">
               {dmcPoints.map((p) => <li key={p}>{p}</li>)}
@@ -136,17 +148,25 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
             <div className="grid gap-4">
               <ImageCard
                 src="/corp-aviation.webp"
-                title={lang === 'fr' ? 'Aviation Privée & d’Affaires' : 'Private & Business Aviation'}
-                text={lang === 'fr'
-                  ? 'Assistance FBO, opérations au Bourget et coordination sol-air : vos passagers passent du jet au salon sans la moindre friction.'
-                  : 'FBO assistance, Le Bourget operations and ground-to-air coordination: your passengers move from jet to lounge without a single friction.'}
+                title={pickL(lang, { fr: 'Aviation Privée & d’Affaires', en: 'Private & Business Aviation', es: 'Aviación Privada & de Negocios', ru: 'Частная и деловая авиация', ar: 'الطيران الخاص وطيران الأعمال' })}
+                text={pickL(lang, {
+                  fr: 'Assistance FBO, opérations au Bourget et coordination sol-air : vos passagers passent du jet au salon sans la moindre friction.',
+                  en: 'FBO assistance, Le Bourget operations and ground-to-air coordination: your passengers move from jet to lounge without a single friction.',
+                  es: 'Asistencia FBO, operaciones en Le Bourget y coordinación tierra-aire: sus pasajeros pasan del jet al salón sin fricción alguna.',
+                  ru: 'FBO-сопровождение, операции в Ле-Бурже и координация «земля-воздух»: ваши пассажиры переходят из джета в лаундж без усилий.',
+                  ar: 'مساعدة FBO وعمليات لوبورجيه وتنسيق بري-جوي: ينتقل ركابكم من الطائرة إلى الصالة بلا أي عناء.',
+                })}
               />
               <ImageCard
                 src="/corp-hotel.webp"
-                title={lang === 'fr' ? 'Conciergerie' : 'Concierge'}
-                text={lang === 'fr'
-                  ? 'Réservations, demandes sur mesure et coordination 24/7 — notre conciergerie prolonge chaque trajet en expérience.'
-                  : 'Reservations, bespoke requests and 24/7 coordination — our concierge turns every journey into an experience.'}
+                title={pickL(lang, { fr: 'Conciergerie', en: 'Concierge', es: 'Conserjería', ru: 'Консьерж-сервис', ar: 'الكونسيرج' })}
+                text={pickL(lang, {
+                  fr: 'Réservations, demandes sur mesure et coordination 24/7 — notre conciergerie prolonge chaque trajet en expérience.',
+                  en: 'Reservations, bespoke requests and 24/7 coordination — our concierge turns every journey into an experience.',
+                  es: 'Reservas, peticiones a medida y coordinación 24/7 — nuestra conserjería convierte cada trayecto en una experiencia.',
+                  ru: 'Бронирования, индивидуальные запросы и координация 24/7 — наш консьерж превращает каждую поездку в опыт.',
+                  ar: 'حجوزات وطلبات مخصصة وتنسيق 24/7 — الكونسيرج لدينا يحوّل كل رحلة إلى تجربة.',
+                })}
               />
             </div>
           </Reveal>
@@ -163,13 +183,13 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
             <div>
               <p className="os-eyebrow">{t.corporate.eyebrow}</p>
               <h2 className="os-pk__title">
-                {lang === 'fr' ? 'Des partenariats à la hauteur de vos exigences' : 'Partnerships that meet your standards'}
+                {pickL(lang, CORP_TITLE)}
               </h2>
             </div>
             <div className="os-pk__headright">
-              <span className="os-pk__hint">{lang === 'fr' ? 'Cliquez sur une fiche' : 'Click a card'}</span>
+              <span className="os-pk__hint">{pickL(lang, { fr: 'Cliquez sur une fiche', en: 'Click a card', es: 'Haga clic en una ficha', ru: 'Нажмите на карточку', ar: 'انقر على بطاقة' })}</span>
               <button type="button" className="os-gal__openbtn" onClick={() => setCorpAllOpen(true)}>
-                {lang === 'fr' ? 'Tout afficher' : 'View all'}
+                {pickL(lang, { fr: 'Tout afficher', en: 'View all', es: 'Ver todo', ru: 'Показать все', ar: 'عرض الكل' })}
                 <i>{String(CORP_ITEMS.length).padStart(2, '0')}</i>
               </button>
             </div>
@@ -180,12 +200,12 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
             <article key={`${c.src}-${i}`} className="os-pk__card os-pk__card--corp" onClick={() => setCorpInfo(c)}
               role="button" tabIndex={i < CORP_ITEMS.length ? 0 : -1}
               onKeyDown={(e) => e.key === 'Enter' && setCorpInfo(c)}>
-              <img src={c.src} alt={lang === 'fr' ? c.fr : c.en} loading="lazy" />
+              <img src={c.src} alt={pickL(lang, c.name)} loading="lazy" />
               <div className="os-pk__scrim" aria-hidden />
               <span className="os-pk__num">{String((i % CORP_ITEMS.length) + 1).padStart(2, '0')}</span>
               <div className="os-pk__body">
-                <h3 className="os-pk__route">{lang === 'fr' ? c.fr : c.en}</h3>
-                <span className="os-pk__book">{lang === 'fr' ? c.tagFr : c.tagEn} →</span>
+                <h3 className="os-pk__route">{pickL(lang, c.name)}</h3>
+                <span className="os-pk__book">{pickL(lang, c.tag)} →</span>
               </div>
             </article>
           ))}
@@ -201,10 +221,10 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
               <div>
                 <p className="os-eyebrow">{t.corporate.eyebrow}</p>
                 <h3 className="os-gal__title">
-                  {lang === 'fr' ? 'Des partenariats à la hauteur de vos exigences' : 'Partnerships that meet your standards'}
+                  {pickL(lang, CORP_TITLE)}
                 </h3>
               </div>
-              <span className="os-gal__count">{String(CORP_ITEMS.length).padStart(2, '0')} {lang === 'fr' ? 'expertises' : 'areas of expertise'}</span>
+              <span className="os-gal__count">{String(CORP_ITEMS.length).padStart(2, '0')} {pickL(lang, { fr: 'expertises', en: 'areas of expertise', es: 'especialidades', ru: 'направлений', ar: 'مجالات خبرة' })}</span>
             </header>
             <div className="os-gal__grid">
               {CORP_ITEMS.map((c, i) => (
@@ -213,19 +233,19 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
                   onClick={() => { setCorpAllOpen(false); setCorpInfo(c); }} role="button" tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && (setCorpAllOpen(false), setCorpInfo(c))}>
                   <div className="os-gal__media">
-                    <img src={c.src} alt={lang === 'fr' ? c.fr : c.en} loading="lazy" />
+                    <img src={c.src} alt={pickL(lang, c.name)} loading="lazy" />
                     <span className="os-gal__num">{String(i + 1).padStart(2, '0')}</span>
                   </div>
                   <div className="os-gal__body">
-                    <h4>{lang === 'fr' ? c.fr : c.en}</h4>
-                    <p className="os-gal__desc">{lang === 'fr' ? c.descFr : c.descEn}</p>
-                    <span className="os-gal__more">{lang === 'fr' ? c.tagFr : c.tagEn} →</span>
+                    <h4>{pickL(lang, c.name)}</h4>
+                    <p className="os-gal__desc">{pickL(lang, c.desc)}</p>
+                    <span className="os-gal__more">{pickL(lang, c.tag)} →</span>
                   </div>
                 </article>
               ))}
             </div>
             <footer className="os-gal__foot">
-              <span>{lang === 'fr' ? 'Chaque partenariat s’accompagne d’un interlocuteur dédié.' : 'Every partnership comes with a dedicated account manager.'}</span>
+              <span>{pickL(lang, { fr: 'Chaque partenariat s’accompagne d’un interlocuteur dédié.', en: 'Every partnership comes with a dedicated account manager.', es: 'Cada alianza cuenta con un gestor dedicado.', ru: 'Каждое партнёрство сопровождает персональный менеджер.', ar: 'كل شراكة يرافقها مدير حساب مخصص.' })}</span>
               <a href="#corporate" onClick={() => { setCorpAllOpen(false); onQuote(); }}>{t.events.cta} →</a>
             </footer>
           </div>
@@ -234,16 +254,16 @@ function DmcBand({ onQuote }: { onQuote: () => void }) {
 
       {/* Popup fiche corporate */}
       {corpInfo && (
-        <div className="os-dpop" role="dialog" aria-modal aria-label={lang === 'fr' ? corpInfo.fr : corpInfo.en} onClick={() => setCorpInfo(null)}>
+        <div className="os-dpop" role="dialog" aria-modal aria-label={pickL(lang, corpInfo.name)} onClick={() => setCorpInfo(null)}>
           <div className="os-dpop__panel" onClick={(e) => e.stopPropagation()}>
             <button className="os-dpop__close" onClick={() => setCorpInfo(null)} aria-label={t.common.close}>×</button>
             <div className="os-dpop__media">
-              <img src={corpInfo.src} alt={lang === 'fr' ? corpInfo.fr : corpInfo.en} />
+              <img src={corpInfo.src} alt={pickL(lang, corpInfo.name)} />
               <span className="os-dpop__chip">{t.corporate.eyebrow}</span>
             </div>
             <div className="os-dpop__body">
-              <h3 className="os-dpop__title">{lang === 'fr' ? corpInfo.fr : corpInfo.en}</h3>
-              <p className="os-dpop__desc">{lang === 'fr' ? corpInfo.descFr : corpInfo.descEn}</p>
+              <h3 className="os-dpop__title">{pickL(lang, corpInfo.name)}</h3>
+              <p className="os-dpop__desc">{pickL(lang, corpInfo.desc)}</p>
               <button className="os-btn os-btn--gold os-dpop__cta"
                 onClick={() => { setCorpInfo(null); onQuote(); }}>
                 {t.events.cta}
@@ -331,11 +351,15 @@ export function Faq() {
           <Reveal>
             <div className="os-faq2__intro">
               <p className="os-eyebrow">FAQ</p>
-              <h2 className="os-faq2__title">{lang === 'fr' ? 'Questions fréquentes' : 'Frequently asked'}</h2>
+              <h2 className="os-faq2__title">{pickL(lang, { fr: 'Questions fréquentes', en: 'Frequently asked', es: 'Preguntas frecuentes', ru: 'Частые вопросы', ar: 'أسئلة شائعة' })}</h2>
               <p className="os-faq2__hint">
-                {lang === 'fr'
-                  ? 'Une autre question ? Notre conciergerie répond 24/7.'
-                  : 'Another question? Our concierge answers 24/7.'}
+                {pickL(lang, {
+                fr: 'Une autre question ? Notre conciergerie répond 24/7.',
+                en: 'Another question? Our concierge answers 24/7.',
+                es: '¿Otra pregunta? Nuestra conserjería responde 24/7.',
+                ru: 'Остались вопросы? Наш консьерж отвечает 24/7.',
+                ar: 'سؤال آخر؟ الكونسيرج لدينا يجيب على مدار الساعة.',
+              })}
               </p>
               <a className="os-faq2__contact" href="https://wa.me/33651030306" target="_blank" rel="noreferrer">
                 WhatsApp · +33 6 51 03 03 06 →

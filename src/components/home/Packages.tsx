@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useI18n } from '@/i18n';
+import { useI18n, pickL, type L5 } from '@/i18n';
 import { ROUTE_RATES, type RouteRate } from '@/data/pricing';
 import { usePricingSync } from '@/lib/livePricing';
 import { useAutoScroll } from '@/lib/useAutoScroll';
@@ -34,31 +34,70 @@ const ROUTE_IMAGES: Record<string, string> = {
 };
 const FALLBACK_IMAGE = '/dest-paris.webp';
 
-/** Notices destination (popup d'information). */
-const ROUTE_INFO: Record<string, { fr: string; en: string }> = {
+/** Micro-libellés de la vitrine — 5 langues. */
+const TXT: Record<string, L5> = {
+  hint: { fr: 'Cliquez sur une destination', en: 'Click a destination', es: 'Haga clic en un destino', ru: 'Нажмите на направление', ar: 'انقر على وجهة' },
+  viewAll: { fr: 'Tout afficher', en: 'View all', es: 'Ver todo', ru: 'Показать все', ar: 'عرض الكل' },
+  count: { fr: 'itinéraires', en: 'itineraries', es: 'itinerarios', ru: 'маршрутов', ar: 'مسارات' },
+  foot: {
+    fr: 'Chaque itinéraire se décline en E-Class, V-Class ou S-Class.',
+    en: 'Every itinerary is available in E-Class, V-Class or S-Class.',
+    es: 'Cada itinerario está disponible en E-Class, V-Class o S-Class.',
+    ru: 'Каждый маршрут доступен в классах E-Class, V-Class и S-Class.',
+    ar: 'كل مسار متاح بفئات E-Class أو V-Class أو S-Class.',
+  },
+  note: {
+    fr: 'Disponible en E-Class, V-Class ou S-Class — notre équipe vous confirme le tarif à la réservation.',
+    en: 'Available in E-Class, V-Class or S-Class — our team confirms the fare upon booking.',
+    es: 'Disponible en E-Class, V-Class o S-Class — nuestro equipo le confirma la tarifa al reservar.',
+    ru: 'Доступно в классах E-Class, V-Class и S-Class — тариф подтверждается при бронировании.',
+    ar: 'متاح بفئات E-Class أو V-Class أو S-Class — يؤكد فريقنا السعر عند الحجز.',
+  },
+};
+
+/** Notices destination (popup d'information) — 5 langues. */
+const ROUTE_INFO: Record<string, L5> = {
   'cdg-ory-lbg-paris': {
     fr: 'Transferts entre les aéroports parisiens (CDG, Orly, Le Bourget) et le cœur de Paris — accueil pancarte, suivi des vols et attente incluse.',
     en: 'Transfers between Paris airports (CDG, Orly, Le Bourget) and central Paris — name-board welcome, flight tracking and waiting included.',
+    es: 'Traslados entre los aeropuertos de París (CDG, Orly, Le Bourget) y el centro de la ciudad — cartel de bienvenida, seguimiento de vuelos y espera incluida.',
+    ru: 'Трансферы между аэропортами Парижа (CDG, Орли, Ле-Бурже) и центром города — встреча с табличкой, отслеживание рейсов и ожидание включены.',
+    ar: 'توصيلات بين مطارات باريس (CDG، أورلي، لوبورجيه) وقلب باريس — استقبال بلافتة، تتبّع الرحلات وانتظار مشمول.',
   },
   'paris-disneyland': {
     fr: 'Rejoignez Disneyland Paris depuis le centre de Paris en tout confort — idéal pour les familles, sièges enfants sur simple demande.',
     en: 'Reach Disneyland Paris from central Paris in full comfort — perfect for families, child seats on request.',
+    es: 'Llegue a Disneyland París desde el centro con todo confort — ideal para familias, sillas infantiles bajo petición.',
+    ru: 'Доехать до Диснейленда из центра Парижа с полным комфортом — идеально для семей, детские кресла по запросу.',
+    ar: 'انطلق إلى ديزني لاند باريس من قلب المدينة بكل راحة — مثالي للعائلات، ومقاعد أطفال عند الطلب.',
   },
   'nce-monaco': {
     fr: 'De l’aéroport de Nice à la Principauté par la corniche — un trajet spectaculaire entre mer et falaises, jusqu’à votre hôtel ou le Casino.',
     en: 'From Nice airport to the Principality along the corniche — a spectacular drive between sea and cliffs, to your hotel or the Casino.',
+    es: 'Del aeropuerto de Niza al Principado por la cornisa — un trayecto espectacular entre mar y acantilados, hasta su hotel o el Casino.',
+    ru: 'Из аэропорта Ниццы в Княжество по корнишу — впечатляющая дорога между морем и скалами, до вашего отеля или казино.',
+    ar: 'من مطار نيس إلى الإمارة عبر الكورنيش — رحلة خلابة بين البحر والمنحدرات، حتى فندقك أو الكازينو.',
   },
   'paris-versailles': {
     fr: 'Le château de Versailles à 40 minutes de Paris — mise à disposition possible pendant votre visite, retour quand vous le souhaitez.',
     en: 'The Palace of Versailles, 40 minutes from Paris — chauffeur at disposal during your visit, return whenever you wish.',
+    es: 'El palacio de Versalles a 40 minutos de París — chófer a disposición durante su visita, regreso cuando lo desee.',
+    ru: 'Версальский дворец в 40 минутах от Парижа — автомобиль в вашем распоряжении на время визита, возвращение когда пожелаете.',
+    ar: 'قصر فرساي على بُعد 40 دقيقة من باريس — سائق تحت تصرفك أثناء زيارتك، والعودة متى شئت.',
   },
   'nice-st-tropez': {
     fr: 'La Côte d’Azur dans toute sa splendeur : de Nice au golfe de Saint-Tropez, par l’Estérel et ses panoramas.',
     en: 'The Riviera at its finest: from Nice to the Gulf of Saint-Tropez, through the Estérel and its panoramas.',
+    es: 'La Costa Azul en todo su esplendor: de Niza al golfo de Saint-Tropez, por el Estérel y sus panorámicas.',
+    ru: 'Лазурный берег во всём великолепии: из Ниццы к заливу Сен-Тропе, через Эстерель с его панорамами.',
+    ar: 'الريفييرا الفرنسية بكل بهائها: من نيس إلى خليج سان-تروبيه، عبر إستريل وإطلالاته.',
   },
   'paris-mont-saint-michel': {
     fr: 'Journée d’exception vers la Merveille de l’Occident — itinéraire privé, arrêts à la demande, chauffeur dédié toute la journée.',
     en: 'An exceptional day trip to the Wonder of the West — private itinerary, stops on request, dedicated chauffeur all day.',
+    es: 'Una jornada excepcional hacia la Maravilla de Occidente — itinerario privado, paradas a demanda, chófer dedicado todo el día.',
+    ru: 'Исключительная поездка к Чуду Запада — частный маршрут, остановки по желанию, персональный шофёр на весь день.',
+    ar: 'يوم استثنائي نحو أعجوبة الغرب — مسار خاص، توقفات عند الطلب، وسائق مخصص طوال اليوم.',
   },
 };
 
@@ -85,9 +124,9 @@ export default function Packages({ onBook }: Props) {
               <h2 className="os-pk__title">{t.packages.title}</h2>
             </div>
             <div className="os-pk__headright">
-              <span className="os-pk__hint">{lang === 'fr' ? 'Cliquez sur une destination' : 'Click a destination'}</span>
+              <span className="os-pk__hint">{pickL(lang, TXT.hint)}</span>
               <button type="button" className="os-gal__openbtn" onClick={() => setAllOpen(true)}>
-                {lang === 'fr' ? 'Tout afficher' : 'View all'}
+                {pickL(lang, TXT.viewAll)}
                 <i>{String(routes.length).padStart(2, '0')}</i>
               </button>
             </div>
@@ -107,8 +146,8 @@ export default function Packages({ onBook }: Props) {
               <span className="os-pk__num">{String((i % routes.length) + 1).padStart(2, '0')}</span>
               <div className="os-pk__body">
                 <h3 className="os-pk__route">{r.label}</h3>
-                <p className="os-pk__desc">{ROUTE_INFO[r.id]?.[lang] ?? ''}</p>
-                <span className="os-pk__book">{lang === 'fr' ? 'Réserver' : 'Book'} →</span>
+                <p className="os-pk__desc">{ROUTE_INFO[r.id] ? pickL(lang, ROUTE_INFO[r.id]) : ''}</p>
+                <span className="os-pk__book">{t.cta.book} →</span>
               </div>
             </article>
           ))}
@@ -125,7 +164,7 @@ export default function Packages({ onBook }: Props) {
                 <p className="os-eyebrow">{t.packages.eyebrow}</p>
                 <h3 className="os-gal__title">{t.packages.title}</h3>
               </div>
-              <span className="os-gal__count">{String(routes.length).padStart(2, '0')} {lang === 'fr' ? 'itinéraires' : 'itineraries'}</span>
+              <span className="os-gal__count">{String(routes.length).padStart(2, '0')} {pickL(lang, TXT.count)}</span>
             </header>
             <div className="os-gal__grid">
               {routes.map((r, i) => (
@@ -138,14 +177,14 @@ export default function Packages({ onBook }: Props) {
                   </div>
                   <div className="os-gal__body">
                     <h4>{r.label}</h4>
-                    <p className="os-gal__desc">{ROUTE_INFO[r.id]?.[lang] ?? ''}</p>
-                    <span className="os-gal__more">{lang === 'fr' ? 'Réserver' : 'Book'} →</span>
+                    <p className="os-gal__desc">{ROUTE_INFO[r.id] ? pickL(lang, ROUTE_INFO[r.id]) : ''}</p>
+                    <span className="os-gal__more">{t.cta.book} →</span>
                   </div>
                 </article>
               ))}
             </div>
             <footer className="os-gal__foot">
-              <span>{lang === 'fr' ? 'Chaque itinéraire se décline en E-Class, V-Class ou S-Class.' : 'Every itinerary is available in E-Class, V-Class or S-Class.'}</span>
+              <span>{pickL(lang, TXT.foot)}</span>
             </footer>
           </div>
         </div>
@@ -162,12 +201,8 @@ export default function Packages({ onBook }: Props) {
             </div>
             <div className="os-dpop__body">
               <h3 className="os-dpop__title">{info.label}</h3>
-              <p className="os-dpop__desc">{ROUTE_INFO[info.id]?.[lang] ?? ''}</p>
-              <p className="os-dpop__note">
-                {lang === 'fr'
-                  ? 'Disponible en E-Class, V-Class ou S-Class — notre équipe vous confirme le tarif à la réservation.'
-                  : 'Available in E-Class, V-Class or S-Class — our team confirms the fare upon booking.'}
-              </p>
+              <p className="os-dpop__desc">{ROUTE_INFO[info.id] ? pickL(lang, ROUTE_INFO[info.id]) : ''}</p>
+              <p className="os-dpop__note">{pickL(lang, TXT.note)}</p>
               <button className="os-btn os-btn--gold os-dpop__cta"
                 onClick={() => { const label = info.label; setInfo(null); onBook(label); }}>
                 {t.cta.book}

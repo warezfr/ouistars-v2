@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useI18n } from '@/i18n';
+import { useI18n, LANGS } from '@/i18n';
 import { MAIN_NAV } from '@/data/services';
 import { useSingleton } from '@/lib/cms';
 import './nav.css';
@@ -15,6 +15,7 @@ export default function Nav({ onBook }: Props) {
   const brand = (settings.brandName as string) || 'OUISTARS';
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -40,7 +41,7 @@ export default function Nav({ onBook }: Props) {
         <nav className={`os-nav__links${open ? ' is-open' : ''}`} aria-label="Navigation principale">
           {NAV_LINKS.map((item) => (
             <a key={item.id} href={item.href} onClick={() => setOpen(false)}>
-              {lang === 'fr' ? item.fr : item.en}
+              {item[lang]}
             </a>
           ))}
           <div className="os-nav__mobile-cta">
@@ -49,7 +50,25 @@ export default function Nav({ onBook }: Props) {
         </nav>
 
         <div className="os-nav__actions">
-          <button className="os-nav__lang" onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')} aria-label="Language">{t.nav.lang}</button>
+          <div className="os-nav__langwrap" onMouseLeave={() => setLangOpen(false)}>
+            <button className="os-nav__lang" onClick={() => setLangOpen((v) => !v)}
+              aria-label="Language" aria-haspopup="listbox" aria-expanded={langOpen}>
+              {t.nav.lang}
+            </button>
+            {langOpen && (
+              <ul className="os-nav__langmenu" role="listbox" aria-label="Language">
+                {LANGS.map((l) => (
+                  <li key={l.code}>
+                    <button role="option" aria-selected={l.code === lang}
+                      className={l.code === lang ? 'is-now' : ''}
+                      onClick={() => { setLang(l.code); setLangOpen(false); }}>
+                      <i>{l.code.toUpperCase()}</i>{l.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <button className="os-btn os-btn--gold os-nav__book" onClick={onBook}>{t.cta.book}</button>
           <button
             className={`os-nav__burger${open ? ' is-active' : ''}`}

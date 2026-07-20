@@ -40,8 +40,11 @@ test('galerie itinéraires : tout afficher → fiche → réservation prérempli
   await modal.getByPlaceholder('Prénom *').fill('Jean');
   await modal.getByPlaceholder('Nom *', { exact: true }).fill('E2E');
   await modal.getByPlaceholder('Téléphone *').fill('+33600000000');
-  await modal.getByPlaceholder('Email *').fill('jean@e2e.fr');
-  await modal.locator('input[name="travel_date"]').fill('2030-06-15');
+  await modal.getByPlaceholder('E-mail *').fill('jean@e2e.fr');
+  await modal.locator('.osp-field').first().click();
+  const cal = modal.locator('.osp-pop--cal');
+  await cal.getByRole('button', { name: /Mois suivant|Next month/ }).click();
+  await cal.locator('.osp-cell:not(.is-disabled)', { hasText: /^15$/ }).first().click();
   await modal.getByPlaceholder('Départ *').fill('Paris');
   await modal.getByPlaceholder('Destination *').fill('Versailles');
   await modal.getByRole('button', { name: 'Envoyer par e-mail' }).click();

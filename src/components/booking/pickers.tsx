@@ -2,7 +2,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactElement, RefObject } from 'react';
 import './pickers.css';
 
-type Locale = 'fr' | 'en';
+type Locale = 'fr' | 'en' | 'es' | 'ru' | 'ar';
+
+/** Libellés localisés des pickers. */
+const PICKER_TXT: Record<Locale, { pickDate: string; pickTime: string; prevMonth: string; nextMonth: string; times: string }> = {
+  fr: { pickDate: 'Choisir une date', pickTime: 'Choisir une heure', prevMonth: 'Mois précédent', nextMonth: 'Mois suivant', times: 'Heures' },
+  en: { pickDate: 'Select a date', pickTime: 'Select a time', prevMonth: 'Previous month', nextMonth: 'Next month', times: 'Times' },
+  es: { pickDate: 'Elegir una fecha', pickTime: 'Elegir una hora', prevMonth: 'Mes anterior', nextMonth: 'Mes siguiente', times: 'Horas' },
+  ru: { pickDate: 'Выберите дату', pickTime: 'Выберите время', prevMonth: 'Предыдущий месяц', nextMonth: 'Следующий месяц', times: 'Время' },
+  ar: { pickDate: 'اختر تاريخاً', pickTime: 'اختر وقتاً', prevMonth: 'الشهر السابق', nextMonth: 'الشهر التالي', times: 'الأوقات' },
+};
 
 /* ---------------------------------------------------------------- helpers */
 
@@ -46,6 +55,9 @@ function mondayIndex(dt: Date): number {
 const WEEKDAYS: Record<Locale, string[]> = {
   fr: ['L', 'M', 'M', 'J', 'V', 'S', 'D'],
   en: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+  es: ['L', 'M', 'X', 'J', 'V', 'S', 'D'],
+  ru: ['П', 'В', 'С', 'Ч', 'П', 'С', 'В'],
+  ar: ['ن', 'ث', 'ر', 'خ', 'ج', 'س', 'ح'],
 };
 
 /* ------------------------------------------------------ shared behaviours */
@@ -156,7 +168,7 @@ export function DateField({
   useDismiss(open, wrapperRef, () => setOpen(false));
 
   const displayLabel = useMemo(() => {
-    if (!selected) return locale === 'fr' ? 'Choisir une date' : 'Select a date';
+    if (!selected) return PICKER_TXT[locale].pickDate;
     return new Intl.DateTimeFormat(locale, {
       weekday: 'short',
       day: '2-digit',
@@ -208,7 +220,7 @@ export function DateField({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={label ?? (locale === 'fr' ? 'Choisir une date' : 'Select a date')}
+        aria-label={label ?? PICKER_TXT[locale].pickDate}
       >
         <span className={selected ? 'osp-value' : 'osp-value osp-placeholder'}>
           {displayLabel}
@@ -224,7 +236,7 @@ export function DateField({
               className="osp-nav"
               onClick={() => goMonth(-1)}
               disabled={!canGoPrev}
-              aria-label={locale === 'fr' ? 'Mois précédent' : 'Previous month'}
+              aria-label={PICKER_TXT[locale].prevMonth}
             >
               &lsaquo;
             </button>
@@ -233,7 +245,7 @@ export function DateField({
               type="button"
               className="osp-nav"
               onClick={() => goMonth(1)}
-              aria-label={locale === 'fr' ? 'Mois suivant' : 'Next month'}
+              aria-label={PICKER_TXT[locale].nextMonth}
             >
               &rsaquo;
             </button>
@@ -326,7 +338,7 @@ export function TimeField({
     el?.scrollIntoView({ block: 'center' });
   }, [open]);
 
-  const displayValue = value || (locale === 'fr' ? 'Choisir une heure' : 'Select a time');
+  const displayValue = value || PICKER_TXT[locale].pickTime;
 
   const pick = (t: string): void => {
     onChange(t);
@@ -342,7 +354,7 @@ export function TimeField({
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={label ?? (locale === 'fr' ? 'Choisir une heure' : 'Select a time')}
+        aria-label={label ?? PICKER_TXT[locale].pickTime}
       >
         <span className={value ? 'osp-value' : 'osp-value osp-placeholder'}>
           {displayValue}
@@ -354,7 +366,7 @@ export function TimeField({
         <div
           className="osp-pop osp-pop--time"
           role="listbox"
-          aria-label={label ?? (locale === 'fr' ? 'Heures' : 'Times')}
+          aria-label={label ?? PICKER_TXT[locale].times}
           ref={listRef}
         >
           {slots.map((t) => {

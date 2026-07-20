@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode, type FormEvent } from 'react';
-import { useI18n } from '@/i18n';
+import { useI18n, pickL } from '@/i18n';
+import { DateField, TimeField } from '@/components/booking/pickers';
 import './modal.css';
 
 const WA_NUMBER = '33651030306';
@@ -30,6 +31,7 @@ function shakeField(el: HTMLElement) {
 export function validateForm(form: HTMLFormElement, extraRequired: string[] = []): boolean {
   let firstBad: HTMLInputElement | HTMLTextAreaElement | null = null;
   form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>('input, textarea').forEach((el) => {
+    if ((el as HTMLInputElement).type === 'hidden') return; // pickers → validés à part
     const required = el.required || extraRequired.includes(el.name);
     const empty = !el.value.trim();
     const bad = (required && empty) || (!empty && !el.checkValidity());
@@ -67,9 +69,11 @@ function useSubmit(type: string, opts?: { waText?: (d: Record<string, string>, r
   const [ref, setRef] = useState<string>('');
   const formRef = useRef<HTMLFormElement>(null);
 
-  const send = async (channel: Channel, extraRequired: string[]) => {
+  const send = async (channel: Channel, extraRequired: string[], extraOk = true) => {
     const form = formRef.current;
-    if (!form || !validateForm(form, extraRequired)) return;
+    if (!form) return;
+    const fieldsOk = validateForm(form, extraRequired); // fait toujours vibrer les manquants
+    if (!fieldsOk || !extraOk) return;
     setState('sending');
     const data = Object.fromEntries(new FormData(form).entries()) as Record<string, string>;
     const res = await postIntake({ type, channel: channel === 'whatsapp' ? 'whatsapp' : 'siteweb', data });
@@ -108,13 +112,22 @@ function SendButtons({ sending, onEmail, onWhatsApp }: { sending: boolean; onEma
 
 export function BookingModal({ open, onClose, prefill }: { open: boolean; onClose: () => void; prefill?: string }) {
   const { t, lang } = useI18n();
+  const [tDate, setTDate] = useState('');
+  const [tTime, setTTime] = useState('');
+  const [dateInvalid, setDateInvalid] = useState(false);
+  const today = new Date().toISOString().slice(0, 10);
   const { state, ref, formRef, send, submit } = useSubmit('booking', {
     waText: (d, r) =>
-      `${lang === 'fr' ? 'Bonjour Oui Stars, je souhaite réserver' : 'Hello Oui Stars, I would like to book'} : ` +
+      `${pickL(lang, { fr: 'Bonjour Oui Stars, je souhaite réserver', en: 'Hello Oui Stars, I would like to book', es: 'Hola Oui Stars, deseo reservar', ru: 'Здравствуйте, Oui Stars, хочу забронировать', ar: 'مرحباً Oui Stars، أودّ الحجز' })} : ` +
       `${d.prefill || `${d.pickup} → ${d.destination}`} · ${d.travel_date ?? ''} ${d.travel_time ?? ''}` +
       ` · ${d.passengers ?? 1} pax — ${d.first_name} ${d.last_name} · ${d.phone}${r ? ` · réf ${r}` : ''}` +
       `${d.notes ? ` · ${d.notes}` : ''}`,
   });
+  const trySend = (channel: Channel, extra: string[]) => {
+    const dateOk = Boolean(tDate);
+    if (!dateOk) { setDateInvalid(false); requestAnimationFrame(() => setDateInvalid(true)); }
+    send(channel, extra, dateOk);
+  };
   return (
     <Shell open={open} onClose={onClose} title={t.nav.book}>
       {state === 'ok' ? (
@@ -123,26 +136,30 @@ export function BookingModal({ open, onClose, prefill }: { open: boolean; onClos
         <form className="os-form" onSubmit={submit} ref={formRef} noValidate>
           {prefill && <input type="text" name="prefill" defaultValue={prefill} readOnly className="os-form__prefill" />}
           <div className="os-form__row">
-            <input name="first_name" placeholder="Prénom *" required />
-            <input name="last_name" placeholder="Nom *" required />
+            <input name="first_name" placeholder={`${t.meetGreet.firstName} *`} required />
+            <input name="last_name" placeholder={`${t.meetGreet.lastName} *`} required />
           </div>
           <div className="os-form__row">
-            <input name="phone" placeholder="Téléphone *" required />
-            <input name="email" type="email" placeholder="Email *" />
+            <input name="phone" placeholder={`${t.meetGreet.phone} *`} required />
+            <input name="email" type="email" placeholder={`${t.meetGreet.email} *`} />
           </div>
-          <div className="os-form__row">
-            <input name="travel_date" type="date" required />
-            <input name="travel_time" type="time" />
+          <div className={`os-form__row os-form__pickers${dateInvalid ? ' os-invalid-wrap' : ''}`}>
+            <DateField value={tDate} min={today} locale={lang}
+              label={`${t.wizard.recapDate} *`}
+              onChange={(v) => { setTDate(v); setDateInvalid(false); }} />
+            <TimeField value={tTime} locale={lang} label={t.wizard.recapTime} onChange={setTTime} />
           </div>
-          <input name="pickup" placeholder="Départ *" required />
-          <input name="destination" placeholder="Destination *" required />
-          <input name="passengers" type="number" min={1} defaultValue={2} placeholder="Passagers" />
-          <textarea name="notes" placeholder="Précisions (vol, bagages, meet & greet…)" rows={3} />
+          <input type="hidden" name="travel_date" value={tDate} />
+          <input type="hidden" name="travel_time" value={tTime} />
+          <input name="pickup" placeholder={`${t.calculator.fromLabel} *`} required />
+          <input name="destination" placeholder={`${t.calculator.toLabel} *`} required />
+          <input name="passengers" type="number" min={1} defaultValue={2} placeholder={t.calculator.passengers} />
+          <textarea name="notes" placeholder={t.wizard.notesPlaceholder} rows={3} />
           <SendButtons sending={state === 'sending'}
-            onEmail={() => send('email', ['email'])}
-            onWhatsApp={() => send('whatsapp', [])} />
+            onEmail={() => trySend('email', ['email'])}
+            onWhatsApp={() => trySend('whatsapp', [])} />
           <p className="os-form__reqnote">* {t.common.required}</p>
-          {state === 'error' && <p className="os-modal__err">Erreur — réessayez ou contactez-nous par WhatsApp.</p>}
+          {state === 'error' && <p className="os-modal__err">{t.meetGreet.error}</p>}
         </form>
       )}
     </Shell>
@@ -151,9 +168,12 @@ export function BookingModal({ open, onClose, prefill }: { open: boolean; onClos
 
 export function QuoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, lang } = useI18n();
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const today = new Date().toISOString().slice(0, 10);
   const { state, ref, formRef, send, submit } = useSubmit('quote', {
     waText: (d, r) =>
-      `${lang === 'fr' ? 'Bonjour Oui Stars, demande de devis' : 'Hello Oui Stars, quote request'} : ` +
+      `${pickL(lang, { fr: 'Bonjour Oui Stars, demande de devis', en: 'Hello Oui Stars, quote request', es: 'Hola Oui Stars, solicitud de presupuesto', ru: 'Здравствуйте, Oui Stars, запрос расчёта', ar: 'مرحباً Oui Stars، طلب عرض سعر' })} : ` +
       `${d.company ?? ''} · ${d.event_type ?? ''} · ${d.start_date ?? ''}${d.end_date ? ` → ${d.end_date}` : ''}` +
       ` — ${d.contact ?? ''} · ${d.phone ?? ''}${r ? ` · réf ${r}` : ''}${d.details ? ` · ${d.details}` : ''}`,
   });
@@ -163,24 +183,30 @@ export function QuoteModal({ open, onClose }: { open: boolean; onClose: () => vo
         <p className="os-modal__ok">✓ {t.common.send} — réf. <strong>{ref}</strong></p>
       ) : (
         <form className="os-form" onSubmit={submit} ref={formRef} noValidate>
-          <input name="company" placeholder="Société *" required />
-          <input name="contact" placeholder="Contact *" required />
+          <input name="company" placeholder={`${pickL(lang, { fr: 'Société', en: 'Company', es: 'Empresa', ru: 'Компания', ar: 'الشركة' })} *`} required />
+          <input name="contact" placeholder={`${pickL(lang, { fr: 'Contact', en: 'Contact', es: 'Contacto', ru: 'Контактное лицо', ar: 'جهة الاتصال' })} *`} required />
           <div className="os-form__row">
-            <input name="email" type="email" placeholder="Email *" />
-            <input name="phone" placeholder="Téléphone *" />
+            <input name="email" type="email" placeholder={`${t.meetGreet.email} *`} />
+            <input name="phone" placeholder={`${t.meetGreet.phone} *`} />
           </div>
-          <input name="event_type" placeholder="Type (congrès, gala, fashion week, délégation…)" />
-          <div className="os-form__row">
-            <input name="start_date" type="date" />
-            <input name="end_date" type="date" />
+          <input name="event_type" placeholder={pickL(lang, { fr: 'Type (congrès, gala, fashion week, délégation…)', en: 'Type (congress, gala, fashion week, delegation…)', es: 'Tipo (congreso, gala, fashion week, delegación…)', ru: 'Тип (конгресс, гала, неделя моды, делегация…)', ar: 'النوع (مؤتمر، حفل، أسبوع موضة، وفد…)' })} />
+          <div className="os-form__row os-form__pickers">
+            <DateField value={startDate} min={today} locale={lang}
+              label={pickL(lang, { fr: 'Début', en: 'Start', es: 'Inicio', ru: 'Начало', ar: 'البداية' })}
+              onChange={setStartDate} />
+            <DateField value={endDate} min={startDate || today} locale={lang}
+              label={pickL(lang, { fr: 'Fin', en: 'End', es: 'Fin', ru: 'Окончание', ar: 'النهاية' })}
+              onChange={setEndDate} />
           </div>
-          <input name="vehicles" type="number" min={1} defaultValue={1} placeholder="Véhicules estimés" />
-          <textarea name="details" placeholder="Votre besoin" rows={3} />
+          <input type="hidden" name="start_date" value={startDate} />
+          <input type="hidden" name="end_date" value={endDate} />
+          <input name="vehicles" type="number" min={1} defaultValue={1} placeholder={pickL(lang, { fr: 'Véhicules estimés', en: 'Estimated vehicles', es: 'Vehículos estimados', ru: 'Примерное число машин', ar: 'عدد السيارات المتوقع' })} />
+          <textarea name="details" placeholder={pickL(lang, { fr: 'Votre besoin', en: 'Your needs', es: 'Su necesidad', ru: 'Ваш запрос', ar: 'احتياجكم' })} rows={3} />
           <SendButtons sending={state === 'sending'}
             onEmail={() => send('email', ['email'])}
             onWhatsApp={() => send('whatsapp', ['phone'])} />
           <p className="os-form__reqnote">* {t.common.required}</p>
-          {state === 'error' && <p className="os-modal__err">Erreur — réessayez.</p>}
+          {state === 'error' && <p className="os-modal__err">{t.meetGreet.error}</p>}
         </form>
       )}
     </Shell>
@@ -188,31 +214,31 @@ export function QuoteModal({ open, onClose }: { open: boolean; onClose: () => vo
 }
 
 export function ChauffeurModal({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { state, ref, formRef, send, submit } = useSubmit('chauffeur');
   return (
     <Shell open={open} onClose={onClose} title={t.nav.join}>
       {state === 'ok' ? (
-        <p className="os-modal__ok">✓ Candidature reçue — réf. <strong>{ref}</strong></p>
+        <p className="os-modal__ok">✓ {pickL(lang, { fr: 'Candidature reçue', en: 'Application received', es: 'Candidatura recibida', ru: 'Заявка получена', ar: 'تم استلام الترشح' })} — réf. <strong>{ref}</strong></p>
       ) : (
         <form className="os-form" onSubmit={submit} ref={formRef} noValidate>
           <div className="os-form__row">
-            <input name="first_name" placeholder="Prénom *" required />
-            <input name="last_name" placeholder="Nom *" required />
+            <input name="first_name" placeholder={`${t.meetGreet.firstName} *`} required />
+            <input name="last_name" placeholder={`${t.meetGreet.lastName} *`} required />
           </div>
           <div className="os-form__row">
-            <input name="phone" placeholder="Téléphone *" required />
-            <input name="email" type="email" placeholder="Email *" required />
+            <input name="phone" placeholder={`${t.meetGreet.phone} *`} required />
+            <input name="email" type="email" placeholder={`${t.meetGreet.email} *`} required />
           </div>
-          <input name="vtc_card" placeholder="N° carte VTC" />
-          <input name="city" placeholder="Ville / zone d'opération" />
-          <textarea name="message" placeholder="Expérience, véhicule, langues…" rows={3} />
+          <input name="vtc_card" placeholder={pickL(lang, { fr: 'N° carte VTC', en: 'PHV licence no.', es: 'N.º licencia VTC', ru: '№ лицензии VTC', ar: 'رقم رخصة VTC' })} />
+          <input name="city" placeholder={pickL(lang, { fr: 'Ville / zone d’opération', en: 'City / operating area', es: 'Ciudad / zona de operación', ru: 'Город / зона работы', ar: 'المدينة / منطقة العمل' })} />
+          <textarea name="message" placeholder={pickL(lang, { fr: 'Expérience, véhicule, langues…', en: 'Experience, vehicle, languages…', es: 'Experiencia, vehículo, idiomas…', ru: 'Опыт, автомобиль, языки…', ar: 'الخبرة، السيارة، اللغات…' })} rows={3} />
           <button type="button" className="os-btn os-btn--gold" disabled={state === 'sending'}
             onClick={() => send('email', [])}>
             {state === 'sending' ? t.common.sending : t.common.send}
           </button>
           <p className="os-form__reqnote">* {t.common.required}</p>
-          {state === 'error' && <p className="os-modal__err">Erreur — réessayez.</p>}
+          {state === 'error' && <p className="os-modal__err">{t.meetGreet.error}</p>}
         </form>
       )}
     </Shell>

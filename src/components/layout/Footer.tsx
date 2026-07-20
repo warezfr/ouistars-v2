@@ -1,4 +1,4 @@
-import { useI18n } from '@/i18n';
+import { useI18n, pickL } from '@/i18n';
 import { MAIN_NAV } from '@/data/services';
 import { useSingleton } from '@/lib/cms';
 import './footer.css';
@@ -21,14 +21,14 @@ export default function Footer({ onJoin }: Props) {
       {/* Bande d'invitation — la dernière question de la maison */}
       <div className="os-container os-footer__call">
         <div>
-          <p className="os-eyebrow">{lang === 'fr' ? 'Votre prochain trajet' : 'Your next journey'}</p>
+          <p className="os-eyebrow">{pickL(lang, { fr: 'Votre prochain trajet', en: 'Your next journey', es: 'Su próximo trayecto', ru: 'Ваша следующая поездка', ar: 'رحلتك القادمة' })}</p>
           <h3 className="os-footer__calltitle">
-            {lang === 'fr' ? 'Où pouvons-nous vous conduire ?' : 'Where may we take you?'}
+            {pickL(lang, { fr: 'Où pouvons-nous vous conduire ?', en: 'Where may we take you?', es: '¿A dónde podemos llevarle?', ru: 'Куда вас отвезти?', ar: 'إلى أين يمكننا اصطحابك؟' })}
           </h3>
         </div>
         <div className="os-footer__callactions">
           <a className="os-btn os-btn--gold" href={`https://wa.me/${st.whatsapp}`} target="_blank" rel="noreferrer">
-            {lang === 'fr' ? 'Conciergerie 24/7' : 'Concierge 24/7'}
+            {pickL(lang, { fr: 'Conciergerie 24/7', en: 'Concierge 24/7', es: 'Conserjería 24/7', ru: 'Консьерж 24/7', ar: 'كونسيرج 24/7' })}
           </a>
           <button className="os-btn os-btn--ghost" onClick={onJoin}>{t.nav.join}</button>
         </div>
@@ -46,10 +46,10 @@ export default function Footer({ onJoin }: Props) {
         </div>
 
         <div className="os-footer__col">
-          <h4>{lang === 'fr' ? 'Explorer' : 'Explore'}</h4>
+          <h4>{pickL(lang, { fr: 'Explorer', en: 'Explore', es: 'Explorar', ru: 'Разделы', ar: 'استكشف' })}</h4>
           <ul className="os-footer__links os-footer__links--2col">
             {MAIN_NAV.filter((n) => n.id !== 'contact').map((n) => (
-              <li key={n.id}><a href={n.href}>{lang === 'fr' ? n.fr : n.en}</a></li>
+              <li key={n.id}><a href={n.href}>{n[lang]}</a></li>
             ))}
           </ul>
         </div>
@@ -69,7 +69,7 @@ export default function Footer({ onJoin }: Props) {
           <ul className="os-footer__links">
             <li><a href={`mailto:${st.email}`}>{st.email as string}</a></li>
             <li><a href={`https://wa.me/${st.whatsapp}`} target="_blank" rel="noreferrer">WhatsApp · {st.phone as string}</a></li>
-            <li><span className="os-footer__hours">{lang === 'fr' ? 'Jour & nuit — 24/7' : 'Day & night — 24/7'}</span></li>
+            <li><span className="os-footer__hours">{pickL(lang, { fr: 'Jour & nuit — 24/7', en: 'Day & night — 24/7', es: 'Día y noche — 24/7', ru: 'Днём и ночью — 24/7', ar: 'ليلاً ونهاراً — 24/7' })}</span></li>
           </ul>
         </div>
       </div>

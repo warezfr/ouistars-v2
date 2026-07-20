@@ -1,5 +1,8 @@
 /** Setup commun — polyfills jsdom pour les composants (no-op en env node). */
 if (typeof window !== 'undefined') {
+  // Langue déterministe : jsdom expose navigator.language en-US → on force le FR
+  // (les tests composants ciblent les libellés français).
+  try { window.localStorage.setItem('os-lang', 'fr'); } catch { /* noop */ }
   // IntersectionObserver (composant Reveal) : tout est immédiatement visible.
   class IO {
     private cb: IntersectionObserverCallback;
