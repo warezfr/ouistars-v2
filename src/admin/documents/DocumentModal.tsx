@@ -13,6 +13,7 @@ export interface DocData {
   number: string;
   date: string;
   client: { name: string; email?: string; phone?: string };
+  vatRate?: number;   // 0.10 transport (défaut) | 0.20 autres prestations
   items?: DocItem[];
   mission?: {
     date: string; time?: string; pickup?: string; destination?: string;
@@ -56,8 +57,9 @@ export default function DocumentModal({ doc, onClose }: Props) {
   const brand = (st.brandName as string) || 'OUISTARS';
   const title = TITLES[doc.kind];
   const items = doc.items ?? [];
+  const vat = doc.vatRate ?? VAT;
   const ttc = useMemo(() => items.reduce((s, i) => s + i.qty * i.unit, 0), [items]);
-  const ht = ttc / (1 + VAT);
+  const ht = ttc / (1 + vat);
 
   async function downloadPdf() {
     setBusy('pdf'); setNotice(null);
@@ -255,7 +257,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
                         </div>
                         <div className="osdoc__totals">
                           <div className="row"><span>Sous-total HT</span><span>{ht.toFixed(2)} €</span></div>
-                          <div className="row"><span>TVA (10 %)</span><span>{(ttc - ht).toFixed(2)} €</span></div>
+                          <div className="row"><span>TVA ({Math.round(vat * 100)} %)</span><span>{(ttc - ht).toFixed(2)} €</span></div>
                           <div className="osdoc__grand"><span>{doc.kind === 'quote' ? 'ESTIMATION TTC :' : 'TOTAL TTC :'}</span><span>{ttc.toFixed(2)} €</span></div>
                         </div>
                       </div>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import DocumentModal, { type DocData } from '../documents/DocumentModal';
+import DocumentModal, { type DocData, type DocItem } from '../documents/DocumentModal';
+import NewInvoiceModal from '../documents/NewInvoiceModal';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
 
 /**
@@ -12,6 +13,7 @@ interface Invoice {
   id: string; number: string; reference: string; source: string;
   client_name: string; client_email?: string; client_phone?: string;
   route?: string; service_date?: string; amount: number;
+  vat_rate?: number; items?: DocItem[] | null;
   status: 'unpaid' | 'paid' | 'cancelled'; issued_at: string; pdf_path?: string;
 }
 interface Billable {
@@ -31,6 +33,7 @@ export default function Invoices() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [view, setView] = useState<DocData | null>(null);
+  const [creating, setCreating] = useState(false);
 
   async function load() {
     if (!supabase) { setError('Supabase non configuré.'); setLoading(false); return; }
@@ -129,8 +132,20 @@ export default function Invoices() {
     kind: 'invoice', reference: i.reference, number: i.number,
     date: (i.issued_at ?? '').slice(0, 10),
     client: { name: i.client_name, email: i.client_email, phone: i.client_phone },
-    items: [{ label: `Transport avec chauffeur — ${i.route ?? ''}`, sub: i.service_date, qty: 1, unit: Number(i.amount) }],
+    vatRate: i.vat_rate != null ? Number(i.vat_rate) : undefined,
+    items: i.items?.length
+      ? i.items.map((it) => ({ ...it, qty: Number(it.qty), unit: Number(it.unit) }))
+      : [{ label: `Transport avec chauffeur — ${i.route ?? ''}`, sub: i.service_date, qty: 1, unit: Number(i.amount) }],
   });
+
+  /** Après émission d'une facture manuelle : recharge et ouvre le document. */
+  async function onCreated(invoiceId: string) {
+    setCreating(false);
+    await load();
+    if (!supabase) return;
+    const { data } = await supabase.from('invoices').select('*').eq('id', invoiceId).maybeSingle();
+    if (data) setView(toDoc(data as Invoice));
+  }
 
   const totalIssued = invoices.filter((i) => i.status !== 'cancelled').reduce((s, i) => s + Number(i.amount), 0);
   const totalUnpaid = invoices.filter((i) => i.status === 'unpaid').reduce((s, i) => s + Number(i.amount), 0);
@@ -150,9 +165,17 @@ export default function Invoices() {
           <h3 className="card-title mb-0">Registre des factures
             <span className="badge text-bg-secondary ms-2">{invoices.length}</span>
           </h3>
-          <span className="text-muted small">
-            Émis : <strong>{totalIssued.toFixed(0)} €</strong> · Impayé : <strong className="text-danger">{totalUnpaid.toFixed(0)} €</strong>
-          </span>
+          <div className="d-flex align-items-center gap-3">
+            <span className="text-muted small">
+              Émis : <strong>{totalIssued.toFixed(0)} €</strong> · Impayé : <strong className="text-danger">{totalUnpaid.toFixed(0)} €</strong>
+            </span>
+            {writable && (
+              <button className="btn btn-sm btn-warning" disabled={!registerReady} onClick={() => setCreating(true)}
+                title="Facture libre : client en saisie assistée, lignes multiples">
+                <i className="bi bi-plus-lg me-1" />Nouvelle facture
+              </button>
+            )}
+          </div>
         </div>
         <div className="card-body p-0">
           {loading && <div className="p-3 text-muted">Chargement…</div>}
@@ -238,6 +261,7 @@ export default function Invoices() {
         </div>
       </div>
 
+      {creating && <NewInvoiceModal onClose={() => setCreating(false)} onCreated={onCreated} />}
       {view && <DocumentModal doc={view} onClose={() => setView(null)} />}
     </>
   );

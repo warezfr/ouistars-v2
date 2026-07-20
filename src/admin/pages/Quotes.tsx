@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import DocumentModal, { type DocData } from '../documents/DocumentModal';
+import NewQuoteModal from '../documents/NewQuoteModal';
+import { ensureClient } from '../lib/clients';
 import DataTable, { type Column } from '../ui/DataTable';
 import { QUOTES as DEMO } from '../mockData';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
@@ -28,6 +30,7 @@ export default function Quotes() {
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<DocData | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   async function load() {
     setLoading(true); setError(null);
@@ -59,7 +62,7 @@ export default function Quotes() {
   const toDoc = (q: Row): DocData => ({
     kind: 'quote',
     reference: q.reference,
-    number: `DE-${q.reference.replace(/^OS-?/, '')}`,
+    number: `DE-${q.reference.replace(/^OS-?|^DEV-?/, '')}`, // aligné sur le PDF serveur
     date: new Date().toISOString().slice(0, 10),
     client: { name: q.company, email: q.email, phone: q.phone },
     items: [{
@@ -75,7 +78,9 @@ export default function Quotes() {
     if (!supabase || q.demo) return;
     setInfo(null); setError(null);
     const parts = (q.contact ?? q.company ?? '').trim().split(/\s+/);
-    const reference = `EV-${q.reference.replace(/^WEB-|^OS-/, '')}`;
+    const reference = `EV-${q.reference.replace(/^WEB-|^OS-|^DEV-/, '')}`;
+    // Fiche client créée/complétée automatiquement (annuaire).
+    ensureClient({ name: q.contact ?? q.company ?? '—', company: q.company, email: q.email, phone: q.phone }).catch(() => {});
     const { error } = await supabase.from('website_bookings').insert({
       reference,
       channel: 'devis',
@@ -95,6 +100,25 @@ export default function Quotes() {
     if (error) { setError(`Conversion impossible : ${error.message}`); return; }
     await setStatus(q, 'accepted');
     setInfo(`Devis converti en réservation ${reference} — retrouvez-la dans Réservations (et « À facturer » si un montant est renseigné).`);
+  }
+
+  /** Après création d'un devis manuel : recharge et ouvre l'aperçu du document. */
+  async function onCreated(quoteId: string) {
+    setCreating(false);
+    await load();
+    if (!supabase) return;
+    const { data: q } = await supabase.from('quotes').select('*').eq('id', quoteId).maybeSingle();
+    if (!q) return;
+    setInfo(`Devis ${q.reference} créé — fiche client mise à jour automatiquement.`);
+    setView(toDoc({
+      id: q.id, reference: q.reference, company: q.company ?? q.contact_name ?? '—',
+      contact: q.contact_name ?? undefined, email: q.email ?? undefined, phone: q.phone ?? undefined,
+      event: q.event_type ?? '—',
+      dates: [q.start_date, q.end_date].filter(Boolean).join(' → ') || '—',
+      vehicles: q.vehicles_count ?? 1, status: q.status,
+      amount: q.amount_estimated != null ? Number(q.amount_estimated) : undefined,
+      details: q.details ?? undefined,
+    }));
   }
 
   async function setStatus(r: Row, status: string) {
@@ -138,7 +162,15 @@ export default function Quotes() {
           <span className="badge text-bg-secondary ms-2">{rows.length}</span>
           {rows[0]?.demo && <span className="badge text-bg-warning ms-2">démo</span>}
         </h3>
-        <button className="btn btn-sm btn-outline-secondary" onClick={load}><i className="bi bi-arrow-clockwise" /></button>
+        <div className="d-flex gap-2">
+          {writable && (
+            <button className="btn btn-sm btn-warning" onClick={() => setCreating(true)}
+              title="Devis libre : client en saisie assistée, fiche auto-créée">
+              <i className="bi bi-plus-lg me-1" />Nouveau devis
+            </button>
+          )}
+          <button className="btn btn-sm btn-outline-secondary" onClick={load}><i className="bi bi-arrow-clockwise" /></button>
+        </div>
       </div>
       <div className="card-body p-0">
         {loading && <div className="p-3 text-muted">Chargement…</div>}
@@ -149,6 +181,7 @@ export default function Quotes() {
             searchPlaceholder="Rechercher réf., société, événement…" empty="Aucun devis." />
         )}
       </div>
+      {creating && <NewQuoteModal onClose={() => setCreating(false)} onCreated={onCreated} />}
       {view && <DocumentModal doc={view} onClose={() => setView(null)} />}
     </div>
   );

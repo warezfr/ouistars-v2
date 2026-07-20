@@ -42,11 +42,16 @@ const DEMO: BookingLike = {
   amount: 210, driverAmount: 130, notes: 'Accueil pancarte nominative. Eau à bord.',
 };
 
-async function loadBooking(reference: string): Promise<BookingLike | null> {
+function getDb() {
   const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return null;
-  const db = createClient(url, key, { auth: { persistSession: false } });
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+async function loadBooking(reference: string): Promise<BookingLike | null> {
+  const db = getDb();
+  if (!db) return null;
 
   const { data: b } = await db.from('website_bookings').select('*').eq('reference', reference).maybeSingle();
   if (b) {
@@ -87,12 +92,70 @@ async function loadBooking(reference: string): Promise<BookingLike | null> {
   return null;
 }
 
+interface DocLineIn { label: string; sub?: string; qty: number; unit: number }
+interface ManualDoc {
+  clientName: string; clientEmail?: string; clientPhone?: string;
+  lines: DocLineIn[]; vatRate?: number; number?: string;
+}
+
+/** Facture émise au back-office (registre `invoices`) — lignes libres + TVA propre. */
+async function loadManualInvoice(reference: string, number?: string): Promise<ManualDoc | null> {
+  const db = getDb();
+  if (!db) return null;
+  let q = db.from('invoices').select('*').eq('reference', reference);
+  if (number) q = db.from('invoices').select('*').eq('number', number);
+  const { data: rows } = await q.limit(1);
+  const inv = rows?.[0];
+  if (!inv) return null;
+  const items = (inv.items ?? null) as DocLineIn[] | null;
+  return {
+    clientName: inv.client_name ?? 'Client',
+    clientEmail: inv.client_email ?? undefined,
+    clientPhone: inv.client_phone ?? undefined,
+    vatRate: inv.vat_rate != null ? Number(inv.vat_rate) : undefined,
+    number: inv.number,
+    lines: items?.length
+      ? items.map((it) => ({ label: it.label, sub: it.sub, qty: Number(it.qty) || 1, unit: Number(it.unit) || 0 }))
+      : [{
+          label: `Transport avec chauffeur — ${inv.route ?? ''}`,
+          sub: inv.service_date ?? undefined, qty: 1, unit: Number(inv.amount) || 0,
+        }],
+  };
+}
+
+/** Devis réel (table `quotes`) — demandes du site et devis créés au back-office. */
+async function loadQuoteDoc(reference: string): Promise<ManualDoc | null> {
+  const db = getDb();
+  if (!db) return null;
+  const { data: q } = await db.from('quotes').select('*').eq('reference', reference).maybeSingle();
+  if (!q) return null;
+  const dates = [q.start_date, q.end_date].filter(Boolean).join(' → ');
+  return {
+    clientName: q.contact_name || q.company || 'Client',
+    clientEmail: q.email ?? undefined,
+    clientPhone: q.phone ?? undefined,
+    lines: [{
+      label: `Prestation — ${q.event_type ?? 'Événement'}`,
+      sub: [dates, q.vehicles_count ? `${q.vehicles_count} véhicule(s)` : '', (q.details ?? '').slice(0, 90)]
+        .filter(Boolean).join('  ·  '),
+      qty: 1,
+      unit: q.amount_estimated != null ? Number(q.amount_estimated) : 0,
+    }],
+  };
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   const { reference, type, number } = (req.body ?? {}) as { reference?: string; type?: string; number?: string };
   if (!reference || !type) return res.status(400).json({ error: 'reference et type requis' });
 
-  const booking = (await loadBooking(reference)) ?? { ...DEMO, reference };
+  // Réservation d'abord ; sinon documents réels du back-office :
+  // facture du registre `invoices` (lignes libres) ou devis de la table `quotes`.
+  const found = await loadBooking(reference);
+  let manual: ManualDoc | null = null;
+  if (!found && type === 'invoice') manual = await loadManualInvoice(reference, number);
+  if (!found && type === 'quote') manual = await loadQuoteDoc(reference);
+  const booking = found ?? { ...DEMO, reference };
   const logo = await fetchLogo();
 
   // Mentions légales depuis les Paramètres du site (si base joignable).
@@ -131,22 +194,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       footNote: booking.driverName ? `Chauffeur assigné : ${booking.driverName}.` : undefined,
     });
   } else if (type === 'invoice') {
+    const vat = manual?.vatRate ?? 0.10;
     pdf = await buildInvoice({
-      number: number ?? `FA-${booking.reference.replace(/^OS-?/, '')}`,
-      reference: booking.reference,
+      number: number ?? manual?.number ?? `FA-${booking.reference.replace(/^OS-?/, '')}`,
+      reference,
       date: new Date().toISOString().slice(0, 10),
-      clientName: booking.clientName, clientEmail: booking.clientEmail, clientPhone: booking.clientPhone,
-      lines: [line], logo,
-      footNote: legalNote,
+      clientName: manual?.clientName ?? booking.clientName,
+      clientEmail: manual?.clientEmail ?? booking.clientEmail,
+      clientPhone: manual?.clientPhone ?? booking.clientPhone,
+      lines: manual?.lines ?? [line], logo,
+      vatRate: vat,
+      footNote: legal
+        ? `${legal}. TVA : ${Math.round(vat * 100)} %. Pénalités de retard : 3× le taux légal ; indemnité forfaitaire de recouvrement : 40 €.`
+        : legalNote,
     });
   } else if (type === 'quote') {
     pdf = await buildInvoice({
       title: 'DEVIS',
-      number: `DE-${booking.reference.replace(/^OS-?/, '')}`,
-      reference: booking.reference,
+      number: `DE-${reference.replace(/^OS-?|^DEV-?/, '')}`,
+      reference,
       date: new Date().toISOString().slice(0, 10),
-      clientName: booking.clientName, clientEmail: booking.clientEmail, clientPhone: booking.clientPhone,
-      lines: [line], logo,
+      clientName: manual?.clientName ?? booking.clientName,
+      clientEmail: manual?.clientEmail ?? booking.clientEmail,
+      clientPhone: manual?.clientPhone ?? booking.clientPhone,
+      lines: manual?.lines ?? [line], logo,
       footNote: 'Devis valable 30 jours. Prix TTC, TVA transport de personnes 10 % incluse.',
     });
   } else {
