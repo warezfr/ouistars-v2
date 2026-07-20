@@ -9,23 +9,24 @@ afterEach(() => { globalThis.fetch = realFetch; });
 
 const wrap = (ui: React.ReactElement) => render(<I18nProvider>{ui}</I18nProvider>);
 
-function fillBooking() {
-  fireEvent.change(screen.getByPlaceholderText('Prénom'), { target: { value: 'Jean' } });
-  fireEvent.change(screen.getByPlaceholderText('Nom'), { target: { value: 'Client' } });
-  fireEvent.change(screen.getByPlaceholderText('Téléphone'), { target: { value: '+33600000000' } });
+function fillBooking(withEmail = true) {
+  fireEvent.change(screen.getByPlaceholderText('Prénom *'), { target: { value: 'Jean' } });
+  fireEvent.change(screen.getByPlaceholderText('Nom *'), { target: { value: 'Client' } });
+  fireEvent.change(screen.getByPlaceholderText('Téléphone *'), { target: { value: '+33600000000' } });
+  if (withEmail) fireEvent.change(screen.getByPlaceholderText('Email *'), { target: { value: 'jean@ex.fr' } });
   fireEvent.change(document.querySelector('input[name="travel_date"]')!, { target: { value: '2030-06-15' } });
-  fireEvent.change(screen.getByPlaceholderText('Départ'), { target: { value: 'CDG' } });
-  fireEvent.change(screen.getByPlaceholderText('Destination'), { target: { value: 'Paris' } });
+  fireEvent.change(screen.getByPlaceholderText('Départ *'), { target: { value: 'CDG' } });
+  fireEvent.change(screen.getByPlaceholderText('Destination *'), { target: { value: 'Paris' } });
 }
 
 describe('BookingModal', () => {
-  it('soumission → POST /api/intake, écran de référence', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+  it('envoi par e-mail → POST /api/intake (channel siteweb), écran de référence', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ reference: 'WEB-TEST1' }) });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
     wrap(<BookingModal open onClose={() => {}} />);
     fillBooking();
-    fireEvent.click(screen.getByRole('button', { name: 'Envoyer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer par e-mail' }));
 
     await waitFor(() => expect(screen.getByText(/réf\./)).toBeTruthy());
     expect(fetchMock).toHaveBeenCalledOnce();
@@ -37,14 +38,65 @@ describe('BookingModal', () => {
     expect(payload.data.first_name).toBe('Jean');
   });
 
-  it('échec réseau → message d’erreur, formulaire conservé', async () => {
+  it('envoi par WhatsApp → capture back-office (channel whatsapp) + ouverture wa.me', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ reference: 'WEB-TEST2' }) });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    const openMock = vi.fn();
+    vi.stubGlobal('open', openMock);
+
+    wrap(<BookingModal open onClose={() => {}} />);
+    fillBooking(false); // e-mail non requis pour le canal WhatsApp
+    fireEvent.click(screen.getByRole('button', { name: /Envoyer par WhatsApp/ }));
+
+    await waitFor(() => expect(openMock).toHaveBeenCalled());
+    const wa = openMock.mock.calls[0][0] as string;
+    expect(wa).toContain('wa.me/33651030306');
+    expect(decodeURIComponent(wa)).toContain('CDG → Paris');
+    expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string).channel).toBe('whatsapp');
+    vi.unstubAllGlobals();
+  });
+
+  it('champ requis manquant → vibration dorée (os-invalid), aucun envoi', async () => {
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+
+    wrap(<BookingModal open onClose={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer par e-mail' }));
+
+    const prenom = screen.getByPlaceholderText('Prénom *');
+    expect(prenom.classList.contains('os-invalid')).toBe(true);
+    expect(screen.getByPlaceholderText('Email *').classList.contains('os-invalid')).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    // La saisie efface la vibration.
+    fireEvent.input(prenom, { target: { value: 'J' } });
+    expect(prenom.classList.contains('os-invalid')).toBe(false);
+  });
+
+  it('e-mail requis pour le canal e-mail, pas pour WhatsApp', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    vi.stubGlobal('open', vi.fn());
+
+    wrap(<BookingModal open onClose={() => {}} />);
+    fillBooking(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer par e-mail' }));
+    expect(screen.getByPlaceholderText('Email *').classList.contains('os-invalid')).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /Envoyer par WhatsApp/ }));
+    await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+    vi.unstubAllGlobals();
+  });
+
+  it('échec réseau (e-mail) → message d’erreur, formulaire conservé', async () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('offline')) as unknown as typeof fetch;
     wrap(<BookingModal open onClose={() => {}} />);
     fillBooking();
-    fireEvent.click(screen.getByRole('button', { name: 'Envoyer' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer par e-mail' }));
     await waitFor(() => expect(screen.getByText(/Erreur/)).toBeTruthy());
     // Le champ reste rempli — pas de perte de saisie.
-    expect((screen.getByPlaceholderText('Prénom') as HTMLInputElement).value).toBe('Jean');
+    expect((screen.getByPlaceholderText('Prénom *') as HTMLInputElement).value).toBe('Jean');
   });
 
   it('préremplissage affiché en lecture seule', () => {
@@ -68,18 +120,29 @@ describe('BookingModal', () => {
 });
 
 describe('QuoteModal', () => {
-  it('soumission devis → type quote', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+  it('envoi devis par e-mail → type quote', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ reference: 'WEB-Q1' }) });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
     wrap(<QuoteModal open onClose={() => {}} />);
-    fireEvent.change(screen.getByPlaceholderText('Société'), { target: { value: 'ACME' } });
-    fireEvent.change(screen.getByPlaceholderText('Contact'), { target: { value: 'Jean' } });
-    fireEvent.change(screen.getByPlaceholderText('Email'), { target: { value: 'j@acme.fr' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Envoyer' }));
+    fireEvent.change(screen.getByPlaceholderText('Société *'), { target: { value: 'ACME' } });
+    fireEvent.change(screen.getByPlaceholderText('Contact *'), { target: { value: 'Jean' } });
+    fireEvent.change(screen.getByPlaceholderText('Email *'), { target: { value: 'j@acme.fr' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Envoyer par e-mail' }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
     expect(JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string).type).toBe('quote');
+  });
+
+  it('WhatsApp exige le téléphone → vibration si absent', () => {
+    const fetchMock = vi.fn();
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    wrap(<QuoteModal open onClose={() => {}} />);
+    fireEvent.change(screen.getByPlaceholderText('Société *'), { target: { value: 'ACME' } });
+    fireEvent.change(screen.getByPlaceholderText('Contact *'), { target: { value: 'Jean' } });
+    fireEvent.click(screen.getByRole('button', { name: /Envoyer par WhatsApp/ }));
+    expect(screen.getByPlaceholderText('Téléphone *').classList.contains('os-invalid')).toBe(true);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

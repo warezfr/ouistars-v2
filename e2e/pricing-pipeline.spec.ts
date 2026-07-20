@@ -21,21 +21,18 @@ test('un prix édité en back-office se réplique sur toute la vitrine', async (
   await installStubs(page, { cmsRoutes: EDITED, cmsRates: { hourlyE: 85 } });
   await page.goto('/');
 
-  // 1. Galerie « Tout afficher » des itinéraires → 115 € (plus jamais 110 €).
+  // 1. Les itinéraires signature n'affichent AUCUN prix (choix éditorial),
+  //    mais la route pilotée par la DB y apparaît bien.
   await page.locator('#tours').scrollIntoViewIfNeeded();
   await page.locator('#tours').getByRole('button', { name: /Tout afficher/ }).click();
   const gal = page.locator('.os-gal');
   const card = gal.locator('.os-gal__card', { hasText: 'Paris ⇄ Versailles' });
-  await expect(card).toContainText('115 €');
-  await expect(card).not.toContainText('110 €');
+  await expect(card).toBeVisible();
+  await expect(gal.locator('.os-gal__prices')).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await gal.click({ position: { x: 8, y: 8 } }).catch(() => {});
 
-  // 2. Fiche destination → mêmes 115 €.
-  await card.click();
-  const dpop = page.locator('.os-dpop');
-  await expect(dpop).toContainText('115 €');
-  await dpop.locator('.os-dpop__close').click();
-
-  // 3. Grille tarifaire (onglet Excursions) → 115 € aussi.
+  // 2. Grille tarifaire (onglet Excursions) → le prix édité 115 € s'affiche.
   await page.locator('#tarifs').scrollIntoViewIfNeeded();
   const tarifs = page.locator('#tarifs');
   const tab = tarifs.getByRole('button', { name: /Excursions/i });
@@ -46,6 +43,6 @@ test('un prix édité en back-office se réplique sur toute la vitrine', async (
     await expect(row.first()).not.toContainText('110 €');
   }
 
-  // 4. Taux horaire édité (85 €/h) visible dans le panneau mise à disposition.
+  // 3. Taux horaire édité (85 €/h) visible dans le panneau mise à disposition.
   await expect(tarifs.getByText('85 €').first()).toBeVisible();
 });

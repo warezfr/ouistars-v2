@@ -4,8 +4,7 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import { I18nProvider } from '@/i18n';
 import Packages from '@/components/home/Packages';
 import { Events } from '@/components/home/Editorial';
-import { ROUTE_RATES, VEHICLE_CLASSES } from '@/data/pricing';
-import { formatEUR } from '@/lib/pricing';
+import { ROUTE_RATES } from '@/data/pricing';
 
 vi.mock('@/lib/supabase', () => ({ supabase: null }));
 
@@ -22,12 +21,13 @@ describe('Packages — galerie « Tout afficher » des itinéraires', () => {
     expect(gal).toBeTruthy();
     expect(gal.querySelectorAll('.os-gal__card')).toHaveLength(6);
 
-    // Chaque carte porte description ET les trois tarifs E/V/S de la grille.
+    // Chaque carte porte une description et le CTA Réserver — mais AUCUN prix.
     const versailles = ROUTE_RATES.find((r) => r.id === 'paris-versailles')!;
     const card = within(gal as HTMLElement).getByText(versailles.label).closest('.os-gal__card')!;
-    expect(card.textContent).toContain(formatEUR(versailles.prices.E));
-    expect(card.textContent).toContain(formatEUR(versailles.prices.S));
-    expect(card.textContent).toContain(VEHICLE_CLASSES.E.name);
+    expect(card.textContent).toContain('Versailles à 40 minutes');
+    expect(card.textContent).toContain('Réserver');
+    expect(card.textContent).not.toMatch(/\d+\s*€/);
+    expect(gal.querySelectorAll('.os-gal__prices')).toHaveLength(0);
   });
 
   it('clic sur une carte → ferme la galerie et ouvre la fiche détail', () => {
@@ -48,13 +48,15 @@ describe('Packages — galerie « Tout afficher » des itinéraires', () => {
     expect(document.querySelector('.os-gal')).toBeNull();
   });
 
-  it('fiche détail : Réserver transmet le trajet prérempli', () => {
+  it('fiche détail sans prix : Réserver transmet le trajet prérempli', () => {
     const onBook = vi.fn();
     wrap(<Packages onBook={onBook} />);
     // Ouvre la fiche via le rail (première carte).
     fireEvent.click(document.querySelector('.os-pk__card')!);
     const dpop = document.querySelector('.os-dpop') as HTMLElement;
     expect(dpop).toBeTruthy();
+    expect(dpop.querySelector('.os-dpop__rates')).toBeNull(); // plus de tarifs
+    expect(dpop.textContent).not.toMatch(/\d+\s*€/);
     fireEvent.click(within(dpop).getByRole('button', { name: /Réserver/ }));
     expect(onBook).toHaveBeenCalledWith(expect.stringContaining('⇄'));
     expect(document.querySelector('.os-dpop')).toBeNull(); // fermée après action

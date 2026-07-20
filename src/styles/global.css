@@ -77,6 +77,33 @@ p { margin: 0 0 1em; color: var(--os-mut); }
 /* Focus accessible */
 :focus-visible { outline: 2px solid var(--os-gold); outline-offset: 2px; }
 
+/* Champ requis manquant : vibration dorée (tous les formulaires) */
+@keyframes os-shake-gold {
+  0%, 100% { transform: translateX(0); }
+  15%, 45%, 75% { transform: translateX(-5px); }
+  30%, 60%, 90% { transform: translateX(5px); }
+}
+.os-invalid {
+  animation: os-shake-gold 0.45s var(--os-ease);
+  border-color: var(--os-gold) !important;
+  box-shadow: 0 0 0 1px rgba(201, 162, 75, 0.75), 0 0 16px rgba(201, 162, 75, 0.35) !important;
+}
+/* Wizard de réservation : mêmes vibrations sur ses champs en erreur */
+.osw__field.is-err input {
+  animation: os-shake-gold 0.45s var(--os-ease);
+  border-color: var(--os-gold) !important;
+  box-shadow: 0 0 0 1px rgba(201, 162, 75, 0.75), 0 0 16px rgba(201, 162, 75, 0.35) !important;
+}
+/* Champ date custom (bouton calendrier) : vibration via le conteneur */
+.os-invalid-wrap .osp-field {
+  animation: os-shake-gold 0.45s var(--os-ease);
+  border-color: var(--os-gold) !important;
+  box-shadow: 0 0 0 1px rgba(201, 162, 75, 0.75), 0 0 16px rgba(201, 162, 75, 0.35) !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .os-invalid, .osw__field.is-err input, .os-invalid-wrap .osp-field { animation: none; }
+}
+
 /* ————————————————————————————————————————————————
    Redesign « noir & or » 2026 — ajouts (fin de fichier)
    ———————————————————————————————————————————————— */

@@ -283,5 +283,5 @@ export const fr = {
     errRequired: 'Champ requis',
     errEmail: 'Email invalide',
   },
-  common: { close: 'Fermer', send: 'Envoyer', sending: 'Envoi…', required: 'Champ requis' },
+  common: { close: 'Fermer', send: 'Envoyer', sending: 'Envoi…', required: 'Champ requis', sendEmail: 'Envoyer par e-mail', sendWhatsApp: 'Envoyer par WhatsApp' },
 };

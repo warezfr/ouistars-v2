@@ -285,5 +285,5 @@ export const en: typeof fr = {
     errRequired: 'Required field',
     errEmail: 'Invalid email',
   },
-  common: { close: 'Close', send: 'Send', sending: 'Sending…', required: 'Required field' },
+  common: { close: 'Close', send: 'Send', sending: 'Sending…', required: 'Required field', sendEmail: 'Send by e-mail', sendWhatsApp: 'Send by WhatsApp' },
 };

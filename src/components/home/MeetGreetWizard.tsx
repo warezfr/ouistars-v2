@@ -68,6 +68,7 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
   });
   const [sending, setSending] = useState<'email' | 'whatsapp' | null>(null);
   const [errMsg, setErrMsg] = useState('');
+  const [invalid, setInvalid] = useState<{ fn?: boolean; ph?: boolean; dt?: boolean; em?: boolean }>({});
   const [reference, setReference] = useState('');
   const [flight, setFlight] = useState<FlightState>({ kind: 'idle' });
   const flightReq = useRef(0);
@@ -135,7 +136,10 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
     return computeMeetGreet(airportId, form.passengers);
   }, [airportId, form.passengers]);
 
-  const set = (k: keyof typeof form, v: string | number) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: keyof typeof form, v: string | number) => {
+    setInvalid({});
+    setForm((f) => ({ ...f, [k]: v }));
+  };
 
   if (!open) return null;
 
@@ -147,8 +151,19 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
 
   async function submit(channelKind: 'email' | 'whatsapp') {
     setErrMsg('');
-    if (!form.first_name.trim() || !form.phone.trim() || !form.travel_date) { setErrMsg(mg.needFields); return; }
-    if (channelKind === 'email' && !form.email.trim()) { setErrMsg(mg.needEmail); return; }
+    const bad = {
+      fn: !form.first_name.trim(),
+      ph: !form.phone.trim(),
+      dt: !form.travel_date,
+      em: channelKind === 'email' && !form.email.trim(),
+    };
+    if (bad.fn || bad.ph || bad.dt || bad.em) {
+      // Retire puis re-pose les classes → l'animation repart à chaque tentative.
+      setInvalid({});
+      requestAnimationFrame(() => setInvalid(bad));
+      setErrMsg(bad.em && !bad.fn && !bad.ph && !bad.dt ? mg.needEmail : mg.needFields);
+      return;
+    }
     setSending(channelKind);
 
     let ref = '';
@@ -282,7 +297,7 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
             <div className="os-mgw__form">
               <label className="os-mgw__labeled">
                 <span>{mg.firstName} <i className="os-mgw__req">*</i></span>
-                <input className="os-mgw__input" value={form.first_name}
+                <input className={`os-mgw__input${invalid.fn ? ' os-invalid' : ''}`} value={form.first_name}
                   onChange={(e) => set('first_name', e.target.value)} />
               </label>
               <label className="os-mgw__labeled">
@@ -292,15 +307,15 @@ export default function MeetGreetWizard({ open, onClose }: { open: boolean; onCl
               </label>
               <label className="os-mgw__labeled">
                 <span>{mg.phone} <i className="os-mgw__req">*</i></span>
-                <input className="os-mgw__input" type="tel" placeholder="+33 6 …" value={form.phone}
+                <input className={`os-mgw__input${invalid.ph ? ' os-invalid' : ''}`} type="tel" placeholder="+33 6 …" value={form.phone}
                   onChange={(e) => set('phone', e.target.value)} />
               </label>
               <label className="os-mgw__labeled">
                 <span>{mg.email}</span>
-                <input className="os-mgw__input" type="email" placeholder="vous@exemple.com" value={form.email}
+                <input className={`os-mgw__input${invalid.em ? ' os-invalid' : ''}`} type="email" placeholder="vous@exemple.com" value={form.email}
                   onChange={(e) => set('email', e.target.value)} />
               </label>
-              <div className="os-mgw__labeled">
+              <div className={`os-mgw__labeled${invalid.dt ? ' os-invalid-wrap' : ''}`}>
                 <span>{mg.date} <i className="os-mgw__req">*</i></span>
                 <DateField value={form.travel_date} min={new Date().toISOString().slice(0, 10)}
                   locale={lang} onChange={(iso) => set('travel_date', iso)} />

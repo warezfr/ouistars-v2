@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { useI18n } from '@/i18n';
-import { ROUTE_RATES, VEHICLE_CLASSES, type RouteRate } from '@/data/pricing';
-import { formatEUR } from '@/lib/pricing';
+import { ROUTE_RATES, type RouteRate } from '@/data/pricing';
 import { usePricingSync } from '@/lib/livePricing';
 import { useAutoScroll } from '@/lib/useAutoScroll';
 import Reveal from '@/components/ui/Reveal';
@@ -108,14 +107,8 @@ export default function Packages({ onBook }: Props) {
               <span className="os-pk__num">{String((i % routes.length) + 1).padStart(2, '0')}</span>
               <div className="os-pk__body">
                 <h3 className="os-pk__route">{r.label}</h3>
-                <div className="os-pk__prices">
-                  {(['E', 'V', 'S'] as const).map((c) => (
-                    <span key={c}>
-                      <small>{VEHICLE_CLASSES[c].name}</small>
-                      <b>{formatEUR(r.prices[c])}</b>
-                    </span>
-                  ))}
-                </div>
+                <p className="os-pk__desc">{ROUTE_INFO[r.id]?.[lang] ?? ''}</p>
+                <span className="os-pk__book">{lang === 'fr' ? 'Réserver' : 'Book'} →</span>
               </div>
             </article>
           ))}
@@ -146,18 +139,14 @@ export default function Packages({ onBook }: Props) {
                   <div className="os-gal__body">
                     <h4>{r.label}</h4>
                     <p className="os-gal__desc">{ROUTE_INFO[r.id]?.[lang] ?? ''}</p>
-                    <div className="os-gal__prices">
-                      {(['E', 'V', 'S'] as const).map((c) => (
-                        <span key={c}><small>{VEHICLE_CLASSES[c].name}</small><b>{formatEUR(r.prices[c])}</b></span>
-                      ))}
-                    </div>
+                    <span className="os-gal__more">{lang === 'fr' ? 'Réserver' : 'Book'} →</span>
                   </div>
                 </article>
               ))}
             </div>
             <footer className="os-gal__foot">
-              <span>{lang === 'fr' ? 'Prix TTC, par transfert dans un sens ou dans l’autre.' : 'Prices incl. VAT, per one-way transfer.'}</span>
-              <a href="#tarifs" onClick={() => setAllOpen(false)}>{lang === 'fr' ? 'Voir la grille complète →' : 'See the full price list →'}</a>
+              <span>{lang === 'fr' ? 'Chaque itinéraire se décline en E-Class, V-Class ou S-Class.' : 'Every itinerary is available in E-Class, V-Class or S-Class.'}</span>
+              <a href="#tarifs" onClick={() => setAllOpen(false)}>{lang === 'fr' ? 'Voir la grille tarifaire →' : 'See the price list →'}</a>
             </footer>
           </div>
         </div>
@@ -175,15 +164,11 @@ export default function Packages({ onBook }: Props) {
             <div className="os-dpop__body">
               <h3 className="os-dpop__title">{info.label}</h3>
               <p className="os-dpop__desc">{ROUTE_INFO[info.id]?.[lang] ?? ''}</p>
-              <div className="os-dpop__rates">
-                {(['E', 'V', 'S'] as const).map((c) => (
-                  <div key={c} className="os-dpop__rate">
-                    <span>{VEHICLE_CLASSES[c].name}<small>{VEHICLE_CLASSES[c].example}</small></span>
-                    <b>{formatEUR(info.prices[c])}</b>
-                  </div>
-                ))}
-              </div>
-              <p className="os-dpop__note">{lang === 'fr' ? 'Prix TTC, par transfert dans un sens ou dans l’autre.' : 'Prices incl. VAT, per one-way transfer.'}</p>
+              <p className="os-dpop__note">
+                {lang === 'fr'
+                  ? 'Disponible en E-Class, V-Class ou S-Class — notre équipe vous confirme le tarif à la réservation.'
+                  : 'Available in E-Class, V-Class or S-Class — our team confirms the fare upon booking.'}
+              </p>
               <button className="os-btn os-btn--gold os-dpop__cta"
                 onClick={() => { const label = info.label; setInfo(null); onBook(label); }}>
                 {t.cta.book}

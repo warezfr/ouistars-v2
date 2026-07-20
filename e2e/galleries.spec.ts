@@ -16,26 +16,35 @@ test('galerie itinéraires : tout afficher → fiche → réservation prérempli
   await expect(gal).toBeVisible();
   await expect(gal.locator('.os-gal__card')).toHaveCount(6);
 
+  // Aucun prix dans la galerie ni la fiche — descriptions + Réserver seulement.
+  await expect(gal.locator('.os-gal__prices')).toHaveCount(0);
+
   // Fiche Versailles → détail → Réserver → modal préremplie.
   await gal.getByRole('heading', { name: 'Paris ⇄ Versailles' }).click();
-  await expect(page.locator('.os-gal')).toBeHidden({ timeout: 2000 }).catch(() => {});
   const dpop = page.locator('.os-dpop');
   await expect(dpop).toBeVisible();
-  await expect(dpop.getByText('110 €')).toBeVisible(); // E-Class officiel
+  await expect(dpop.getByText(/40 minutes de Paris/)).toBeVisible();
+  await expect(dpop.locator('.os-dpop__rates')).toHaveCount(0);
   await dpop.getByRole('button', { name: 'Réserver' }).click();
 
   const modal = page.locator('.os-modal');
   await expect(modal).toBeVisible();
   await expect(modal.locator('input[name="prefill"]')).toHaveValue(/Versailles/);
 
-  // Envoi complet.
-  await modal.getByPlaceholder('Prénom').fill('Jean');
-  await modal.getByPlaceholder('Nom', { exact: true }).fill('E2E');
-  await modal.getByPlaceholder('Téléphone').fill('+33600000000');
+  // Champs requis vides → vibration dorée, aucun envoi.
+  await modal.getByRole('button', { name: 'Envoyer par e-mail' }).click();
+  await expect(modal.getByPlaceholder('Prénom *')).toHaveClass(/os-invalid/);
+  expect(captured.bodies).toHaveLength(0);
+
+  // Envoi complet par e-mail (e-mail requis pour ce canal).
+  await modal.getByPlaceholder('Prénom *').fill('Jean');
+  await modal.getByPlaceholder('Nom *', { exact: true }).fill('E2E');
+  await modal.getByPlaceholder('Téléphone *').fill('+33600000000');
+  await modal.getByPlaceholder('Email *').fill('jean@e2e.fr');
   await modal.locator('input[name="travel_date"]').fill('2030-06-15');
-  await modal.getByPlaceholder('Départ').fill('Paris');
-  await modal.getByPlaceholder('Destination').fill('Versailles');
-  await modal.getByRole('button', { name: 'Envoyer' }).click();
+  await modal.getByPlaceholder('Départ *').fill('Paris');
+  await modal.getByPlaceholder('Destination *').fill('Versailles');
+  await modal.getByRole('button', { name: 'Envoyer par e-mail' }).click();
 
   await expect(modal.getByText(/réf\./)).toBeVisible();
   expect(captured.bodies[0]).toMatchObject({ type: 'booking', channel: 'siteweb' });
