@@ -34,6 +34,44 @@ export default function Footer({ onJoin }: Props) {
         </div>
       </div>
 
+      {/* Recrutement chauffeurs — « Devenez partenaire » (héritage ancien site) */}
+      <div className="os-container">
+        <div className="os-footer__recruit">
+          <div className="os-footer__recruit-txt">
+            <p className="os-eyebrow">{pickL(lang, { fr: 'Recrutement chauffeurs', en: 'Chauffeur recruitment', es: 'Reclutamiento de chóferes', ru: 'Набор водителей', ar: 'توظيف السائقين' })}</p>
+            <h3>{pickL(lang, { fr: 'Devenez partenaire', en: 'Become a partner', es: 'Hágase socio', ru: 'Станьте партнёром', ar: 'كن شريكًا' })}</h3>
+            <p className="os-footer__recruit-lead">
+              {pickL(lang, {
+                fr: 'Complétez vos disponibilités ou faites de Oui Stars votre principale source de courses.',
+                en: 'Fill the gaps in your schedule — or make Oui Stars your main source of rides.',
+                es: 'Complete su agenda o haga de Oui Stars su principal fuente de servicios.',
+                ru: 'Заполняйте свободные часы — или сделайте Oui Stars основным источником заказов.',
+                ar: 'املأ فراغات جدولك أو اجعل Oui Stars مصدر مشاويرك الرئيسي.',
+              })}
+            </p>
+            <ul className="os-footer__recruit-points">
+              <li>{pickL(lang, { fr: 'Courses premium, clientèle internationale', en: 'Premium rides, international clientele', es: 'Servicios premium, clientela internacional', ru: 'Премиальные поездки, международные клиенты', ar: 'مشاوير فاخرة وعملاء دوليون' })}</li>
+              <li>{pickL(lang, { fr: 'Avec ou sans véhicule personnel', en: 'With or without your own vehicle', es: 'Con o sin vehículo propio', ru: 'Со своим автомобилем или без', ar: 'بسيارتك الخاصة أو بدونها' })}</li>
+              <li>{pickL(lang, { fr: 'Conciergerie dédiée aux chauffeurs 24/7', en: 'Dedicated chauffeur concierge 24/7', es: 'Conserjería dedicada 24/7', ru: 'Круглосуточная поддержка водителей', ar: 'خدمة مخصصة للسائقين 24/7' })}</li>
+            </ul>
+          </div>
+          <div className="os-footer__recruit-cta">
+            <button className="os-btn os-btn--gold" onClick={onJoin}>
+              {pickL(lang, { fr: 'Déposer ma candidature', en: 'Submit my application', es: 'Enviar mi candidatura', ru: 'Отправить заявку', ar: 'إرسال ترشحي' })}
+            </button>
+            <p className="os-footer__recruit-note">
+              {pickL(lang, {
+                fr: 'Pièces obligatoires : photo de profil, permis, carte VTC — et carte grise, contrôle technique, assurance, photo du véhicule si vous roulez avec le vôtre.',
+                en: 'Required documents: profile photo, licence, PHV card — plus registration, maintenance control, insurance and vehicle photo if you drive your own.',
+                es: 'Documentos obligatorios: foto de perfil, permiso, tarjeta VTC — y permiso de circulación, ITV, seguro y foto del vehículo si conduce el suyo.',
+                ru: 'Обязательные документы: фото, права, карта VTC — плюс регистрация, техосмотр, страховка и фото автомобиля, если он ваш.',
+                ar: 'مستندات إلزامية: صورة شخصية، رخصة القيادة، بطاقة VTC — إضافةً إلى أوراق السيارة والفحص التقني والتأمين وصورتها إن كنت تقود سيارتك.',
+              })}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Registre — quatre colonnes en filets or */}
       <div className="os-container os-footer__ledger">
         <div className="os-footer__col os-footer__col--brand">

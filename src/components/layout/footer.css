@@ -91,3 +91,32 @@
   .os-footer__call { align-items: flex-start; flex-direction: column; }
   .os-footer__bottom { padding-right: var(--os-gutter); padding-bottom: 96px; }
 }
+
+/* ————— Recrutement chauffeurs — Devenez partenaire ————— */
+.os-footer__recruit {
+  display: grid; grid-template-columns: 1.5fr 1fr; gap: 34px; align-items: center;
+  border: 1px solid rgba(201, 162, 75, 0.35); border-radius: 14px;
+  padding: clamp(24px, 3.4vw, 42px);
+  margin-bottom: clamp(36px, 5vw, 64px);
+  background:
+    radial-gradient(60% 120% at 88% 10%, rgba(201, 162, 75, 0.10), transparent 60%),
+    rgba(255, 255, 255, 0.015);
+}
+.os-footer__recruit h3 {
+  font-family: var(--os-font-display); font-size: clamp(1.6rem, 3vw, 2.3rem);
+  color: var(--os-ivory); margin: 6px 0 10px;
+}
+.os-footer__recruit-lead { color: var(--os-mist, #9aa0aa); font-size: 0.95rem; line-height: 1.6; max-width: 52ch; }
+.os-footer__recruit-points { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 7px; }
+.os-footer__recruit-points li {
+  color: var(--os-ivory); font-size: 0.86rem; padding-left: 20px; position: relative;
+}
+.os-footer__recruit-points li::before {
+  content: '✦'; position: absolute; left: 0; color: var(--os-gold); font-size: 0.7rem; top: 3px;
+}
+.os-footer__recruit-cta { display: flex; flex-direction: column; gap: 14px; align-items: flex-start; }
+.os-footer__recruit-cta .os-btn { width: auto; }
+.os-footer__recruit-note { color: var(--os-mist, #9aa0aa); font-size: 0.72rem; line-height: 1.6; max-width: 40ch; }
+[dir='rtl'] .os-footer__recruit-points li { padding-left: 0; padding-right: 20px; }
+[dir='rtl'] .os-footer__recruit-points li::before { left: auto; right: 0; }
+@media (max-width: 860px) { .os-footer__recruit { grid-template-columns: 1fr; gap: 20px; } }
