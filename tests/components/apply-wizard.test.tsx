@@ -37,7 +37,7 @@ describe('ChauffeurModal — candidature complète', () => {
     globalThis.fetch = fetchMock as unknown as typeof fetch;
     wrap();
 
-    expect(document.querySelectorAll('.os-doctile').length).toBe(7); // avec véhicule par défaut
+    expect(document.querySelectorAll('.os-doctile').length).toBe(11); // avec véhicule par défaut
     fillIdentity();
     fireEvent.change(screen.getByPlaceholderText(/Marque/), { target: { value: 'Mercedes' } });
     fireEvent.change(screen.getByPlaceholderText(/Modèle/), { target: { value: 'Classe E' } });
@@ -45,14 +45,14 @@ describe('ChauffeurModal — candidature complète', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Déposer ma candidature/ }));
     await waitFor(() => expect(document.querySelector('.os-doctile.os-invalid')).toBeTruthy());
-    expect(document.querySelectorAll('.os-doctile.os-invalid').length).toBe(7);
+    expect(document.querySelectorAll('.os-doctile.os-invalid').length).toBe(11);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('« Sans véhicule » → 3 pièces seulement, champs véhicule retirés', () => {
+  it('« Sans véhicule » → 7 pièces chauffeur seulement, champs véhicule retirés', () => {
     wrap();
     fireEvent.click(screen.getByRole('button', { name: 'Sans véhicule' }));
-    expect(document.querySelectorAll('.os-doctile').length).toBe(3);
+    expect(document.querySelectorAll('.os-doctile').length).toBe(7);
     expect(screen.queryByPlaceholderText(/Marque/)).toBeNull();
   });
 
@@ -78,13 +78,13 @@ describe('ChauffeurModal — candidature complète', () => {
     fireEvent.click(screen.getByRole('button', { name: /Déposer ma candidature/ }));
     await waitFor(() => expect(screen.getByText(/CA-TEST7/)).toBeTruthy());
 
-    // Séquence : 1 create + 3 docs + 1 finalize
-    expect(calls.map((c) => c.action)).toEqual(['create', 'doc', 'doc', 'doc', 'finalize']);
+    // Séquence : 1 create + 7 docs (chauffeur) + 1 finalize
+    expect(calls.map((c) => c.action)).toEqual(['create', 'doc', 'doc', 'doc', 'doc', 'doc', 'doc', 'doc', 'finalize']);
     const create = calls[0] as { data: Record<string, string>; vehicle?: unknown };
     expect(create.data).toMatchObject({ first_name: 'Nadia', vtc_card: 'VTC-075-9001' });
     expect(create.vehicle).toBeUndefined();
     const docKeys = calls.filter((c) => c.action === 'doc').map((c) => c.key).sort();
-    expect(docKeys).toEqual(['driving_licence', 'profile_photo', 'vtc_card_doc']);
+    expect(docKeys).toEqual(['driving_licence', 'id_card', 'kbis', 'profile_photo', 'rc_pro', 'rib', 'vtc_card_doc']);
     expect(calls.filter((c) => c.action === 'doc').every((c) => String(c.base64).length > 50)).toBe(true);
   });
 });

@@ -71,8 +71,9 @@ const APPLICANT = {
 const VEHICLE = { make: 'Mercedes', model: 'Classe E', plate: 'AB-123-CD', year: '2023', seats: 3 };
 const PNG_B64 = Buffer.from('x'.repeat(400)).toString('base64');
 
-const post = (body: Record<string, unknown>, ip = '10.9.0.1') =>
-  invoke(applyHandler, { body, headers: { 'x-forwarded-for': ip } });
+let ipSeq = 0; // IP différente par requête — évite la limite de débit entre tests
+const post = (body: Record<string, unknown>, ip?: string) =>
+  invoke(applyHandler, { body, headers: { 'x-forwarded-for': ip ?? `10.9.${Math.floor(ipSeq / 200)}.${++ipSeq % 200}` } });
 
 async function createFull(withVehicle = true) {
   const r = await post({ action: 'create', data: APPLICANT, vehicle: withVehicle ? VEHICLE : undefined });
@@ -138,9 +139,12 @@ describe('POST /api/apply', () => {
     expect(badKey.status).toBe(400);
   });
 
-  it('CONTRAT : finalize refuse tant que les pièces obligatoires manquent (7 avec véhicule)', async () => {
+  const BASE_DOCS = ['profile_photo', 'id_card', 'driving_licence', 'vtc_card_doc', 'kbis', 'rc_pro', 'rib'];
+  const VEHICLE_DOCS = ['vehicle_photo', 'carte_grise', 'insurance', 'maintenance_control'];
+
+  it('CONTRAT : finalize refuse tant que les pièces obligatoires manquent (11 avec véhicule)', async () => {
     const { id, reference } = await createFull(true);
-    for (const k of ['profile_photo', 'driving_licence', 'vtc_card_doc']) await uploadDoc(id, reference, k);
+    for (const k of BASE_DOCS) await uploadDoc(id, reference, k);
     const r = await post({ action: 'finalize', id, reference });
     expect(r.status).toBe(400);
     const missing = (r.body as { missing: string[] }).missing.sort();
@@ -148,19 +152,25 @@ describe('POST /api/apply', () => {
     expect(state.rows.get(id)!.status).toBe('draft'); // toujours pas déposée
   });
 
-  it('finalize : sans véhicule, 3 pièces suffisent → statut new', async () => {
+  it('finalize : sans véhicule, les 7 pièces chauffeur suffisent → statut new', async () => {
     const { id, reference } = await createFull(false);
-    for (const k of ['profile_photo', 'driving_licence', 'vtc_card_doc']) await uploadDoc(id, reference, k);
+    for (const k of BASE_DOCS) await uploadDoc(id, reference, k);
     const r = await post({ action: 'finalize', id, reference });
     expect(r.status).toBe(200);
     expect(state.rows.get(id)!.status).toBe('new');
   });
 
-  it('finalize : avec véhicule et les 7 pièces → statut new', async () => {
+  it('finalize : Kbis / RC pro / RIB / pièce d’identité aussi exigés (héritage ancien site)', async () => {
+    const { id, reference } = await createFull(false);
+    for (const k of ['profile_photo', 'driving_licence', 'vtc_card_doc']) await uploadDoc(id, reference, k);
+    const r = await post({ action: 'finalize', id, reference });
+    expect(r.status).toBe(400);
+    expect((r.body as { missing: string[] }).missing.sort()).toEqual(['id_card', 'kbis', 'rc_pro', 'rib']);
+  });
+
+  it('finalize : avec véhicule et les 11 pièces → statut new', async () => {
     const { id, reference } = await createFull(true);
-    for (const k of ['profile_photo', 'driving_licence', 'vtc_card_doc', 'vehicle_photo', 'carte_grise', 'maintenance_control', 'insurance']) {
-      await uploadDoc(id, reference, k);
-    }
+    for (const k of [...BASE_DOCS, ...VEHICLE_DOCS]) await uploadDoc(id, reference, k);
     const r = await post({ action: 'finalize', id, reference });
     expect(r.status).toBe(200);
     expect((r.body as { reference: string }).reference).toBe(reference);

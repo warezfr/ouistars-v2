@@ -13,22 +13,26 @@ import { sendMail, opsEmail } from '../server/email/mailer.js';
  * Durci : Zod, honeypot, limite de débit, insertion tolérante au schéma.
  */
 
-/* ————— Pièces demandées (héritage ancien site, adapté France) ————— */
-/** Toujours obligatoires. */
-export const DOCS_BASE = ['profile_photo', 'driving_licence', 'vtc_card_doc'] as const;
+/* ————— Pièces demandées — liste de l'ancien site (Become a Chauffeur Partner) ————— */
+/** Toujours obligatoires (le chauffeur). */
+export const DOCS_BASE = ['profile_photo', 'id_card', 'driving_licence', 'vtc_card_doc', 'kbis', 'rc_pro', 'rib'] as const;
 /** Obligatoires en plus si le candidat déclare un véhicule. */
-export const DOCS_VEHICLE = ['vehicle_photo', 'carte_grise', 'maintenance_control', 'insurance'] as const;
+export const DOCS_VEHICLE = ['vehicle_photo', 'carte_grise', 'insurance', 'maintenance_control'] as const;
 const DOC_KEYS = [...DOCS_BASE, ...DOCS_VEHICLE, 'vehicle_photo_2'] as const;
 
 export const DOC_LABELS: Record<string, string> = {
   profile_photo: 'Photo de profil',
+  id_card: "Pièce d'identité / Passeport",
   driving_licence: 'Permis de conduire',
-  vtc_card_doc: 'Carte professionnelle VTC',
+  vtc_card_doc: 'Carte VTC (recto/verso)',
+  kbis: 'Extrait Kbis (moins de 3 mois)',
+  rc_pro: 'Assurance RC professionnelle',
+  rib: 'RIB (coordonnées bancaires)',
   vehicle_photo: 'Photo du véhicule',
   vehicle_photo_2: 'Photo du véhicule (2)',
   carte_grise: "Carte grise (certificat d'immatriculation)",
+  insurance: 'Assurance du véhicule',
   maintenance_control: 'Contrôle technique',
-  insurance: "Attestation d'assurance",
 };
 
 /* ————— Limite de débit (fenêtre glissante 1 min / IP) ————— */

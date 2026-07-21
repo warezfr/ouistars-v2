@@ -220,19 +220,23 @@ export function QuoteModal({ open, onClose }: { open: boolean; onClose: () => vo
    le serveur re-contrôle les pièces — impossible de candidater sans.
    ———————————————————————————————————————————————————————————————— */
 
-/** Pièces demandées — mêmes clés que l'API. */
-const DOCS_BASE = ['profile_photo', 'driving_licence', 'vtc_card_doc'] as const;
-const DOCS_VEHICLE = ['vehicle_photo', 'carte_grise', 'maintenance_control', 'insurance'] as const;
+/** Pièces demandées — mêmes clés que l'API (liste héritée de l'ancien site). */
+const DOCS_BASE = ['profile_photo', 'id_card', 'driving_licence', 'vtc_card_doc', 'kbis', 'rc_pro', 'rib'] as const;
+const DOCS_VEHICLE = ['vehicle_photo', 'carte_grise', 'insurance', 'maintenance_control'] as const;
 type DocKey = typeof DOCS_BASE[number] | typeof DOCS_VEHICLE[number];
 
 const DOC_T: Record<DocKey, { fr: string; en: string; es: string; ru: string; ar: string }> = {
   profile_photo: { fr: 'Photo de profil', en: 'Profile picture', es: 'Foto de perfil', ru: 'Фото профиля', ar: 'صورة شخصية' },
+  id_card: { fr: 'Pièce d’identité / Passeport', en: 'ID card / Passport', es: 'DNI / Pasaporte', ru: 'Удостоверение личности / паспорт', ar: 'بطاقة الهوية / جواز السفر' },
   driving_licence: { fr: 'Permis de conduire', en: 'Driving licence', es: 'Permiso de conducir', ru: 'Водительское удостоверение', ar: 'رخصة القيادة' },
-  vtc_card_doc: { fr: 'Carte professionnelle VTC', en: 'PHV professional card', es: 'Tarjeta profesional VTC', ru: 'Профессиональная карта VTC', ar: 'البطاقة المهنية VTC' },
+  vtc_card_doc: { fr: 'Carte VTC (recto/verso)', en: 'PHV card (front/back)', es: 'Tarjeta VTC (anverso/reverso)', ru: 'Карта VTC (обе стороны)', ar: 'بطاقة VTC (الوجهان)' },
+  kbis: { fr: 'Extrait Kbis (moins de 3 mois)', en: 'Kbis extract (under 3 months)', es: 'Extracto Kbis (menos de 3 meses)', ru: 'Выписка Kbis (не старше 3 мес.)', ar: 'مستخرج Kbis (أقل من 3 أشهر)' },
+  rc_pro: { fr: 'Assurance RC professionnelle', en: 'Professional liability insurance', es: 'Seguro de RC profesional', ru: 'Страхование проф. ответственности', ar: 'تأمين المسؤولية المهنية' },
+  rib: { fr: 'RIB (coordonnées bancaires)', en: 'Bank details (RIB)', es: 'Datos bancarios (RIB)', ru: 'Банковские реквизиты (RIB)', ar: 'بيانات الحساب البنكي (RIB)' },
   vehicle_photo: { fr: 'Photo du véhicule', en: 'Vehicle photo', es: 'Foto del vehículo', ru: 'Фото автомобиля', ar: 'صورة السيارة' },
-  carte_grise: { fr: 'Carte grise', en: 'Registration document', es: 'Permiso de circulación', ru: 'Свидетельство о регистрации', ar: 'بطاقة تسجيل السيارة' },
+  carte_grise: { fr: 'Carte grise', en: 'Vehicle registration', es: 'Permiso de circulación', ru: 'Свидетельство о регистрации', ar: 'بطاقة تسجيل السيارة' },
+  insurance: { fr: 'Assurance du véhicule', en: 'Vehicle insurance', es: 'Seguro del vehículo', ru: 'Страховка автомобиля', ar: 'تأمين السيارة' },
   maintenance_control: { fr: 'Contrôle technique', en: 'Maintenance control', es: 'Inspección técnica', ru: 'Техосмотр', ar: 'الفحص التقني' },
-  insurance: { fr: 'Attestation d’assurance', en: 'Insurance certificate', es: 'Certificado de seguro', ru: 'Страховой сертификат', ar: 'شهادة التأمين' },
 };
 
 interface DocFile { name: string; contentType: string; base64: string; size: number }

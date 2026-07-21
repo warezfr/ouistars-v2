@@ -38,16 +38,20 @@ const badge = (s: string) =>
 
 const DOC_LABELS: Record<string, string> = {
   profile_photo: 'Photo de profil',
+  id_card: 'Pièce d’identité / Passeport',
   driving_licence: 'Permis de conduire',
-  vtc_card_doc: 'Carte professionnelle VTC',
+  vtc_card_doc: 'Carte VTC (recto/verso)',
+  kbis: 'Extrait Kbis (moins de 3 mois)',
+  rc_pro: 'Assurance RC professionnelle',
+  rib: 'RIB (coordonnées bancaires)',
   vehicle_photo: 'Photo du véhicule',
   vehicle_photo_2: 'Photo du véhicule (2)',
   carte_grise: 'Carte grise',
+  insurance: 'Assurance du véhicule',
   maintenance_control: 'Contrôle technique',
-  insurance: 'Attestation d’assurance',
 };
-const DOCS_BASE = ['profile_photo', 'driving_licence', 'vtc_card_doc'];
-const DOCS_VEHICLE = ['vehicle_photo', 'carte_grise', 'maintenance_control', 'insurance'];
+const DOCS_BASE = ['profile_photo', 'id_card', 'driving_licence', 'vtc_card_doc', 'kbis', 'rc_pro', 'rib'];
+const DOCS_VEHICLE = ['vehicle_photo', 'carte_grise', 'insurance', 'maintenance_control'];
 const requiredDocs = (r: Row) => [...DOCS_BASE, ...(r.vehicle ? DOCS_VEHICLE : [])];
 
 const CLASS_LABELS: Record<string, string> = {
