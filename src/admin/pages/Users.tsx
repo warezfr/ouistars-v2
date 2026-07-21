@@ -24,10 +24,11 @@ export default function Users() {
   const [rows, setRows] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [newId, setNewId] = useState('');
   const [newEmail, setNewEmail] = useState('');
+  const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState('ops');
   const [adding, setAdding] = useState(false);
+  const [inviteMsg, setInviteMsg] = useState<string | null>(null);
 
   async function load() {
     if (!supabase) { setError('Supabase non configuré.'); setLoading(false); return; }
@@ -48,13 +49,26 @@ export default function Users() {
   async function addProfile(e: FormEvent) {
     e.preventDefault();
     if (!supabase) return;
-    setAdding(true); setError(null);
-    const { error } = await supabase.from('admin_profiles').insert({
-      id: newId.trim(), email: newEmail.trim(), role: newRole, active: true,
-    });
-    setAdding(false);
-    if (error) setError(error.message);
-    else { setNewId(''); setNewEmail(''); load(); }
+    setAdding(true); setError(null); setInviteMsg(null);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) throw new Error('Session expirée, reconnectez-vous.');
+      const r = await fetch('/api/admin/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ email: newEmail.trim(), role: newRole, displayName: newName.trim() || null }),
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body.error ?? `Erreur ${r.status}`);
+      setInviteMsg(body.message ?? 'Invitation envoyée.');
+      setNewEmail(''); setNewName('');
+      load();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setAdding(false);
+    }
   }
 
   return (
@@ -105,23 +119,22 @@ export default function Users() {
 
       <div className="col-lg-4">
         <div className="card card-outline card-secondary">
-          <div className="card-header"><h3 className="card-title mb-0">Autoriser un nouvel utilisateur</h3></div>
+          <div className="card-header"><h3 className="card-title mb-0">Inviter un utilisateur</h3></div>
           <div className="card-body">
             <p className="text-muted small">
-              1. La personne se connecte une première fois sur <code>/admin</code> (compte Supabase).<br />
-              2. L’écran « Accès en attente » lui affiche son <strong>identifiant utilisateur</strong>.<br />
-              3. Collez cet identifiant ici avec son e-mail et un rôle.
+              Saisissez l’e-mail et le rôle : la personne reçoit un e-mail avec un lien
+              pour définir son mot de passe, puis accède directement au back-office.
             </p>
             <form onSubmit={addProfile}>
               <div className="mb-2">
-                <label className="form-label">Identifiant utilisateur (UUID)</label>
-                <input className="form-control" required value={newId} disabled={!isAdmin}
-                  placeholder="xxxxxxxx-xxxx-…" onChange={(e) => setNewId(e.target.value)} />
-              </div>
-              <div className="mb-2">
                 <label className="form-label">E-mail</label>
                 <input className="form-control" type="email" required value={newEmail} disabled={!isAdmin}
-                  onChange={(e) => setNewEmail(e.target.value)} />
+                  placeholder="prenom@exemple.com" onChange={(e) => setNewEmail(e.target.value)} />
+              </div>
+              <div className="mb-2">
+                <label className="form-label">Nom (facultatif)</label>
+                <input className="form-control" value={newName} disabled={!isAdmin}
+                  placeholder="Prénom Nom" onChange={(e) => setNewName(e.target.value)} />
               </div>
               <div className="mb-3">
                 <label className="form-label">Rôle</label>
@@ -130,8 +143,9 @@ export default function Users() {
                   {ROLES.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </div>
+              {inviteMsg && <div className="alert alert-success small py-2">{inviteMsg}</div>}
               <button className="btn btn-warning w-100" disabled={!isAdmin || adding}>
-                {adding ? 'Ajout…' : 'Autoriser l’accès'}
+                {adding ? 'Envoi…' : 'Envoyer l’invitation'}
               </button>
               {!isAdmin && <small className="text-muted d-block mt-2">Seul un rôle « admin » peut gérer les utilisateurs.</small>}
             </form>
