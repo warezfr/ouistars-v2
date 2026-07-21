@@ -24,6 +24,11 @@ alter table if exists etg_airport_mappings   enable row level security;
 alter table if exists etg_coverage_zones     enable row level security;
 alter table if exists etg_rate_cards         enable row level security;
 alter table if exists etg_api_logs           enable row level security;
+alter table if exists etg_admin_users        enable row level security;
+alter table if exists ops_packages           enable row level security;
+alter table if exists ops_invoices           enable row level security;
+alter table if exists quote_items            enable row level security;
+alter table if exists invoice_items          enable row level security;
 
 -- 2) etg_rate_cards : la page Tarifs du back-office y accède via le client
 --    authentifié (clé anon + session admin). On garde donc un accès admin.
