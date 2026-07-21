@@ -1,10 +1,9 @@
 import PDFDocument from 'pdfkit';
-import { CG_MED, CG_SEMI, CG_BOLD, CG_ITALIC } from './fonts.js';
+import { MR_MED, MR_SEMI, MR_XBOLD } from './fonts.js';
 
 /**
- * Socle graphique des documents Oui Stars — « papier de maison » noir & or.
- * Typographie : Cormorant Garamond (display, embarquée) + Helvetica (labels/corps).
- * Composition : bandeau nuit, filets or, pied éditorial — cohérente avec le site.
+ * Socle graphique des documents Oui Stars — papier clair, ondulations dorées
+ * soulignées de traits noirs, typographie professionnelle Manrope (embarquée).
  */
 
 const GOLD = '#c9a24b';
@@ -28,10 +27,9 @@ export function renderToBuffer(doc: PDFKit.PDFDocument): Promise<Buffer> {
 
 export function newDoc(): PDFKit.PDFDocument {
   const doc = new PDFDocument({ size: 'A4', margin: 48 });
-  doc.registerFont('Display', CG_SEMI);
-  doc.registerFont('Display-Med', CG_MED);
-  doc.registerFont('Display-Bold', CG_BOLD);
-  doc.registerFont('Display-Italic', CG_ITALIC);
+  doc.registerFont('Brand', MR_MED);        // 500 — corps
+  doc.registerFont('Brand-Semi', MR_SEMI);  // 600 — valeurs, libellés
+  doc.registerFont('Brand-Bold', MR_XBOLD); // 800 — titres, montants
   return doc;
 }
 
@@ -52,10 +50,11 @@ export function watermark(doc: PDFKit.PDFDocument, logo: Buffer | null) {
   } catch { /* sans filigrane */ }
 }
 
-/** Montant au format français : 1 440,00 € (espace fine insécable). */
+/** Montant au format français : 1 440,00 € (séparateur de milliers en espace simple —
+    les espaces typographiques U+202F/U+00A0 ne sont pas couvertes par la police embarquée). */
 export function eur(n: number): string {
   const s = n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return `${s} €`.replace(/ /g, ' ');
+  return `${s} €`.replace(/[\s  ]/g, ' ');
 }
 
 /** Logo du site (PNG) chargé depuis le déploiement — null si injoignable. */
@@ -87,7 +86,7 @@ export function micro(
   doc: PDFKit.PDFDocument, text: string, x: number, y: number,
   opts: { color?: string; size?: number; width?: number; align?: 'left' | 'right' | 'center' } = {},
 ) {
-  doc.fillColor(opts.color ?? GOLD_DEEP).fontSize(opts.size ?? 6.6).font('Helvetica-Bold')
+  doc.fillColor(opts.color ?? GOLD_DEEP).fontSize(opts.size ?? 6.4).font('Brand-Bold')
     .text(text.toUpperCase(), x, y, {
       characterSpacing: 1.6, lineBreak: false,
       ...(opts.width ? { width: opts.width, align: opts.align ?? 'left', lineBreak: true } : {}),
@@ -100,97 +99,107 @@ export function hr(doc: PDFKit.PDFDocument, x1: number, x2: number, y: number, c
 }
 
 /**
- * Papier à en-tête : bandeau nuit (logo + marque, contacts empilés à droite),
- * double filet or. Retourne la position Y sous le bandeau.
+ * Papier à en-tête clair : ondulation dorée en tête (soulignée de traits noirs),
+ * logo + marque à gauche, contacts empilés à droite. Retourne le Y sous l'en-tête.
  */
 export function bandHeader(doc: PDFKit.PDFDocument, logo: Buffer | null, contact: BrandContact = DEFAULT_CONTACT): number {
   doc.save();
-  doc.rect(0, 0, 595, 96).fill(NIGHT);
 
-  // Marque — logo + wordmark Cormorant espacé + devise
+  // Ondulation dorée — bord inférieur en vague
+  doc.moveTo(0, 0).lineTo(595, 0).lineTo(595, 26)
+    .bezierCurveTo(430, 56, 180, 2, 0, 44)
+    .closePath().fill(GOLD);
+  // Traits noirs suivant l'ondulation
+  doc.moveTo(0, 50).bezierCurveTo(180, 8, 430, 62, 595, 32)
+    .strokeColor(NIGHT).lineWidth(1.4).stroke();
+  doc.moveTo(0, 57).bezierCurveTo(180, 15, 430, 69, 595, 39)
+    .strokeColor(GOLD_DEEP).lineWidth(0.8).stroke();
+
+  // Marque — logo + wordmark sur fond blanc
   let bx = 44;
+  const by = 76;
   if (logo) {
-    try { doc.image(logo, 44, 22, { height: 52 }); bx = 108; } catch { /* repli texte */ }
+    try { doc.image(logo, 44, by - 4, { height: 46 }); bx = 102; } catch { /* repli texte */ }
   }
-  doc.font('Display-Bold').fontSize(21);
-  doc.fillColor('#ffffff').text('OUI', bx, 28, { characterSpacing: 2.4, continued: true });
-  doc.fillColor(GOLD).text('STARS', { characterSpacing: 2.4 });
-  doc.fillColor('#8b8f99').fontSize(6.2).font('Helvetica-Bold')
-    .text('PREMIUM MOBILITY  ·  DESTINATION MANAGEMENT', bx + 1, 58, { characterSpacing: 1.7 });
+  doc.font('Brand-Bold').fontSize(17);
+  doc.fillColor(INK).text('OUI', bx, by + 2, { characterSpacing: 2.6, continued: true });
+  doc.fillColor(GOLD_DEEP).text('STARS', { characterSpacing: 2.6 });
+  doc.fillColor(MUT).fontSize(5.8).font('Brand-Bold')
+    .text('PREMIUM MOBILITY  ·  DESTINATION MANAGEMENT', bx + 1, by + 26, { characterSpacing: 1.7 });
 
   // Contacts — trois lignes empilées, alignées à droite
   const rx = 547;
   const row = (label: string, value: string, y: number) => {
-    doc.fillColor(GOLD).fontSize(5.8).font('Helvetica-Bold')
+    doc.fillColor(GOLD_DEEP).fontSize(5.6).font('Brand-Bold')
       .text(label, 330, y + 1.5, { width: 80, align: 'right', characterSpacing: 1.4 });
-    doc.fillColor('#e9e7e0').fontSize(8).font('Helvetica')
+    doc.fillColor(INK).fontSize(7.8).font('Brand-Semi')
       .text(value, 418, y, { width: rx - 418, align: 'right' });
   };
-  row('TÉLÉPHONE', contact.phone, 26);
-  row('E-MAIL', contact.email, 44);
-  row('SITE', contact.site, 62);
+  row('TÉLÉPHONE', contact.phone, by);
+  row('E-MAIL', contact.email, by + 15);
+  row('SITE', contact.site, by + 30);
 
-  // Double filet or : trait fin + trait fort
-  doc.rect(0, 96, 595, 2.2).fill(GOLD);
-  doc.rect(0, 101.4, 595, 0.7).fill(GOLD_DEEP);
+  // filet de clôture de l'en-tête
+  hr(doc, 48, 547, by + 52, HAIR);
   doc.restore();
-  return 122;
+  return by + 66;
 }
 
 /**
- * Pied éditorial : filet or, remerciement en italique Cormorant centré,
- * ligne légale, ruban nuit en base de page.
+ * Pied de page : ondulation dorée montante soulignée de traits noirs,
+ * remerciement en noir sur l'or, coordonnées à droite.
  */
 export function waveFooter(
   doc: PDFKit.PDFDocument,
   message = 'Merci de votre confiance',
-  sub = 'Oui Stars — Premium Chauffeur Service',
+  sub = 'Oui Stars — Premium Chauffeur Service  ·  ouistars.com',
 ) {
   doc.page.margins.bottom = 0; // pas de saut de page pour le pied
   doc.save();
-  // filet or centré
-  doc.moveTo(258, 764).lineTo(337, 764).strokeColor(GOLD).lineWidth(1).stroke();
-  doc.circle(297.5, 764, 2.2).fill(GOLD);
-  // remerciement en italique
-  doc.fillColor(INK).font('Display-Italic').fontSize(16)
-    .text(message, 48, 774, { width: 499, align: 'center' });
-  doc.fillColor(MUT).fontSize(6.8).font('Helvetica')
-    .text(sub, 48, 796, { width: 499, align: 'center', characterSpacing: 0.4 });
-  // ruban nuit
-  doc.rect(0, 816, 595, 26).fill(NIGHT);
-  doc.rect(0, 816, 595, 1.2).fill(GOLD);
-  doc.fillColor(GOLD).fontSize(6).font('Helvetica-Bold')
-    .text('OUI STARS  ·  PREMIUM MOBILITY  ·  OUISTARS.COM', 48, 826, {
-      width: 499, align: 'center', characterSpacing: 2.2,
-    });
+
+  // Traits noirs au-dessus de la vague
+  doc.moveTo(0, 786).bezierCurveTo(180, 750, 420, 806, 595, 764)
+    .strokeColor(NIGHT).lineWidth(1.4).stroke();
+  doc.moveTo(0, 793).bezierCurveTo(180, 757, 420, 813, 595, 771)
+    .strokeColor(GOLD_DEEP).lineWidth(0.8).stroke();
+  // Vague dorée
+  doc.moveTo(0, 800).bezierCurveTo(180, 764, 420, 820, 595, 778)
+    .lineTo(595, 842).lineTo(0, 842).closePath().fill(GOLD);
+
+  // Message + signature — en noir sur l'or
+  doc.fillColor(NIGHT).font('Brand-Bold').fontSize(11.5).text(message, 48, 812);
+  doc.fillColor('#3d3418').fontSize(6.6).font('Brand-Semi').text(sub, 48, 828);
+  doc.fillColor(NIGHT).fontSize(6.6).font('Brand-Bold')
+    .text('OUISTARS.COM', 380, 822, { width: 167, align: 'right', characterSpacing: 1.8 });
   doc.restore();
 }
 
 /**
- * Zone de titre commune : titre Cormorant à gauche (taille auto-ajustée),
- * méta empilées à droite. Retourne le Y sous la zone.
+ * Zone de titre commune : titre lettré à gauche, méta empilées à droite.
+ * Retourne le Y sous la zone.
  */
 export function titleBlock(
   doc: PDFKit.PDFDocument, title: string, meta: [string, string][], y: number,
 ): number {
-  // Titre — Cormorant Bold, ajusté pour tenir sur 330 pt
-  let size = 40;
-  doc.font('Display-Bold');
-  while (size > 22 && doc.fontSize(size).widthOfString(title) > 330) size -= 2;
-  doc.fillColor(INK).fontSize(size).text(title, 48, y, { lineBreak: false });
-  const titleBottom = y + size + 8;
-  doc.rect(48, titleBottom, 44, 2).fill(GOLD);
+  // Titre — capitales espacées, taille auto-ajustée pour tenir sur 330 pt
+  const t = title.toUpperCase();
+  let size = 25;
+  doc.font('Brand-Bold');
+  while (size > 13 && doc.fontSize(size).widthOfString(t, { characterSpacing: 2.5 }) > 330) size -= 1;
+  doc.fillColor(INK).fontSize(size).text(t, 48, y, { characterSpacing: 2.5, lineBreak: false });
+  const titleBottom = y + size + 10;
+  doc.rect(48, titleBottom, 44, 2.4).fill(GOLD);
 
   // Méta — label micro + valeur, alignés à droite
-  let my = y + 6;
+  let my = y - 2;
   for (const [k, v] of meta) {
-    doc.fillColor(MUT).fontSize(6.2).font('Helvetica-Bold')
-      .text(k.toUpperCase(), 330, my + 2, { width: 105, align: 'right', characterSpacing: 1.2 });
-    doc.fillColor(INK).font('Display').fontSize(11.5)
+    doc.fillColor(MUT).fontSize(6).font('Brand-Bold')
+      .text(k.toUpperCase(), 320, my + 2, { width: 115, align: 'right', characterSpacing: 1.2 });
+    doc.fillColor(INK).font('Brand-Semi').fontSize(9.2)
       .text(v, 442, my, { width: 105, align: 'right' });
-    my += 19;
+    my += 17;
   }
-  return Math.max(titleBottom + 14, my + 8);
+  return Math.max(titleBottom + 16, my + 8);
 }
 
 export { GOLD, GOLD_DEEP, NIGHT, INK, MUT, PAPER, HAIR };

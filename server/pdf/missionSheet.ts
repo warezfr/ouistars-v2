@@ -40,20 +40,20 @@ export async function buildMissionSheet(d: MissionData, logo?: Buffer | null): P
   doc.rect(L, y, R - L, 64).fill(PAPER);
   doc.rect(L, y, 2.4, 64).fill(GOLD);
   micro(doc, 'Départ', L + 16, y + 11, { color: MUT });
-  doc.fillColor(INK).font('Display').fontSize(13).text(pdfSafe(d.pickup) || '—', L + 16, y + 21, { width: 210 });
+  doc.fillColor(INK).font('Brand-Semi').fontSize(10.5).text(pdfSafe(d.pickup) || '—', L + 16, y + 23, { width: 210 });
   // flèche vectorielle
   doc.save().strokeColor(GOLD).lineWidth(1.3);
   doc.moveTo(283, y + 32).lineTo(301, y + 32).stroke();
   doc.moveTo(296, y + 27.5).lineTo(301, y + 32).lineTo(296, y + 36.5).stroke();
   doc.restore();
   micro(doc, 'Destination', 316, y + 11, { color: MUT });
-  doc.fillColor(INK).font('Display').fontSize(13).text(pdfSafe(d.destination) || '—', 316, y + 21, { width: 215 });
+  doc.fillColor(INK).font('Brand-Semi').fontSize(10.5).text(pdfSafe(d.destination) || '—', 316, y + 23, { width: 215 });
   y += 78;
 
   // ————— Grille de mission — 2 colonnes, filets crème —————
   const cell = (label: string, value: string, x: number, yy: number, w = 230) => {
     micro(doc, label, x, yy, { color: MUT });
-    doc.fillColor(INK).font('Display').fontSize(13.5).text(pdfSafe(value) || '—', x, yy + 10, { width: w });
+    doc.fillColor(INK).font('Brand-Semi').fontSize(10.5).text(pdfSafe(value) || '—', x, yy + 11, { width: w });
   };
   const rows: [string, string, string, string][] = [
     ['Date', d.date || '—', 'Heure de prise en charge', d.time || '—'],
@@ -72,10 +72,10 @@ export async function buildMissionSheet(d: MissionData, logo?: Buffer | null): P
   // Meet & Greet + montant chauffeur — chips
   let chipX = L;
   const chip = (text: string, dark = false) => {
-    doc.font('Helvetica-Bold').fontSize(7);
+    doc.font('Brand-Bold').fontSize(6.8);
     const w = doc.widthOfString(text.toUpperCase()) + 7 * 2 + (text.length * 1.1);
-    doc.roundedRect(chipX, y, w + 8, 17, 8.5).fill(dark ? NIGHT : PAPER);
-    doc.fillColor(dark ? GOLD : INK).text(text.toUpperCase(), chipX + 8, y + 5.5, { characterSpacing: 1.1, lineBreak: false });
+    doc.roundedRect(chipX, y, w + 8, 17, 8.5).fill(dark ? GOLD : PAPER);
+    doc.fillColor(dark ? NIGHT : INK).text(text.toUpperCase(), chipX + 8, y + 5.8, { characterSpacing: 1.1, lineBreak: false });
     chipX += w + 18;
   };
   chip(d.meetGreet ? 'Meet & Greet : oui' : 'Meet & Greet : non', d.meetGreet);
@@ -86,7 +86,7 @@ export async function buildMissionSheet(d: MissionData, logo?: Buffer | null): P
   if (d.notes) {
     micro(doc, 'Consignes', L, y);
     doc.rect(L, y + 10, 2, 30).fill(GOLD);
-    doc.fillColor(INK).fontSize(8.6).font('Helvetica').text(pdfSafe(d.notes), L + 12, y + 12, { width: R - L - 12, lineGap: 2 });
+    doc.fillColor(INK).fontSize(8.4).font('Brand').text(pdfSafe(d.notes), L + 12, y + 12, { width: R - L - 12, lineGap: 2 });
   }
 
   waveFooter(doc, 'Bonne route', 'Document interne — ordre de mission chauffeur');
@@ -109,7 +109,7 @@ export async function buildMissionSheet(d: MissionData, logo?: Buffer | null): P
   if (logo) {
     try { doc.image(logo, W / 2 - 30, 52, { height: 60 }); } catch { /* texte seul */ }
   }
-  doc.font('Display-Bold').fontSize(25);
+  doc.font('Brand-Bold').fontSize(22);
   const wOui = doc.widthOfString('OUI', { characterSpacing: 3 });
   const wStars = doc.widthOfString('STARS', { characterSpacing: 3 });
   const bx = (W - (wOui + wStars)) / 2;
@@ -118,26 +118,26 @@ export async function buildMissionSheet(d: MissionData, logo?: Buffer | null): P
   doc.fillColor(GOLD).text('STARS', bx + wOui, by, { characterSpacing: 3, lineBreak: false });
 
   // WELCOME / BIENVENUE
-  doc.fillColor(GOLD).fontSize(11).font('Helvetica-Bold')
-    .text('WELCOME  ·  BIENVENUE', 0, 208, { width: W, align: 'center', characterSpacing: 5 });
+  doc.fillColor(GOLD).fontSize(10.5).font('Brand-Bold')
+    .text('WELCOME  ·  BIENVENUE', 0, 210, { width: W, align: 'center', characterSpacing: 5 });
 
-  // Nom du client — Cormorant, taille auto-ajustée
+  // Nom du client — taille auto-ajustée
   const name = d.clientName || 'Notre invité';
-  let size = 92;
-  doc.font('Display-Bold');
-  while (size > 30 && doc.fontSize(size).widthOfString(name) > W - 140) size -= 4;
-  doc.fillColor('#ffffff').fontSize(size).text(name, 70, 380 - size * 1.15, { width: W - 140, align: 'center' });
+  let size = 66;
+  doc.font('Brand-Bold');
+  while (size > 24 && doc.fontSize(size).widthOfString(name) > W - 140) size -= 4;
+  doc.fillColor('#ffffff').fontSize(size).text(name, 70, 372 - size * 1.15, { width: W - 140, align: 'center' });
 
   // filet + pied
-  doc.moveTo(W / 2 - 40, 402).lineTo(W / 2 + 40, 402).strokeColor(GOLD).lineWidth(1).stroke();
-  doc.circle(W / 2, 402, 2.2).fill(GOLD);
-  doc.fillColor('#c9c7c0').fontSize(12).font('Display-Italic')
+  doc.moveTo(W / 2 - 40, 400).lineTo(W / 2 + 40, 400).strokeColor(GOLD).lineWidth(1).stroke();
+  doc.circle(W / 2, 400, 2.2).fill(GOLD);
+  doc.fillColor('#c9c7c0').fontSize(10.5).font('Brand-Semi')
     .text('Votre chauffeur vous attend  ·  Your chauffeur is waiting', 0, 420, { width: W, align: 'center' });
-  doc.fillColor(GOLD).fontSize(8.5).font('Helvetica-Bold')
-    .text(`RÉF. ${d.reference}${d.flight && d.flight !== 'No flight' ? '   ·   VOL ' + d.flight : ''}`, 0, 450, {
+  doc.fillColor(GOLD).fontSize(8).font('Brand-Bold')
+    .text(`RÉF. ${d.reference}${d.flight && d.flight !== 'No flight' ? '   ·   VOL ' + d.flight : ''}`, 0, 448, {
       width: W, align: 'center', characterSpacing: 2,
     });
-  doc.fillColor('#63666f').fontSize(7.5).font('Helvetica-Bold')
+  doc.fillColor('#63666f').fontSize(7).font('Brand-Bold')
     .text('PREMIUM MOBILITY  ·  DESTINATION MANAGEMENT  ·  EVENT SOLUTIONS', 0, H - 42, {
       width: W, align: 'center', characterSpacing: 2.4,
     });

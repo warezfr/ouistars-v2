@@ -52,9 +52,9 @@ export async function buildInvoice(d: InvoiceData): Promise<Buffer> {
   // ————— Client —————
   y += 10;
   micro(doc, "À l'attention de", 48, y);
-  doc.fillColor(INK).font('Display').fontSize(17).text(pdfSafe(d.clientName), 48, y + 10, { width: 300 });
-  let cy = doc.y + 2;
-  doc.fillColor(MUT).fontSize(8).font('Helvetica');
+  doc.fillColor(INK).font('Brand-Bold').fontSize(13).text(pdfSafe(d.clientName), 48, y + 11, { width: 300 });
+  let cy = doc.y + 3;
+  doc.fillColor(MUT).fontSize(7.8).font('Brand');
   if (d.clientPhone) { doc.text(d.clientPhone, 48, cy); cy += 11; }
   if (d.clientEmail) { doc.text(d.clientEmail, 48, cy); cy += 11; }
 
@@ -75,21 +75,21 @@ export async function buildInvoice(d: InvoiceData): Promise<Buffer> {
   d.lines.forEach((l) => {
     const label = pdfSafe(l.label);
     const sub = l.sub ? pdfSafe(l.sub) : undefined;
-    doc.font('Display').fontSize(12.5);
+    doc.font('Brand-Semi').fontSize(9.6);
     const labelH = doc.heightOfString(label, { width: 285 });
-    doc.font('Helvetica').fontSize(7.5);
+    doc.font('Brand').fontSize(7.2);
     const subH = sub ? doc.heightOfString(sub, { width: 285 }) : 0;
-    const rowH = Math.max(30, 9 + labelH + (sub ? subH + 3 : 0) + 9);
+    const rowH = Math.max(30, 10 + labelH + (sub ? subH + 3 : 0) + 10);
 
-    doc.fillColor(INK).font('Display').fontSize(12.5).text(label, L, y + 8, { width: 285 });
-    if (sub) doc.fillColor(MUT).font('Helvetica').fontSize(7.5).text(sub, L, y + 8 + labelH + 3, { width: 285 });
+    doc.fillColor(INK).font('Brand-Semi').fontSize(9.6).text(label, L, y + 10, { width: 285 });
+    if (sub) doc.fillColor(MUT).font('Brand').fontSize(7.2).text(sub, L, y + 10 + labelH + 3, { width: 285 });
 
     const lineTotal = l.qty * l.unit;
     subtotal += lineTotal;
-    doc.fillColor(MUT).font('Helvetica').fontSize(9);
+    doc.fillColor(MUT).font('Brand').fontSize(8.8);
     doc.text(eur(l.unit), cols.unit - 60, y + 11, { width: 120, align: 'right' });
     doc.text(String(l.qty), cols.qty - 40, y + 11, { width: 60, align: 'right' });
-    doc.fillColor(INK).font('Helvetica-Bold').fontSize(9.2)
+    doc.fillColor(INK).font('Brand-Bold').fontSize(8.8)
       .text(eur(lineTotal), cols.total, y + 11, { width: R - cols.total, align: 'right' });
 
     y += rowH;
@@ -103,30 +103,30 @@ export async function buildInvoice(d: InvoiceData): Promise<Buffer> {
 
   let py = y + 18;
   micro(doc, 'Règlement', L, py);
-  doc.fillColor(INK).fontSize(8.2).font('Helvetica')
+  doc.fillColor(INK).fontSize(8).font('Brand-Semi')
     .text('Virement  ·  Carte bancaire  ·  Lien de paiement', L, py + 10);
   py += 32;
   micro(doc, 'Conditions & notes', L, py);
-  doc.fillColor(MUT).fontSize(7.6).font('Helvetica')
+  doc.fillColor(MUT).fontSize(7.2).font('Brand')
     .text(pdfSafe(d.footNote ?? `TVA sur le transport de personnes : ${Math.round(vat * 100)} %. Document généré électroniquement — valable sans signature.`),
       L, py + 10, { width: 252, lineGap: 1.5 });
 
   let ty = y + 16;
   const totalRow = (label: string, value: string) => {
-    doc.fillColor(MUT).fontSize(8.4).font('Helvetica').text(label, 340, ty, { width: 120, align: 'right' });
-    doc.fillColor(INK).fontSize(8.8).font('Helvetica-Bold').text(value, 465, ty, { width: 82, align: 'right' });
+    doc.fillColor(MUT).fontSize(8.2).font('Brand').text(label, 340, ty, { width: 120, align: 'right' });
+    doc.fillColor(INK).fontSize(8.4).font('Brand-Bold').text(value, 465, ty, { width: 82, align: 'right' });
     ty += 16;
   };
   totalRow('Sous-total HT', eur(ht));
   totalRow(`TVA (${Math.round(vat * 100)} %)`, eur(tva));
   ty += 5;
 
-  // Total — cartouche nuit, montant Cormorant
-  doc.rect(320, ty, 227, 38).fill(NIGHT);
-  doc.rect(320, ty, 2.4, 38).fill(GOLD);
-  micro(doc, isQuote ? 'Estimation TTC' : 'Total TTC', 334, ty + 15, { color: GOLD, size: 7 });
-  doc.fillColor('#ffffff').font('Display-Bold').fontSize(17)
-    .text(eur(ttc), 400, ty + 9, { width: 137, align: 'right' });
+  // Total — cartouche or souligné d'un trait noir, texte nuit
+  doc.rect(320, ty, 227, 36).fill(GOLD);
+  doc.rect(320, ty + 36, 227, 1.6).fill(NIGHT);
+  micro(doc, isQuote ? 'Estimation TTC' : 'Total TTC', 334, ty + 14.5, { color: NIGHT, size: 7 });
+  doc.fillColor(NIGHT).font('Brand-Bold').fontSize(14)
+    .text(eur(ttc), 400, ty + 11, { width: 137, align: 'right' });
 
   waveFooter(doc, isQuote ? 'Merci pour votre demande' : 'Merci de votre confiance');
   return renderToBuffer(doc);
