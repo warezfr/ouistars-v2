@@ -27,9 +27,6 @@ export default function Footer({ onJoin }: Props) {
           </h3>
         </div>
         <div className="os-footer__callactions">
-          <a className="os-btn os-btn--gold" href={`https://wa.me/${st.whatsapp}`} target="_blank" rel="noreferrer">
-            {pickL(lang, { fr: 'Conciergerie 24/7', en: 'Concierge 24/7', es: 'Conserjería 24/7', ru: 'Консьерж 24/7', ar: 'كونسيرج 24/7' })}
-          </a>
           {/* Recrutement chauffeurs — carte imagée (héritage « Become a partner ») */}
           <button className="os-footer__joincard" onClick={onJoin} type="button">
             <img src="/corp-chauffeur.webp" alt="" loading="lazy" />
