@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "outDir": "server-dist",
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": false,
+    "types": ["node"],
+    "noEmit": false
+  },
+  "include": ["api/**/*.ts", "server/**/*.ts", "src/data/pricing.ts"]
+}
