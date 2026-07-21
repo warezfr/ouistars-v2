@@ -137,6 +137,53 @@ export default function Users() {
             </form>
           </div>
         </div>
+
+        <MyPasswordCard />
+      </div>
+    </div>
+  );
+}
+
+/** Changement de son propre mot de passe (tout utilisateur connecté). */
+function MyPasswordCard() {
+  const { updatePassword } = useAuth();
+  const [pw, setPw] = useState('');
+  const [pw2, setPw2] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    setMsg(null);
+    if (pw.length < 8) { setMsg({ ok: false, text: 'Au moins 8 caractères.' }); return; }
+    if (pw !== pw2) { setMsg({ ok: false, text: 'Les deux mots de passe ne correspondent pas.' }); return; }
+    setBusy(true);
+    const { error } = await updatePassword(pw);
+    setBusy(false);
+    if (error) setMsg({ ok: false, text: error });
+    else { setMsg({ ok: true, text: 'Mot de passe mis à jour.' }); setPw(''); setPw2(''); }
+  }
+
+  return (
+    <div className="card card-outline card-secondary mt-3">
+      <div className="card-header"><h3 className="card-title mb-0">Mon mot de passe</h3></div>
+      <div className="card-body">
+        <form onSubmit={onSubmit}>
+          <div className="mb-2">
+            <label className="form-label">Nouveau mot de passe</label>
+            <input className="form-control" type="password" autoComplete="new-password" required
+              value={pw} onChange={(e) => setPw(e.target.value)} />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Confirmer</label>
+            <input className="form-control" type="password" autoComplete="new-password" required
+              value={pw2} onChange={(e) => setPw2(e.target.value)} />
+          </div>
+          {msg && <div className={`alert small py-2 ${msg.ok ? 'alert-success' : 'alert-danger'}`}>{msg.text}</div>}
+          <button className="btn btn-warning w-100" disabled={busy}>
+            {busy ? 'Enregistrement…' : 'Changer mon mot de passe'}
+          </button>
+        </form>
       </div>
     </div>
   );

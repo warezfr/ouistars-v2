@@ -20,6 +20,8 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
+  sendReset: (email: string) => Promise<{ error: string | null }>;
+  updatePassword: (password: string) => Promise<{ error: string | null }>;
 }
 
 const Ctx = createContext<AuthState | null>(null);
@@ -88,8 +90,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(false); setProfile(null); setEmail(null);
   }
 
+  // Envoie l'e-mail de réinitialisation. Le lien renvoie vers /admin/reset,
+  // où Supabase établit une session de récupération pour définir un nouveau mdp.
+  async function sendReset(mail: string) {
+    if (!supabase) return { error: 'Supabase non configuré.' };
+    const redirectTo = `${window.location.origin}/admin/reset`;
+    const { error } = await supabase.auth.resetPasswordForEmail(mail.trim(), { redirectTo });
+    return { error: error?.message ?? null };
+  }
+
+  // Change le mot de passe de l'utilisateur connecté (ou en session de récupération).
+  async function updatePassword(password: string) {
+    if (!supabase) return { error: 'Supabase non configuré.' };
+    const { error } = await supabase.auth.updateUser({ password });
+    if (!error) await refresh();
+    return { error: error?.message ?? null };
+  }
+
   return (
-    <Ctx.Provider value={{ loading, configured: hasSupabase, session, profile, email, signIn, signOut, refresh }}>
+    <Ctx.Provider value={{ loading, configured: hasSupabase, session, profile, email, signIn, signOut, refresh, sendReset, updatePassword }}>
       {children}
     </Ctx.Provider>
   );

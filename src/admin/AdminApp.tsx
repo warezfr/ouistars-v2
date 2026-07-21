@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminLayout from './layout/AdminLayout';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
+import ResetPassword from './auth/ResetPassword';
 import { mountAdminLTE } from './adminlte';
 
 import Dashboard from './pages/Dashboard';
@@ -32,9 +33,14 @@ export default function AdminApp() {
 
   return (
     <AuthProvider>
-      <ProtectedRoute>
-        <Routes>
-          <Route element={<AdminLayout />}>
+      <Routes>
+        {/* Route publique : définition d'un nouveau mot de passe via lien e-mail. */}
+        <Route path="reset" element={<ResetPassword />} />
+
+        <Route path="*" element={
+          <ProtectedRoute>
+            <Routes>
+              <Route element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
 
             <Route path="bookings" element={<Bookings />} />
@@ -53,10 +59,12 @@ export default function AdminApp() {
 
             <Route path="soon/:label" element={<Placeholder />} />
 
-            <Route path="*" element={<Navigate to="/admin" replace />} />
-          </Route>
-        </Routes>
-      </ProtectedRoute>
+              <Route path="*" element={<Navigate to="/admin" replace />} />
+              </Route>
+            </Routes>
+          </ProtectedRoute>
+        } />
+      </Routes>
     </AuthProvider>
   );
 }
