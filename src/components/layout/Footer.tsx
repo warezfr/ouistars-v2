@@ -26,19 +26,30 @@ export default function Footer({ onJoin }: Props) {
             {pickL(lang, { fr: 'Où pouvons-nous vous conduire ?', en: 'Where may we take you?', es: '¿A dónde podemos llevarle?', ru: 'Куда вас отвезти?', ar: 'إلى أين يمكننا اصطحابك؟' })}
           </h3>
         </div>
-        <div className="os-footer__callactions">
-          {/* Recrutement chauffeurs — carte imagée (héritage « Become a partner ») */}
-          <button className="os-footer__joincard" onClick={onJoin} type="button">
+        {/* Recrutement chauffeurs — panneau « Rejoignez-nous » (héritage « Become a partner ») */}
+        <div className="os-footer__join">
+          <figure className="os-footer__join-media" aria-hidden>
             <img src="/corp-chauffeur.webp" alt="" loading="lazy" />
-            <span className="os-footer__joincard-veil" aria-hidden />
-            <span className="os-footer__joincard-txt">
-              <em>{pickL(lang, { fr: 'Recrutement chauffeurs', en: 'Chauffeur recruitment', es: 'Reclutamiento de chóferes', ru: 'Набор водителей', ar: 'توظيف السائقين' })}</em>
-              <strong>{pickL(lang, { fr: 'Devenez partenaire', en: 'Become a partner', es: 'Hágase socio', ru: 'Станьте партнёром', ar: 'كن شريكًا' })}</strong>
-              <span className="os-footer__joincard-cta">
-                {pickL(lang, { fr: 'Déposer ma candidature', en: 'Submit my application', es: 'Enviar mi candidatura', ru: 'Отправить заявку', ar: 'إرسال ترشحي' })} →
-              </span>
-            </span>
-          </button>
+            <figcaption>{pickL(lang, { fr: 'Nos chauffeurs', en: 'Our chauffeurs', es: 'Nuestros chóferes', ru: 'Наши водители', ar: 'سائقونا' })}</figcaption>
+          </figure>
+          <div className="os-footer__join-body">
+            <p className="os-eyebrow">{pickL(lang, { fr: 'Recrutement chauffeurs', en: 'Chauffeur recruitment', es: 'Reclutamiento de chóferes', ru: 'Набор водителей', ar: 'توظيف السائقين' })}</p>
+            <h3 className="os-footer__join-title">
+              {pickL(lang, { fr: 'Rejoignez-nous', en: 'Join us', es: 'Únase a nosotros', ru: 'Присоединяйтесь', ar: 'انضم إلينا' })}
+            </h3>
+            <p className="os-footer__join-lead">
+              {pickL(lang, {
+                fr: 'Devenez partenaire Oui Stars — courses premium, clientèle internationale, avec ou sans votre véhicule.',
+                en: 'Become a Oui Stars partner — premium rides, international clientele, with or without your own vehicle.',
+                es: 'Hágase socio de Oui Stars — servicios premium, clientela internacional, con o sin su vehículo.',
+                ru: 'Станьте партнёром Oui Stars — премиальные поездки, международные клиенты, со своим автомобилем или без.',
+                ar: 'كن شريكًا مع Oui Stars — مشاوير فاخرة وعملاء دوليون، بسيارتك أو بدونها.',
+              })}
+            </p>
+            <button className="os-btn os-btn--gold os-footer__join-cta" onClick={onJoin} type="button">
+              {pickL(lang, { fr: 'Déposer ma candidature', en: 'Submit my application', es: 'Enviar mi candidatura', ru: 'Отправить заявку', ar: 'إرسال ترشحي' })} →
+            </button>
+          </div>
         </div>
       </div>
 
