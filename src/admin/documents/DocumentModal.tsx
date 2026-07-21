@@ -24,7 +24,7 @@ export interface DocData {
 }
 
 const TITLES: Record<DocData['kind'], string> = {
-  invoice: 'FACTURE', quote: 'DEVIS', order: 'BON DE COMMANDE', mission: 'ORDRE DE MISSION',
+  invoice: 'Facture', quote: 'Devis', order: 'Bon de commande', mission: 'Ordre de mission',
 };
 const API_TYPES: Record<DocData['kind'], string> = {
   invoice: 'invoice', quote: 'quote', order: 'purchase_order', mission: 'mission_sheet',
@@ -253,7 +253,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
                           <h6>Règlement</h6>
                           <div className="gold">Virement · Carte bancaire · Lien de paiement</div>
                           <h6 style={{ marginTop: 10 }}>Conditions & notes</h6>
-                          <div>{doc.footNote ?? 'TVA sur le transport de personnes : 10 %. Document généré électroniquement — valable sans signature.'}</div>
+                          <div>{doc.footNote ?? `TVA sur le transport de personnes : ${Math.round(vat * 100)} %. Document généré électroniquement — valable sans signature.`}</div>
                         </div>
                         <div className="osdoc__totals">
                           <div className="row"><span>Sous-total HT</span><span>{ht.toFixed(2)} €</span></div>
