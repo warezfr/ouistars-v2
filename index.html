@@ -4,11 +4,71 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Oui Stars — Mobilité Premium, Destination Management & Solutions Événementielles à travers la France." />
+    <title>Oui Stars — Chauffeur Privé de Luxe & VTC Premium à Paris | Destination Management</title>
+    <meta name="description" content="Service de chauffeur privé haut de gamme à Paris et en France : transferts aéroport CDG/Orly, Meet & Greet, Fashion Weeks, événements et délégations. Réservation 24/7." />
+    <link rel="canonical" href="https://www.ouistars.com/" />
+    <meta name="theme-color" content="#0d0d10" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Oui Stars" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta property="og:title" content="Oui Stars — Chauffeur Privé de Luxe & VTC Premium à Paris" />
+    <meta property="og:description" content="Mobilité premium, Meet & Greet aéroport, Fashion Weeks et Destination Management à travers la France. Réservation 24/7." />
+    <meta property="og:url" content="https://www.ouistars.com/" />
+    <meta property="og:image" content="https://www.ouistars.com/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Oui Stars — Chauffeur Privé de Luxe & VTC Premium à Paris" />
+    <meta name="twitter:description" content="Mobilité premium, Meet & Greet aéroport, Fashion Weeks et Destination Management à travers la France." />
+    <meta name="twitter:image" content="https://www.ouistars.com/og-image.jpg" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-    <title>Oui Stars — Premium Mobility & Destination Management</title>
+    <link rel="preload" as="image" href="/hero-poster.jpg" fetchpriority="high" />
+
+    <!-- Données structurées : entreprise locale (service de chauffeur) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "@id": "https://www.ouistars.com/#business",
+      "name": "Oui Stars",
+      "description": "Service de chauffeur privé haut de gamme, Meet & Greet aéroport et Destination Management à Paris et en France.",
+      "url": "https://www.ouistars.com/",
+      "logo": "https://www.ouistars.com/logo-ouistars.png",
+      "image": "https://www.ouistars.com/og-image.jpg",
+      "telephone": "+33651030306",
+      "priceRange": "€€€",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Paris",
+        "addressCountry": "FR"
+      },
+      "areaServed": [
+        { "@type": "City", "name": "Paris" },
+        { "@type": "Country", "name": "France" }
+      ],
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+        "opens": "00:00",
+        "closes": "23:59"
+      },
+      "makesOffer": [
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Transfert aéroport CDG / Orly / Le Bourget" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Meet & Greet aéroport" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Mise à disposition avec chauffeur" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Fashion Weeks & événements" } },
+        { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Destination Management (DMC)" } }
+      ]
+    }
+    </script>
   </head>
   <body>
     <div id="root"></div>
