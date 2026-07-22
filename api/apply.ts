@@ -96,15 +96,33 @@ async function insertApplication(
 ): Promise<{ id: string | null; error: string | null; dropped: string[] }> {
   const payload = { ...row };
   const dropped: string[] = [];
-  for (let i = 0; i < 12; i++) {
+  const vehicle = (row.vehicle ?? null) as Record<string, unknown> | null;
+  for (let i = 0; i < 20; i++) {
     const { data, error } = await db.from('chauffeur_applications').insert(payload).select('id').single();
     if (!error) return { id: (data as { id: string }).id, error: null, dropped };
+
+    // Colonne inconnue du schéma → on la retire et on réessaie.
     const m = /Could not find the '([^']+)' column/.exec(error.message);
     if (error.code === 'PGRST204' && m && m[1] in payload) {
       delete payload[m[1]];
       dropped.push(m[1]);
       continue;
     }
+
+    // Colonne héritée NOT NULL absente du payload (ancien schéma) → valeur de repli.
+    const nn = /null value in column "([^"]+)"/.exec(error.message);
+    if (nn && payload[nn[1]] == null) {
+      const col = nn[1];
+      const legacy: Record<string, unknown> = {
+        vehicle_make: vehicle?.make, vehicle_model: vehicle?.model,
+        vehicle_plate: vehicle?.plate, vehicle_year: vehicle?.year,
+        vehicle_color: vehicle?.color,
+      };
+      payload[col] = legacy[col] ?? '—';
+      dropped.push(`${col}(repli)`);
+      continue;
+    }
+
     return { id: null, error: error.message, dropped };
   }
   return { id: null, error: 'trop de colonnes manquantes', dropped };
