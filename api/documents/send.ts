@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { sendMail, mailConfigured } from '../../server/email/mailer.js';
+import { requireAdmin } from '../../server/auth/requireAdmin.js';
 
 /**
  * Envoie un document PDF (facture, devis, bon, fiche mission) par e-mail au client.
@@ -10,6 +11,8 @@ import { sendMail, mailConfigured } from '../../server/email/mailer.js';
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  // Envoi d'un document client à une adresse arbitraire → réservé au back-office.
+  if (!(await requireAdmin(req, res))) return;
   const { reference, type, to, message } = (req.body ?? {}) as {
     reference?: string; type?: string; to?: string; message?: string;
   };
@@ -30,7 +33,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }),
   } as unknown as VercelResponse;
   try {
-    await generate({ method: 'POST', body: { reference, type } } as unknown as VercelRequest, fakeRes);
+    // On propage l'en-tête d'auth pour que le contrôle interne de generate passe.
+    await generate({
+      method: 'POST', body: { reference, type }, headers: { authorization: req.headers.authorization },
+    } as unknown as VercelRequest, fakeRes);
   } catch (e) {
     return res.status(500).json({ error: `Génération PDF impossible : ${(e as Error).message}` });
   }

@@ -1,3 +1,4 @@
+import { authHeaders } from '@/admin/lib/authFetch';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { listEntries, createEntry } from '../cms/api';
@@ -209,7 +210,7 @@ export default function Bookings() {
       setNotice(`Envoi de la fiche de mission à ${d.email}…`);
       try {
         const res = await fetch('/api/documents/send', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await authHeaders(),
           body: JSON.stringify({ reference: row.reference, type: 'mission_sheet', to: d.email,
             message: `Nouvelle mission ${row.reference} — ${row.route} le ${row.date}. Fiche en pièce jointe.` }),
         });

@@ -1,3 +1,4 @@
+import { authHeaders } from '@/admin/lib/authFetch';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import ClientPicker from '../ui/ClientPicker';
@@ -72,7 +73,7 @@ export default function NewInvoiceModal({ onClose, onCreated }: Props) {
       // 3) Archive le PDF officiel dans le Storage (best-effort).
       try {
         const res = await fetch('/api/documents/generate', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: await authHeaders(),
           body: JSON.stringify({ reference, type: 'invoice', number: row.number }),
         });
         if (res.ok) {

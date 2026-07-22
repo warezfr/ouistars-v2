@@ -1,3 +1,4 @@
+import { authHeaders } from '@/admin/lib/authFetch';
 import { useMemo, useRef, useState } from 'react';
 import { useSingleton } from '@/lib/cms';
 import { supabase } from '@/lib/supabase';
@@ -65,7 +66,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
     setBusy('pdf'); setNotice(null);
     try {
       const res = await fetch('/api/documents/generate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: await authHeaders(),
         body: JSON.stringify({ reference: doc.reference, type: API_TYPES[doc.kind], number: doc.number }),
       });
       if (!res.ok) throw new Error();
@@ -96,7 +97,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
     setBusy('send'); setNotice(null);
     try {
       const res = await fetch('/api/documents/send', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: await authHeaders(),
         body: JSON.stringify({ reference: doc.reference, type: API_TYPES[doc.kind], to: doc.client.email }),
       });
       const j = await res.json().catch(() => ({}));
@@ -123,7 +124,7 @@ export default function DocumentModal({ doc, onClose }: Props) {
     let link = '';
     try {
       const res = await fetch('/api/documents/generate', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: await authHeaders(),
         body: JSON.stringify({ reference: doc.reference, type: API_TYPES[doc.kind] }),
       });
       if (res.ok && supabase) {

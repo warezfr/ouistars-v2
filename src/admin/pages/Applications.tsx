@@ -12,6 +12,11 @@ import DataTable, { type Column } from '../ui/DataTable';
  * - « Approuver » crée la fiche Chauffeur enrichie (photo copiée en médiathèque, véhicule, carte VTC)
  */
 
+/** Échappe une valeur avant insertion dans du HTML rendu en innerHTML (anti-XSS). */
+const esc = (s: unknown): string =>
+  String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 interface DocMeta { bucket: string; path: string; name?: string; type?: string; size?: number }
 interface Vehicle { make?: string; model?: string; year?: string; plate?: string; seats?: number; color?: string }
 
@@ -196,8 +201,10 @@ export default function Applications() {
       if (!already) {
         const image = await copyToCms(docs.profile_photo, `media/drivers/${r.reference.toLowerCase()}.jpg`);
         const v = r.vehicle;
+        // Échappement HTML : les champs proviennent du formulaire public (candidat)
+        // et sont réinjectés dans les notes rendues en innerHTML côté admin.
         const vehicleLine = v
-          ? `<p>Véhicule : ${v.make ?? ''} ${v.model ?? ''}${v.year ? ` (${v.year})` : ''} — ${v.plate ?? ''}${v.seats ? ` · ${v.seats} places` : ''}${r.vehicleClass ? ` · ${CLASS_LABELS[r.vehicleClass] ?? r.vehicleClass}` : ''}</p>`
+          ? `<p>Véhicule : ${esc(v.make)} ${esc(v.model)}${v.year ? ` (${esc(v.year)})` : ''} — ${esc(v.plate)}${v.seats ? ` · ${esc(v.seats)} places` : ''}${r.vehicleClass ? ` · ${esc(CLASS_LABELS[r.vehicleClass] ?? r.vehicleClass)}` : ''}</p>`
           : '<p>Sans véhicule personnel.</p>';
         await createEntry({
           collection: 'driver',
@@ -209,10 +216,10 @@ export default function Applications() {
             state: r.city ?? '', country: r.country || 'France', title: 'Chauffeur VTC',
             image,
             languages: r.languages ?? '',
-            notes: `<p>Créé depuis la candidature ${r.reference}${r.vtcCard ? ` — carte VTC ${r.vtcCard}` : ''}.</p>` +
+            notes: `<p>Créé depuis la candidature ${esc(r.reference)}${r.vtcCard ? ` — carte VTC ${esc(r.vtcCard)}` : ''}.</p>` +
               vehicleLine +
-              (r.experience ? `<p>Expérience : ${r.experience}</p>` : '') +
-              (r.message ? `<p>${r.message}</p>` : ''),
+              (r.experience ? `<p>Expérience : ${esc(r.experience)}</p>` : '') +
+              (r.message ? `<p>${esc(r.message)}</p>` : ''),
           },
         });
         done.push(`fiche chauffeur créée pour ${r.name}`);

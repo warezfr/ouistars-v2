@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { requireAdmin } from '../../server/auth/requireAdmin.js';
 import { buildMissionSheet } from '../../server/pdf/missionSheet.js';
 import { buildInvoice } from '../../server/pdf/invoice.js';
 import { fetchLogo } from '../../server/pdf/pdfBase.js';
@@ -146,6 +147,8 @@ async function loadQuoteDoc(reference: string): Promise<ManualDoc | null> {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  // Documents = données clients (PII + montants) → réservé au back-office.
+  if (!(await requireAdmin(req, res))) return;
   const { reference, type, number } = (req.body ?? {}) as { reference?: string; type?: string; number?: string };
   if (!reference || !type) return res.status(400).json({ error: 'reference et type requis' });
 
