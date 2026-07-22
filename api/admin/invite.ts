@@ -65,25 +65,42 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // L'utilisateur existe déjà : on le retrouve et on (re)crée juste son profil.
     const alreadyExists = /already|exist|registered/i.test(inviteErr.message);
     if (!alreadyExists) return res.status(502).json({ error: `Invitation impossible : ${inviteErr.message}` });
-    const { data: list } = await admin.auth.admin.listUsers();
-    const users = (list?.users ?? []) as Array<{ id: string; email?: string }>;
-    userId = users.find((u) => u.email?.toLowerCase() === email)?.id;
+    userId = await findUserIdByEmail(admin, email);
     if (!userId) return res.status(409).json({ error: 'Utilisateur déjà existant mais introuvable.' });
   }
 
   // 4. Créer / mettre à jour la ligne admin_profiles.
+  //    On lit d'abord le profil existant pour signaler un éventuel changement de rôle.
+  const { data: existing } = await admin
+    .from('admin_profiles').select('role').eq('id', userId).maybeSingle();
+  const roleChanged = Boolean(existing) && existing?.role !== role;
+
   const { error: profileErr } = await admin.from('admin_profiles').upsert(
     { id: userId, email, role, active: true, display_name: displayName },
     { onConflict: 'id' },
   );
   if (profileErr) return res.status(500).json({ error: `Profil non créé : ${profileErr.message}` });
 
-  return res.status(200).json({
-    ok: true,
-    userId,
-    invited: !inviteErr,
-    message: inviteErr
-      ? 'Utilisateur déjà inscrit — profil mis à jour (aucun e-mail renvoyé).'
-      : 'Invitation envoyée par e-mail.',
-  });
+  const message = inviteErr
+    ? (roleChanged
+        ? `Utilisateur déjà inscrit — rôle changé de « ${existing?.role} » à « ${role} » (aucun e-mail renvoyé).`
+        : 'Utilisateur déjà inscrit — profil mis à jour (aucun e-mail renvoyé).')
+    : 'Invitation envoyée par e-mail.';
+
+  return res.status(200).json({ ok: true, userId, invited: !inviteErr, roleChanged, message });
+}
+
+/** Retrouve l'UID d'un utilisateur par e-mail en paginant (listUsers plafonne à ~50/page). */
+async function findUserIdByEmail(
+  admin: ReturnType<typeof getServiceSupabase>, email: string,
+): Promise<string | undefined> {
+  if (!admin) return undefined;
+  for (let page = 1; page <= 40; page++) {
+    const { data } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    const users = (data?.users ?? []) as Array<{ id: string; email?: string }>;
+    const hit = users.find((u) => u.email?.toLowerCase() === email);
+    if (hit) return hit.id;
+    if (users.length < 200) break; // dernière page atteinte
+  }
+  return undefined;
 }
