@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useI18n, LANGS } from '@/i18n';
 import { MAIN_NAV } from '@/data/services';
 import { useSingleton } from '@/lib/cms';
@@ -16,6 +16,18 @@ export default function Nav({ onBook }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement>(null);
+
+  // Fermeture du menu langue au clic/toucher hors du menu (fiable sur mobile,
+  // contrairement à mouseleave qui refermait le menu avant le clic).
+  useEffect(() => {
+    if (!langOpen) return;
+    const close = (e: PointerEvent) => {
+      if (langRef.current && !langRef.current.contains(e.target as Node)) setLangOpen(false);
+    };
+    document.addEventListener('pointerdown', close);
+    return () => document.removeEventListener('pointerdown', close);
+  }, [langOpen]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -50,7 +62,7 @@ export default function Nav({ onBook }: Props) {
         </nav>
 
         <div className="os-nav__actions">
-          <div className="os-nav__langwrap" onMouseLeave={() => setLangOpen(false)}>
+          <div className="os-nav__langwrap" ref={langRef}>
             <button className="os-nav__lang" onClick={() => setLangOpen((v) => !v)}
               aria-label="Language" aria-haspopup="listbox" aria-expanded={langOpen}>
               {t.nav.lang}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { createEntry } from '../cms/api';
+import { createEntry, listEntries } from '../cms/api';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
 import DataTable, { type Column } from '../ui/DataTable';
 
@@ -66,6 +66,54 @@ async function docUrl(d: DocMeta): Promise<string | null> {
   return supabase.storage.from(d.bucket).getPublicUrl(d.path).data.publicUrl ?? null;
 }
 
+/** Retrouve les pièces directement dans le Storage quand la colonne `docs` est
+    vide (candidatures déposées avant l'exécution de la migration 0010). */
+async function recoverDocsFromStorage(reference: string): Promise<Record<string, DocMeta>> {
+  if (!supabase || !reference) return {};
+  const found: Record<string, DocMeta> = {};
+  const tries = [
+    { bucket: 'applications', prefix: reference },
+    { bucket: 'cms', prefix: `applications/${reference}` },
+  ];
+  for (const t of tries) {
+    try {
+      const { data } = await supabase.storage.from(t.bucket).list(t.prefix, { limit: 40 });
+      for (const f of data ?? []) {
+        if (!f.name || f.name.startsWith('.')) continue;
+        const key = f.name.replace(/\.[a-z0-9]+$/i, '');
+        if (!found[key]) {
+          found[key] = { bucket: t.bucket, path: `${t.prefix}/${f.name}`, name: f.name };
+        }
+      }
+      if (Object.keys(found).length > 0) break;
+    } catch { /* bucket absent — on tente le suivant */ }
+  }
+  return found;
+}
+
+/** Trouve ou crée une entrée CMS référencée par son nom (marque, type de véhicule…). */
+async function ensureRefEntry(collection: string, name: string): Promise<string> {
+  const clean = name.trim();
+  if (!clean) return '';
+  try {
+    const rows = await listEntries(collection);
+    const hit = rows.find((r) =>
+      String((r.data as Record<string, unknown>)?.name ?? r.title ?? '').toLowerCase() === clean.toLowerCase());
+    if (hit) return String((hit.data as Record<string, unknown>)?.name ?? hit.title ?? clean);
+    await createEntry({ collection, title: clean, status: 'published', position: 0, data: { name: clean } });
+    return clean;
+  } catch {
+    return clean; // la fiche véhicule garde le nom même si la référence n'a pas pu être créée
+  }
+}
+
+const CLASS_TO_TYPE: Record<string, string> = {
+  business: 'Berline', van: 'Van', first: 'Berline de prestige', other: 'Autre',
+};
+const CLASS_TO_PRICING: Record<string, string> = {
+  business: 'E-Class', van: 'V-Class', first: 'S-Class',
+};
+
 export default function Applications() {
   const { profile } = useAuth();
   const writable = canWrite(profile?.role);
@@ -113,51 +161,104 @@ export default function Applications() {
     }
   }
 
-  /** Approuver : fiche Chauffeur enrichie — photo copiée en médiathèque publique,
-      carte VTC, langues, véhicule dans les notes. */
+  /** Copie une pièce du bucket privé vers la médiathèque publique cms ; renvoie l'URL publique. */
+  async function copyToCms(doc: DocMeta | undefined, dest: string): Promise<string> {
+    if (!doc || !supabase) return '';
+    try {
+      const dl = await supabase.storage.from(doc.bucket).download(doc.path);
+      if (!dl.data) return '';
+      const up = await supabase.storage.from('cms').upload(dest, dl.data, {
+        upsert: true, contentType: doc.type ?? 'image/jpeg',
+      });
+      if (up.error) return '';
+      return supabase.storage.from('cms').getPublicUrl(dest).data.publicUrl;
+    } catch { return ''; }
+  }
+
+  /** Approuver (idempotent) : statut → fiche Chauffeur → véhicule dans la Flotte.
+      Relançable sur une candidature déjà approuvée pour recréer ce qui manque. */
   async function approve(r: Row) {
     setInfo(null); setError(null);
-    await setStatus(r, 'approved');
+    if (r.status !== 'approved') await setStatus(r, 'approved');
+    const done: string[] = [];
     try {
-      // Photo de profil → copie dans le bucket public cms (URL stable pour la fiche).
-      let image = '';
-      const photo = r.docs.profile_photo;
-      if (photo && supabase) {
-        try {
-          const dl = await supabase.storage.from(photo.bucket).download(photo.path);
-          if (dl.data) {
-            const dest = `media/drivers/${r.reference.toLowerCase()}.jpg`;
-            const up = await supabase.storage.from('cms').upload(dest, dl.data, {
-              upsert: true, contentType: photo.type ?? 'image/jpeg',
-            });
-            if (!up.error) image = supabase.storage.from('cms').getPublicUrl(dest).data.publicUrl;
-          }
-        } catch { /* photo best-effort */ }
+      // Pièces : si la colonne docs était vide, on retrouve les fichiers au Storage.
+      let docs = r.docs;
+      if (Object.keys(docs).length === 0) docs = await recoverDocsFromStorage(r.reference);
+
+      /* ——— 1. Fiche Chauffeur (si absente) ——— */
+      const drivers = await listEntries('driver').catch(() => []);
+      const already = drivers.find((d) => {
+        const data = d.data as Record<string, unknown>;
+        return String(data?.notes ?? '').includes(r.reference) ||
+          String(data?.name ?? d.title ?? '').toLowerCase() === r.name.toLowerCase();
+      });
+      if (!already) {
+        const image = await copyToCms(docs.profile_photo, `media/drivers/${r.reference.toLowerCase()}.jpg`);
+        const v = r.vehicle;
+        const vehicleLine = v
+          ? `<p>Véhicule : ${v.make ?? ''} ${v.model ?? ''}${v.year ? ` (${v.year})` : ''} — ${v.plate ?? ''}${v.seats ? ` · ${v.seats} places` : ''}${r.vehicleClass ? ` · ${CLASS_LABELS[r.vehicleClass] ?? r.vehicleClass}` : ''}</p>`
+          : '<p>Sans véhicule personnel.</p>';
+        await createEntry({
+          collection: 'driver',
+          title: r.name,
+          status: 'published',
+          position: 0,
+          data: {
+            name: r.name, phone: r.phone ?? '', whatsapp: r.phone ?? '', email: r.email ?? '',
+            state: r.city ?? '', country: r.country || 'France', title: 'Chauffeur VTC',
+            image,
+            languages: r.languages ?? '',
+            notes: `<p>Créé depuis la candidature ${r.reference}${r.vtcCard ? ` — carte VTC ${r.vtcCard}` : ''}.</p>` +
+              vehicleLine +
+              (r.experience ? `<p>Expérience : ${r.experience}</p>` : '') +
+              (r.message ? `<p>${r.message}</p>` : ''),
+          },
+        });
+        done.push(`fiche chauffeur créée pour ${r.name}`);
+      } else {
+        done.push('fiche chauffeur déjà existante');
       }
 
+      /* ——— 2. Véhicule du candidat → Flotte (si déclaré et absent) ——— */
       const v = r.vehicle;
-      const vehicleLine = v
-        ? `<p>Véhicule : ${v.make ?? ''} ${v.model ?? ''}${v.year ? ` (${v.year})` : ''} — ${v.plate ?? ''}${v.seats ? ` · ${v.seats} places` : ''}${r.vehicleClass ? ` · ${CLASS_LABELS[r.vehicleClass] ?? r.vehicleClass}` : ''}</p>`
-        : '<p>Sans véhicule personnel.</p>';
-      await createEntry({
-        collection: 'driver',
-        title: r.name,
-        status: 'published',
-        position: 0,
-        data: {
-          name: r.name, phone: r.phone ?? '', whatsapp: r.phone ?? '', email: r.email ?? '',
-          state: r.city ?? '', country: r.country || 'France', title: 'Chauffeur VTC',
-          image,
-          notes: `<p>Créé depuis la candidature ${r.reference}${r.vtcCard ? ` — carte VTC ${r.vtcCard}` : ''}.</p>` +
-            vehicleLine +
-            (r.languages ? `<p>Langues : ${r.languages}</p>` : '') +
-            (r.experience ? `<p>Expérience : ${r.experience}</p>` : '') +
-            (r.message ? `<p>${r.message}</p>` : ''),
-        },
-      });
-      setInfo(`Fiche chauffeur créée pour ${r.name}${image ? ' (photo reprise)' : ''} — les pièces restent consultables ici.`);
+      if (v?.make || v?.model) {
+        const vehName = [v.make, v.model].filter(Boolean).join(' ') || `Véhicule ${r.reference}`;
+        const vehicles = await listEntries('vehicle').catch(() => []);
+        const vehExists = vehicles.find((e) => {
+          const data = e.data as Record<string, unknown>;
+          return (v.plate && String(data?.descFr ?? '').includes(v.plate)) ||
+            String(data?.name ?? e.title ?? '').toLowerCase() === vehName.toLowerCase();
+        });
+        if (!vehExists) {
+          // Marque / type créés à la volée s'ils n'existent pas encore.
+          const brand = v.make ? await ensureRefEntry('vehicle_brand', v.make) : '';
+          const typeName = await ensureRefEntry('vehicle_type', CLASS_TO_TYPE[r.vehicleClass ?? ''] ?? 'Berline');
+          const vimage = await copyToCms(docs.vehicle_photo, `media/vehicles/${r.reference.toLowerCase()}.jpg`);
+          await createEntry({
+            collection: 'vehicle',
+            title: vehName,
+            status: 'published',
+            position: 0,
+            data: {
+              name: vehName,
+              brand, type: typeName,
+              className: CLASS_TO_PRICING[r.vehicleClass ?? ''] ?? '',
+              seats: v.seats ?? null,
+              image: vimage,
+              descFr: `Véhicule du chauffeur partenaire ${r.name} — immatriculation ${v.plate ?? '—'}${v.year ? `, année ${v.year}` : ''}${v.color ? `, ${v.color}` : ''}. Candidature ${r.reference}.`,
+              show_on_site: false,
+            },
+          });
+          done.push(`véhicule « ${vehName} » ajouté à la flotte`);
+        } else {
+          done.push('véhicule déjà dans la flotte');
+        }
+      }
+
+      setInfo(`Candidature ${r.reference} : ${done.join(' · ')}.`);
     } catch (e) {
-      setError(`Candidature approuvée mais création de la fiche impossible : ${(e as Error).message}`);
+      setError(`Candidature approuvée mais synchronisation incomplète : ${(e as Error).message}`);
     }
   }
 
@@ -197,13 +298,18 @@ export default function Applications() {
           </button>
           {writable && (a.status === 'new' || a.status === 'reviewing') && (
             <>
-              <button className="btn btn-sm btn-success me-1" title="Approuver — crée la fiche chauffeur" onClick={() => approve(a)}>
+              <button className="btn btn-sm btn-success me-1" title="Approuver — crée la fiche chauffeur + le véhicule" onClick={() => approve(a)}>
                 <i className="bi bi-person-plus" />
               </button>
               <button className="btn btn-sm btn-outline-danger" title="Refuser" onClick={() => setStatus(a, 'rejected')}>
                 <i className="bi bi-x-lg" />
               </button>
             </>
+          )}
+          {writable && a.status === 'approved' && !a.demo && (
+            <button className="btn btn-sm btn-outline-success" title="Synchroniser — recrée fiche chauffeur / véhicule manquants" onClick={() => approve(a)}>
+              <i className="bi bi-arrow-repeat" />
+            </button>
           )}
         </span>
       ) },
@@ -242,18 +348,35 @@ function ApplicationModal({ row, writable, onClose, onStatus, onApprove }: {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [vehicleUrl, setVehicleUrl] = useState<string | null>(null);
   const [busyDoc, setBusyDoc] = useState<string | null>(null);
+  const [docs, setDocs] = useState<Record<string, DocMeta>>(row.docs);
   const need = requiredDocs(row);
-  const missing = need.filter((k) => !row.docs[k]);
+  const missing = need.filter((k) => !docs[k]);
 
+  // Colonne docs vide (migration 0010 exécutée après le dépôt) → on retrouve les
+  // fichiers directement au Storage, et on répare la ligne en base (best-effort).
   useEffect(() => {
     let on = true;
-    if (row.docs.profile_photo) docUrl(row.docs.profile_photo).then((u) => on && setPhotoUrl(u));
-    if (row.docs.vehicle_photo) docUrl(row.docs.vehicle_photo).then((u) => on && setVehicleUrl(u));
+    setDocs(row.docs);
+    if (Object.keys(row.docs).length === 0 && !row.demo) {
+      recoverDocsFromStorage(row.reference).then((found) => {
+        if (!on || Object.keys(found).length === 0) return;
+        setDocs(found);
+        if (supabase) supabase.from('chauffeur_applications').update({ docs: found }).eq('id', row.id).then(() => {});
+      });
+    }
     return () => { on = false; };
   }, [row]);
 
+  useEffect(() => {
+    let on = true;
+    setPhotoUrl(null); setVehicleUrl(null);
+    if (docs.profile_photo) docUrl(docs.profile_photo).then((u) => on && setPhotoUrl(u));
+    if (docs.vehicle_photo) docUrl(docs.vehicle_photo).then((u) => on && setVehicleUrl(u));
+    return () => { on = false; };
+  }, [docs]);
+
   async function open(key: string) {
-    const d = row.docs[key];
+    const d = docs[key];
     if (!d) return;
     setBusyDoc(key);
     const u = await docUrl(d);
@@ -326,11 +449,11 @@ function ApplicationModal({ row, writable, onClose, onStatus, onApprove }: {
                 {need.map((k) => (
                   <div key={k} className="list-group-item d-flex justify-content-between align-items-center py-2">
                     <span>
-                      <i className={`bi me-2 ${row.docs[k] ? 'bi-check-circle-fill text-success' : 'bi-exclamation-circle text-danger'}`} />
+                      <i className={`bi me-2 ${docs[k] ? 'bi-check-circle-fill text-success' : 'bi-exclamation-circle text-danger'}`} />
                       {DOC_LABELS[k] ?? k}
-                      {row.docs[k]?.name && <span className="text-muted small ms-2">{row.docs[k].name}</span>}
+                      {docs[k]?.name && <span className="text-muted small ms-2">{docs[k].name}</span>}
                     </span>
-                    {row.docs[k] ? (
+                    {docs[k] ? (
                       <button className="btn btn-sm btn-outline-secondary" disabled={busyDoc === k} onClick={() => open(k)}>
                         <i className={`bi ${busyDoc === k ? 'bi-hourglass-split' : 'bi-eye'} me-1`} />Voir
                       </button>
@@ -356,9 +479,16 @@ function ApplicationModal({ row, writable, onClose, onStatus, onApprove }: {
                 <button className="btn btn-outline-secondary me-2" onClick={onClose}>Fermer</button>
                 {writable && !row.demo && row.status !== 'approved' && (
                   <button className="btn btn-success" disabled={missing.length > 0}
-                    title={missing.length > 0 ? 'Pièces obligatoires manquantes' : 'Crée la fiche chauffeur'}
+                    title={missing.length > 0 ? 'Pièces obligatoires manquantes' : 'Crée la fiche chauffeur + le véhicule dans la flotte'}
                     onClick={onApprove}>
                     <i className="bi bi-person-plus me-1" />Approuver
+                  </button>
+                )}
+                {writable && !row.demo && row.status === 'approved' && (
+                  <button className="btn btn-outline-success"
+                    title="Recrée la fiche chauffeur et/ou le véhicule s'ils manquent (sans doublon)"
+                    onClick={onApprove}>
+                    <i className="bi bi-arrow-repeat me-1" />Synchroniser chauffeur & flotte
                   </button>
                 )}
               </div>

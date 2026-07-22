@@ -61,7 +61,7 @@ function FashionWeeks() {
           </Reveal>
           <Reveal>
             <figure className="os-fw__media">
-              <img src="/why-vip.webp" alt={t.fashion.title} loading="lazy" />
+              <img src="https://images.unsplash.com/photo-1543728069-a3f97c5a2f32?w=1400&q=78&auto=format" alt={t.fashion.title} loading="lazy" />
               <figcaption><i>✦</i>{pickL(lang, { fr: 'Backstage, minute par minute', en: 'Backstage, minute by minute', es: 'Backstage, minuto a minuto', ru: 'Бэкстейдж, минута за минутой', ar: 'الكواليس، دقيقة بدقيقة' })}</figcaption>
             </figure>
           </Reveal>

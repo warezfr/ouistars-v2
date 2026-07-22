@@ -12,13 +12,25 @@
 .os-mg2__body ul { list-style: none; padding: 0; margin: 14px 0 18px; display: grid; gap: 11px; }
 .os-mg2__body li { position: relative; padding-left: 26px; color: var(--os-mut); font-size: 0.94rem; }
 .os-mg2__body li::before { content: '✓'; position: absolute; left: 0; color: var(--os-gold); }
-/* Tarifs — bandeau élégant à séparateurs dorés (hors image) */
-.os-mg2__tarifs { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; margin: 4px 0 20px;
-  border-block: 1px solid rgba(201, 162, 75, 0.22); }
-.os-mg2__tarif { display: grid; gap: 3px; padding: 16px 18px; }
-.os-mg2__tarif + .os-mg2__tarif { border-left: 1px solid rgba(201, 162, 75, 0.18); }
-.os-mg2__tairport { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--os-mut); }
-.os-mg2__tprice { font-family: var(--os-font-display); font-size: 1.55rem; color: var(--os-gold-soft); line-height: 1.15; }
+/* Tarifs — plaques horizontales : médaillon IATA · aéroport · prix */
+.os-mg2__tarifs { display: grid; gap: 10px; width: 100%; margin: 8px 0 22px; }
+.os-mg2__tarif {
+  display: flex; align-items: center; gap: 18px; padding: 14px 18px;
+  border: 1px solid rgba(201, 162, 75, 0.22); border-radius: 2px 14px 2px 14px;
+  background: linear-gradient(120deg, rgba(201, 162, 75, 0.07), transparent 55%);
+  transition: border-color 0.3s, transform 0.3s;
+}
+.os-mg2__tarif:hover { border-color: rgba(201, 162, 75, 0.5); transform: translateX(3px); }
+.os-mg2__tcode {
+  flex: 0 0 auto; display: inline-grid; place-items: center; min-width: 64px; height: 44px;
+  padding: 0 10px; border: 1px solid rgba(201, 162, 75, 0.45); border-radius: 2px 10px 2px 10px;
+  font-family: var(--os-font-display); font-size: 0.92rem; letter-spacing: 0.14em;
+  color: var(--os-gold); background: rgba(201, 162, 75, 0.06); white-space: nowrap;
+}
+.os-mg2__tbody { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.os-mg2__tairport { font-size: 0.95rem; letter-spacing: 0.03em; color: var(--os-ivory); font-weight: 600; }
+.os-mg2__tprice { font-family: var(--os-font-display); font-size: 1.55rem; color: var(--os-gold-soft);
+  line-height: 1.1; white-space: nowrap; }
 .os-mg2__tmeta { font-size: 0.72rem; color: var(--os-mut-2); line-height: 1.4; }
 
 .os-mg2__disclaimer { font-size: 0.83rem; font-style: italic; color: var(--os-mut);
@@ -32,9 +44,8 @@
   .os-mg2 { grid-template-columns: 1fr; }
   .os-mg2__body { padding: 28px 22px; }
   .os-mg2__visual { min-height: 300px; }
-  .os-mg2__tarifs { grid-template-columns: 1fr; }
-  .os-mg2__tarif { padding: 12px 4px; }
-  .os-mg2__tarif + .os-mg2__tarif { border-left: 0; border-top: 1px solid rgba(201, 162, 75, 0.18); }
+  .os-mg2__tarif { padding: 12px 14px; gap: 12px; }
+  .os-mg2__tprice { font-size: 1.3rem; }
 }
 
 /* ————— Wizard popup ————— */

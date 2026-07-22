@@ -36,16 +36,22 @@ export default function MeetGreeter() {
               </ul>
 
               <div className="os-mg2__tarifs">
-                {MEET_GREET_RATES.map((r) => (
-                  <div key={r.id} className="os-mg2__tarif">
-                    <span className="os-mg2__tairport">{r.airport}</span>
-                    <span className="os-mg2__tprice">{r.base != null ? formatEUR(r.base) : t.meetGreet.onQuote}</span>
-                    <span className="os-mg2__tmeta">
-                      {t.meetGreet.upTo} {r.includedPax} {t.meetGreet.paxBags}
-                      {r.extraPaxSurcharge != null && <> · +{formatEUR(r.extraPaxSurcharge)}/pax</>}
-                    </span>
-                  </div>
-                ))}
+                {MEET_GREET_RATES.map((r) => {
+                  const [city, codes] = r.airport.split('—').map((s) => s.trim());
+                  return (
+                    <div key={r.id} className="os-mg2__tarif">
+                      <span className="os-mg2__tcode" aria-hidden>{(codes ?? city).replace(/\s*&\s*/g, ' · ')}</span>
+                      <span className="os-mg2__tbody">
+                        <span className="os-mg2__tairport">{city}</span>
+                        <span className="os-mg2__tmeta">
+                          {t.meetGreet.upTo} {r.includedPax} {t.meetGreet.paxBags}
+                          {r.extraPaxSurcharge != null && <> · +{formatEUR(r.extraPaxSurcharge)}/pax</>}
+                        </span>
+                      </span>
+                      <span className="os-mg2__tprice">{r.base != null ? formatEUR(r.base) : t.meetGreet.onQuote}</span>
+                    </div>
+                  );
+                })}
               </div>
 
               <p className="os-mg2__disclaimer">{MEET_GREET_DISCLAIMER_I18N[lang]}</p>

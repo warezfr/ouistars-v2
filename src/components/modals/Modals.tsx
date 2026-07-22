@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode, type FormEvent, type ChangeEvent } from 'react';
 import { useI18n, pickL } from '@/i18n';
 import { DateField, TimeField } from '@/components/booking/pickers';
+import AddressInput from '@/components/ui/AddressInput';
 import './modal.css';
 
 const WA_NUMBER = '33651030306';
@@ -151,8 +152,8 @@ export function BookingModal({ open, onClose, prefill }: { open: boolean; onClos
           </div>
           <input type="hidden" name="travel_date" value={tDate} />
           <input type="hidden" name="travel_time" value={tTime} />
-          <input name="pickup" placeholder={`${t.calculator.fromLabel} *`} required />
-          <input name="destination" placeholder={`${t.calculator.toLabel} *`} required />
+          <AddressInput name="pickup" placeholder={`${t.calculator.fromLabel} *`} required />
+          <AddressInput name="destination" placeholder={`${t.calculator.toLabel} *`} required />
           <input name="passengers" type="number" min={1} defaultValue={2} placeholder={t.calculator.passengers} />
           <textarea name="notes" placeholder={t.wizard.notesPlaceholder} rows={3} />
           <SendButtons sending={state === 'sending'}
@@ -453,7 +454,7 @@ export function ChauffeurModal({ open, onClose }: { open: boolean; onClose: () =
           </div>
           <div className="os-form__row">
             <input name="vtc_card" placeholder={`${L({ fr: 'N° carte professionnelle VTC', en: 'PHV professional card no.', es: 'N.º tarjeta profesional VTC', ru: '№ проф. карты VTC', ar: 'رقم البطاقة المهنية VTC' })} *`} required />
-            <input name="city" placeholder={L({ fr: 'Ville / zone d’opération', en: 'City / operating area', es: 'Ciudad / zona', ru: 'Город / зона работы', ar: 'المدينة / المنطقة' })} />
+            <AddressInput name="city" placeholder={L({ fr: 'Ville / zone d’opération', en: 'City / operating area', es: 'Ciudad / zona', ru: 'Город / зона работы', ar: 'المدينة / المنطقة' })} />
           </div>
           <div className="os-form__row">
             <input name="country" defaultValue="France" placeholder={L({ fr: 'Pays', en: 'Country', es: 'País', ru: 'Страна', ar: 'البلد' })} />

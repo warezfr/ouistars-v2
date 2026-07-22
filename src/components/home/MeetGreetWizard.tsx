@@ -35,7 +35,7 @@ type FlightState =
 
 /** Codes IATA couverts par chaque choix d'aéroport (pour choisir le bon segment). */
 const AIRPORT_IATAS: Record<string, string[]> = {
-  'cdg-ory': ['CDG', 'ORY'], nce: ['NCE'], lbg: ['LBG'],
+  'cdg-ory': ['CDG', 'ORY'], nce: ['NCE'],
 };
 
 const SvcIcon = ({ kind }: { kind: ServiceType }) => {

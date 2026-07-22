@@ -46,6 +46,27 @@ export default function Users() {
     if (error) setError(error.message); else load();
   }
 
+  async function removeUser(r: Profile) {
+    if (!supabase) return;
+    if (!confirm(`Supprimer définitivement l’utilisateur « ${r.email} » ?\nSon compte et son accès au back-office seront révoqués immédiatement.`)) return;
+    setError(null);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess.session?.access_token;
+      if (!token) throw new Error('Session expirée, reconnectez-vous.');
+      const resp = await fetch('/api/admin/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId: r.id }),
+      });
+      const body = await resp.json().catch(() => ({}));
+      if (!resp.ok) throw new Error(body.error ?? `Erreur ${resp.status}`);
+      load();
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+
   async function addProfile(e: FormEvent) {
     e.preventDefault();
     if (!supabase) return;
@@ -82,7 +103,7 @@ export default function Users() {
             {!loading && (
               <div className="table-responsive">
                 <table className="table table-hover align-middle mb-0">
-                  <thead><tr><th>E-mail</th><th>Nom</th><th style={{ width: 190 }}>Rôle</th><th style={{ width: 110 }}>Actif</th></tr></thead>
+                  <thead><tr><th>E-mail</th><th>Nom</th><th style={{ width: 190 }}>Rôle</th><th style={{ width: 90 }}>Actif</th><th style={{ width: 60 }} /></tr></thead>
                   <tbody>
                     {rows.map((r) => (
                       <tr key={r.id} className={r.id === me?.id ? 'table-active' : undefined}>
@@ -106,6 +127,14 @@ export default function Users() {
                               disabled={!isAdmin || r.email === me?.email}
                               onChange={(e) => patch(r.id, { active: e.target.checked })} />
                           </div>
+                        </td>
+                        <td className="text-end pe-3">
+                          {r.id !== me?.id && (
+                            <button className="btn btn-sm btn-outline-danger border-0" title="Supprimer l’utilisateur"
+                              disabled={!isAdmin} onClick={() => removeUser(r)}>
+                              <i className="bi bi-trash" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}

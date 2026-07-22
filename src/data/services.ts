@@ -61,7 +61,7 @@ export const SERVICES: ServiceItem[] = [
     descFr: 'Mobilité coordonnée pour congrès, sommets et événements privés.',
     descEn: 'Coordinated mobility for congresses, summits and private events.',
     descEs: 'Movilidad coordinada para congresos, cumbres y eventos privados.', descRu: 'Слаженная мобильность для конгрессов, саммитов и частных мероприятий.', descAr: 'تنقّل منسّق للمؤتمرات والقمم والفعاليات الخاصة.' },
-  { id: 'fashion', fr: 'Fashion Weeks', en: 'Fashion Weeks', es: 'Fashion Weeks', ru: 'Недели моды', ar: 'أسابيع الموضة', icon: 'sparkle', image: '/why-vip.webp',
+  { id: 'fashion', fr: 'Fashion Weeks', en: 'Fashion Weeks', es: 'Fashion Weeks', ru: 'Недели моды', ar: 'أسابيع الموضة', icon: 'sparkle', image: 'https://images.unsplash.com/photo-1543728069-a3f97c5a2f32?w=1600&q=78&auto=format',
     descFr: 'Logistique dédiée aux maisons, mannequins et invités durant les Fashion Weeks.',
     descEn: 'Dedicated logistics for houses, models and guests during Fashion Weeks.',
     descEs: 'Logística dedicada a casas de moda, modelos e invitados durante las Fashion Weeks.', descRu: 'Выделенная логистика для домов моды, моделей и гостей во время Недель моды.', descAr: 'لوجستيات مخصصة لدور الأزياء والعارضين والضيوف خلال أسابيع الموضة.' },

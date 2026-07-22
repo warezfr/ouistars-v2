@@ -143,6 +143,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const reference = `CA-${Date.now().toString(36).toUpperCase().slice(-5)}${Math.floor(Math.random() * 36).toString(36).toUpperCase()}`;
       const { id, error } = await insertApplication(db, {
         reference, status: 'draft', ...data,
+        // Colonne héritée de l'ancien schéma (NOT NULL) ; retirée automatiquement
+        // par l'insertion tolérante si elle n'existe pas.
+        full_name: `${data.first_name} ${data.last_name}`.trim(),
         email: data.email || null,
         vehicle, docs: {},
       });

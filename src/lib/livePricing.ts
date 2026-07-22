@@ -80,7 +80,9 @@ export async function initLivePricing(): Promise<void> {
           extraPaxSurcharge: d.extraPaxSurcharge != null && d.extraPaxSurcharge !== ('' as unknown) ? Number(d.extraPaxSurcharge) : null,
         });
       }
-      if (mg.length > 0) MEET_GREET_RATES.splice(0, MEET_GREET_RATES.length, ...mg);
+      // LBG retiré de l'offre Meet & Greet — filtré aussi côté CMS.
+      const mgKept = mg.filter((r) => r.id !== 'lbg');
+      if (mgKept.length > 0) MEET_GREET_RATES.splice(0, MEET_GREET_RATES.length, ...mgKept);
     }
   } catch {
     /* repli statique silencieux */

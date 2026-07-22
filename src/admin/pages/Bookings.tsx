@@ -5,6 +5,7 @@ import { BOOKINGS as DEMO } from '../mockData';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
 import DocumentModal, { type DocData } from '../documents/DocumentModal';
 import DataTable, { type Column } from '../ui/DataTable';
+import AddressInput from '@/components/ui/AddressInput';
 
 type Status = 'pending' | 'confirmed' | 'assigned' | 'completed' | 'cancelled';
 
@@ -395,9 +396,9 @@ export default function Bookings() {
                       <div className="col-6"><label className="form-label">E-mail</label>
                         <input name="email" type="email" className="form-control" /></div>
                       <div className="col-6"><label className="form-label">Départ *</label>
-                        <input name="pickup" className="form-control" required /></div>
+                        <AddressInput name="pickup" inputClassName="form-control" required light /></div>
                       <div className="col-6"><label className="form-label">Destination *</label>
-                        <input name="destination" className="form-control" required /></div>
+                        <AddressInput name="destination" inputClassName="form-control" required light /></div>
                       <div className="col-4"><label className="form-label">Date</label>
                         <input name="date" type="date" className="form-control" /></div>
                       <div className="col-4"><label className="form-label">Heure</label>

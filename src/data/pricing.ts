@@ -87,7 +87,6 @@ export interface MeetGreetRate {
 export const MEET_GREET_RATES: MeetGreetRate[] = [
   { id: 'cdg-ory', airport: 'Paris — CDG & ORY', base: 280, includedPax: 3, includedBags: 3, extraPaxSurcharge: 50 },
   { id: 'nce', airport: 'Nice — NCE', base: 320, includedPax: 3, includedBags: 3, extraPaxSurcharge: 70 },
-  { id: 'lbg', airport: 'Paris-Le Bourget — LBG', base: null, includedPax: 3, includedBags: 3, extraPaxSurcharge: null },
 ];
 
 export const MEET_GREET_INCLUDES = [
