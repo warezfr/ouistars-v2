@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifySmtp, sendMail, smtpConfigured, mailConfigured } from '../../server/email/mailer.js';
+import { verifySmtp, sendMail, smtpConfigured, mailConfigured, zeptoConfigured } from '../../server/email/mailer.js';
 
 /**
  * Diagnostic e-mail — vérifie la connexion SMTP et (optionnellement) envoie un
@@ -25,6 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const verify = await verifySmtp();
   const out: Record<string, unknown> = {
     smtpConfigured: smtpConfigured(),
+    zeptoConfigured: zeptoConfigured(),
     mailConfigured: mailConfigured(),
     verify,
   };

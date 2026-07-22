@@ -85,6 +85,48 @@ async function sendViaSmtp(opts: MailOptions): Promise<boolean> {
   return true;
 }
 
+/* ———————————————————— Zoho ZeptoMail (API HTTPS) ————————————————————
+   Canal transactionnel de Zoho — passe le blocage de ports GoDaddy (443).
+   Variables : ZEPTO_API_KEY (jeton « Send Mail token » de l'agent ZeptoMail),
+   ZEPTO_HOST facultatif (api.zeptomail.eu par défaut — datacenter européen). */
+
+export function zeptoConfigured(): boolean {
+  return Boolean(process.env.ZEPTO_API_KEY);
+}
+
+function parseFrom(): { address: string; name: string } {
+  const raw = mailFrom();
+  const m = /^(.*)<([^>]+)>\s*$/.exec(raw);
+  if (m) return { name: m[1].trim().replace(/^"|"$/g, '') || 'Oui Stars', address: m[2].trim() };
+  return { name: 'Oui Stars', address: raw.trim() };
+}
+
+async function sendViaZepto(opts: MailOptions): Promise<boolean> {
+  const key = process.env.ZEPTO_API_KEY;
+  if (!key) return false;
+  const host = (process.env.ZEPTO_HOST ?? 'api.zeptomail.eu').replace(/^https?:\/\//, '');
+  const from = parseFrom();
+  const r = await fetch(`https://${host}/v1.1/email`, {
+    method: 'POST',
+    headers: {
+      Authorization: key.startsWith('Zoho-enczapikey') ? key : `Zoho-enczapikey ${key}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      from: { address: from.address, name: from.name },
+      to: [{ email_address: { address: opts.to } }],
+      subject: opts.subject,
+      htmlbody: opts.html,
+      attachments: opts.attachments?.map((a) => ({
+        name: a.filename, content: a.content,
+        mime_type: a.filename.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream',
+      })),
+    }),
+  });
+  if (!r.ok) console.error('[mail] ZeptoMail:', r.status, (await r.text().catch(() => '')).slice(0, 300));
+  return r.ok;
+}
+
 /* ————————————————————————— Resend (HTTPS) ————————————————————————— */
 
 async function sendViaResend(opts: MailOptions): Promise<boolean> {
@@ -109,13 +151,14 @@ async function sendViaResend(opts: MailOptions): Promise<boolean> {
 export async function sendMail(opts: MailOptions): Promise<boolean> {
   if (!opts.to) return false;
   try {
-    // SMTP prioritaire s'il est configuré, repli automatique sur Resend.
+    // Ordre : ZeptoMail (HTTPS, passe partout) → SMTP → Resend.
+    if (zeptoConfigured()) {
+      try { if (await sendViaZepto(opts)) return true; }
+      catch (e) { console.error('[mail] ZeptoMail échec:', (e as Error).message); }
+    }
     if (smtpConfigured()) {
-      try {
-        if (await sendViaSmtp(opts)) return true;
-      } catch (e) {
-        console.error('[mail] SMTP échec, repli Resend:', (e as Error).message);
-      }
+      try { if (await sendViaSmtp(opts)) return true; }
+      catch (e) { console.error('[mail] SMTP échec:', (e as Error).message); }
     }
     return await sendViaResend(opts);
   } catch (e) {
@@ -125,7 +168,7 @@ export async function sendMail(opts: MailOptions): Promise<boolean> {
 }
 
 export function mailConfigured(): boolean {
-  return smtpConfigured() || Boolean(process.env.RESEND_API_KEY);
+  return zeptoConfigured() || smtpConfigured() || Boolean(process.env.RESEND_API_KEY);
 }
 
 export function opsEmail(): string | null {
