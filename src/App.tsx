@@ -4,6 +4,8 @@ import { I18nProvider } from './i18n';
 import HomePage from './pages/HomePage';
 import LegalPage from './pages/LegalPage';
 import BlogPage from './pages/BlogPage';
+import PaymentPage from './pages/PaymentPage';
+import PaymentReturn from './pages/PaymentReturn';
 
 // Back-office chargé à la demande : le site public n'embarque plus son code.
 const AdminApp = lazy(() => import('./admin/AdminApp'));
@@ -27,6 +29,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/blog" element={<BlogPage />} />
+          <Route path="/paiement" element={<PaymentPage />} />
+          <Route path="/paiement/retour" element={<PaymentReturn />} />
           <Route path="/mentions-legales" element={<LegalPage doc="legal" />} />
           <Route path="/confidentialite" element={<LegalPage doc="privacy" />} />
           <Route path="/cookies" element={<LegalPage doc="cookies" />} />
