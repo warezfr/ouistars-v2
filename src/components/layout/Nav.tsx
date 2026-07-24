@@ -2,12 +2,20 @@ import { useEffect, useRef, useState } from 'react';
 import { useI18n, LANGS } from '@/i18n';
 import { MAIN_NAV } from '@/data/services';
 import { useSingleton } from '@/lib/cms';
+import BlogDrawer from '@/components/blog/BlogDrawer';
 import './nav.css';
 
 interface Props { onBook: () => void; }
 
 /** Liens du menu — Fashion Weeks retiré (accessible via la section Événements). */
 const NAV_LINKS = MAIN_NAV.filter((n) => n.id !== 'fashion');
+
+/** Code pays ISO pour le drapeau de chaque langue (flagcdn — SVG). */
+const FLAG_CC: Record<string, string> = { fr: 'fr', en: 'gb', es: 'es', ru: 'ru', ar: 'sa' };
+const Flag = ({ code, className }: { code: string; className?: string }) => (
+  <img className={className} src={`https://flagcdn.com/${FLAG_CC[code] ?? 'fr'}.svg`}
+    alt="" width={22} height={15} loading="lazy" />
+);
 
 export default function Nav({ onBook }: Props) {
   const { lang, t, setLang } = useI18n();
@@ -16,6 +24,7 @@ export default function Nav({ onBook }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [blogOpen, setBlogOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
 
   // Fermeture du menu langue au clic/toucher hors du menu (fiable sur mobile,
@@ -62,10 +71,14 @@ export default function Nav({ onBook }: Props) {
         </nav>
 
         <div className="os-nav__actions">
+          <button className="os-nav__blog" onClick={() => setBlogOpen(true)}
+            aria-label="Our Blog" title="Our Blog">
+            <span className="os-nav__blog-pip" aria-hidden />Our Blog
+          </button>
           <div className="os-nav__langwrap" ref={langRef}>
-            <button className="os-nav__lang" onClick={() => setLangOpen((v) => !v)}
+            <button className="os-nav__lang os-nav__lang--flag" onClick={() => setLangOpen((v) => !v)}
               aria-label="Language" aria-haspopup="listbox" aria-expanded={langOpen}>
-              {t.nav.lang}
+              <Flag code={lang} className="os-nav__flag" /><span>{lang.toUpperCase()}</span>
             </button>
             {langOpen && (
               <ul className="os-nav__langmenu" role="listbox" aria-label="Language">
@@ -74,7 +87,8 @@ export default function Nav({ onBook }: Props) {
                     <button role="option" aria-selected={l.code === lang}
                       className={l.code === lang ? 'is-now' : ''}
                       onClick={() => { setLang(l.code); setLangOpen(false); }}>
-                      <i>{l.code.toUpperCase()}</i>{l.label}
+                      <Flag code={l.code} className="os-nav__flag" />{l.label}
+                      <em>{l.code.toUpperCase()}</em>
                     </button>
                   </li>
                 ))}
@@ -92,6 +106,7 @@ export default function Nav({ onBook }: Props) {
           </button>
         </div>
       </div>
+      <BlogDrawer open={blogOpen} onClose={() => setBlogOpen(false)} />
     </header>
   );
 }

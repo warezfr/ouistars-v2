@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { I18nProvider } from './i18n';
 import HomePage from './pages/HomePage';
 import LegalPage from './pages/LegalPage';
+import BlogPage from './pages/BlogPage';
 
 // Back-office chargé à la demande : le site public n'embarque plus son code.
 const AdminApp = lazy(() => import('./admin/AdminApp'));
@@ -25,6 +26,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/blog" element={<BlogPage />} />
           <Route path="/mentions-legales" element={<LegalPage doc="legal" />} />
           <Route path="/confidentialite" element={<LegalPage doc="privacy" />} />
           <Route path="/cookies" element={<LegalPage doc="cookies" />} />
