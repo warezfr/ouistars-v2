@@ -4,7 +4,7 @@ info:
   description: Supplier API for ETG Transfers to search, book, check status, and cancel transfers.
   version: 1.0.0
 servers:
-  - url: https://ouistars-v2.vercel.app
+  - url: https://www.ouistars.com
     description: Production Server
 
 components:

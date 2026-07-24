@@ -27,7 +27,6 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     section: 'Opérations',
     items: [
-      { label: 'Réservations', icon: 'bi-calendar-check', to: '/admin/bookings' },
       { label: 'Devis & événements', icon: 'bi-envelope-paper', to: '/admin/quotes' },
       { label: 'Factures', icon: 'bi-receipt', to: '/admin/invoices' },
       { label: 'Clients', icon: 'bi-person-lines-fill', to: '/admin/clients' },

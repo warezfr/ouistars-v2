@@ -4,7 +4,6 @@ import DocumentModal, { type DocData } from '../documents/DocumentModal';
 import NewQuoteModal from '../documents/NewQuoteModal';
 import { ensureClient } from '../lib/clients';
 import DataTable, { type Column } from '../ui/DataTable';
-import { QUOTES as DEMO } from '../mockData';
 import { useAuth, canWrite } from '@/admin/auth/AuthContext';
 
 interface Row {
@@ -51,10 +50,7 @@ export default function Quotes() {
       }
       if (error) setError(error.message);
     }
-    setRows(DEMO.map((q, i) => ({
-      id: String(i), reference: q.reference, company: q.company, event: q.event,
-      dates: q.dates, vehicles: q.vehicles, status: q.status, demo: true,
-    })));
+    setRows([]);            // aucune donnée de démo : liste réelle uniquement
     setLoading(false);
   }
   useEffect(() => { load(); }, []);

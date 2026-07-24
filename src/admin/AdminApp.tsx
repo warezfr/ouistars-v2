@@ -7,7 +7,6 @@ import ResetPassword from './auth/ResetPassword';
 import { mountAdminLTE } from './adminlte';
 
 import Dashboard from './pages/Dashboard';
-import Bookings from './pages/Bookings';
 import Quotes from './pages/Quotes';
 import Pricing from './pages/Pricing';
 import Documents from './pages/Documents';
@@ -43,7 +42,7 @@ export default function AdminApp() {
               <Route element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
 
-            <Route path="bookings" element={<Bookings />} />
+            <Route path="bookings" element={<Navigate to="/admin" replace />} />
             <Route path="quotes" element={<Quotes />} />
             <Route path="pricing" element={<Pricing />} />
             <Route path="documents" element={<Documents />} />

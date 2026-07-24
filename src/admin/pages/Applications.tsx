@@ -28,11 +28,6 @@ interface Row {
   status: string; createdAt?: string; demo?: boolean;
 }
 
-const DEMO: Row[] = [
-  { id: 'd1', reference: 'CA-1041', name: 'Amadou Diallo', city: 'Paris', vtcCard: 'VTC-075-2214', status: 'new', docs: {}, demo: true },
-  { id: 'd2', reference: 'CA-1042', name: 'Marek Kowalski', city: 'Paris', vtcCard: 'VTC-075-2287', status: 'reviewing', docs: {}, demo: true },
-];
-
 const LABELS: Record<string, string> = {
   draft: 'Incomplète', new: 'Nouvelle', reviewing: 'En examen', approved: 'Approuvée', rejected: 'Refusée',
 };
@@ -152,7 +147,7 @@ export default function Applications() {
       }
       if (error) setError(error.message);
     }
-    setRows(DEMO);
+    setRows([]);           // aucune donnée de démo : candidatures réelles uniquement
     setLoading(false);
   }
   useEffect(() => { load(); }, []);

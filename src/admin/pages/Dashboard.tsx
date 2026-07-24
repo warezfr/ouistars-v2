@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { KPIS as DEMO_KPIS, BOOKINGS as DEMO_BOOKINGS, badgeClass } from '../mockData';
 import { AreaChart, DonutChart, BarChart } from '../ui/Charts';
+
+/** Classe de badge Bootstrap (AdminLTE) selon le statut. */
+const badgeClass = (s: string) =>
+  s === 'completed' || s === 'accepted' || s === 'invoiced' || s === 'active' ? 'text-bg-success'
+  : s === 'cancelled' || s === 'rejected' ? 'text-bg-secondary'
+  : 'text-bg-warning';
 
 const SMALLBOX = ['text-bg-warning', 'text-bg-primary', 'text-bg-success', 'text-bg-secondary'];
 const ICONS = ['bi-calendar-check', 'bi-cash-coin', 'bi-envelope-paper', 'bi-person-badge'];
@@ -15,7 +19,12 @@ interface Recent { key: string; reference: string; client: string; route: string
 interface Series { day: string; revenue: number; count: number }
 
 export default function Dashboard() {
-  const [kpis, setKpis] = useState<Kpi[]>(DEMO_KPIS);
+  const [kpis, setKpis] = useState<Kpi[]>([
+    { label: 'Courses (30 j)', value: '—' },
+    { label: 'Volume (30 j)', value: '—' },
+    { label: 'Devis en cours', value: '—' },
+    { label: 'Chauffeurs actifs', value: '—' },
+  ]);
   const [recent, setRecent] = useState<Recent[]>([]);
   const [live, setLive] = useState(false);
   const [series, setSeries] = useState<Series[]>([]);
@@ -107,10 +116,7 @@ export default function Dashboard() {
     })();
   }, []);
 
-  const shown = recent.length ? recent : DEMO_BOOKINGS.slice(0, 6).map((b) => ({
-    key: b.reference, reference: b.reference, client: b.client, route: b.route,
-    date: b.date, vehicle: b.vehicle, amount: `${b.amount} €`, status: b.status, source: 'démo',
-  }));
+  const shown = recent;   // données réelles uniquement (plus de démo)
   const weekRevenue = series.slice(-7).reduce((s, d) => s + d.revenue, 0);
   const labels = series.map((d) => d.day.slice(5));
 
@@ -168,14 +174,16 @@ export default function Dashboard() {
 
       <div className="card card-outline card-warning mt-3">
         <div className="card-header d-flex justify-content-between align-items-center">
-          <h3 className="card-title mb-0">Réservations récentes {!live && <span className="badge text-bg-warning ms-2">démo</span>}</h3>
-          <Link className="btn btn-sm btn-outline-secondary" to="/admin/bookings">Tout voir</Link>
+          <h3 className="card-title mb-0">Activité récente</h3>
         </div>
         <div className="card-body p-0">
           <div className="table-responsive">
             <table className="table table-hover align-middle mb-0">
               <thead><tr><th>Réf.</th><th>Source</th><th>Client</th><th>Trajet</th><th>Date</th><th>Véhicule</th><th>Montant</th><th>Statut</th></tr></thead>
               <tbody>
+                {shown.length === 0 && (
+                  <tr><td colSpan={8} className="text-center text-muted py-4">Aucune activité récente.</td></tr>
+                )}
                 {shown.map((b) => (
                   <tr key={b.key}>
                     <td className="fw-semibold">{b.reference}</td>
