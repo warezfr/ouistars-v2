@@ -1,0 +1,42 @@
+/* Pages légales — lecture confortable sur le fond noir & or du site. */
+.os-legal {
+  min-height: 70vh;
+  padding: clamp(90px, 14vh, 160px) 0 80px;
+  background: var(--os-night, #0d0d10);
+}
+.os-legal__wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 22px;
+}
+.os-legal__eyebrow {
+  font-size: 0.72rem; letter-spacing: 0.28em; text-transform: uppercase;
+  color: var(--os-gold, #c9a24b); margin: 0 0 10px;
+}
+.os-legal__title {
+  font-family: var(--os-font-display, 'Cormorant Garamond', serif);
+  font-size: clamp(2.1rem, 5vw, 3.2rem); line-height: 1.05; font-weight: 600;
+  color: var(--os-ivory, #f4efe6); margin: 0 0 8px;
+}
+.os-legal__updated {
+  font-size: 0.8rem; color: var(--os-mut-2, #8a8478); margin: 0 0 40px;
+  font-style: italic;
+}
+.os-legal__body { color: var(--os-mut, #b9b3a6); font-size: 0.98rem; line-height: 1.75; }
+.os-legal__body h2 {
+  font-family: var(--os-font-display, 'Cormorant Garamond', serif);
+  font-size: 1.5rem; color: var(--os-gold-soft, #e3c988);
+  margin: 40px 0 10px; font-weight: 600;
+}
+.os-legal__body p { margin: 0 0 16px; max-width: 70ch; }
+.os-legal__body ul { margin: 0 0 16px; padding-left: 22px; display: grid; gap: 10px; }
+.os-legal__body li { max-width: 68ch; }
+.os-legal__body strong { color: var(--os-ivory, #f4efe6); font-weight: 600; }
+.os-legal__body a { color: var(--os-gold, #c9a24b); text-decoration: underline; text-underline-offset: 3px; }
+.os-legal__body a:hover { color: var(--os-gold-soft, #e3c988); }
+.os-legal__back { margin-top: 48px; }
+.os-legal__back a {
+  color: var(--os-gold, #c9a24b); text-decoration: none; font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+.os-legal__back a:hover { color: var(--os-gold-soft, #e3c988); }

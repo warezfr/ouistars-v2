@@ -206,7 +206,7 @@ export const ar: typeof fr = {
   footer: {
     tagline: 'تنقّل فاخر وإدارة وجهات — فرنسا.',
     rights: 'جميع الحقوق محفوظة',
-    terms: 'الشروط', privacy: 'الخصوصية', cookies: 'ملفات تعريف الارتباط',
+    terms: 'إشعار قانوني', privacy: 'الخصوصية', cookies: 'ملفات تعريف الارتباط',
     contact: 'اتصل بنا', address: '78 Av. des Champs-Élysées, 75008 باريس',
     pricingLink: 'وجهاتنا',
     meetGreetLink: 'الاستقبال والمرافقة',

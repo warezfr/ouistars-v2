@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { I18nProvider } from './i18n';
 import HomePage from './pages/HomePage';
+import LegalPage from './pages/LegalPage';
 
 // Back-office chargé à la demande : le site public n'embarque plus son code.
 const AdminApp = lazy(() => import('./admin/AdminApp'));
@@ -24,6 +25,9 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/mentions-legales" element={<LegalPage doc="legal" />} />
+          <Route path="/confidentialite" element={<LegalPage doc="privacy" />} />
+          <Route path="/cookies" element={<LegalPage doc="cookies" />} />
           <Route path="/admin/*" element={<Suspense fallback={<AdminFallback />}><AdminApp /></Suspense>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

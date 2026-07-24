@@ -206,7 +206,7 @@ export const ru: typeof fr = {
   footer: {
     tagline: 'Премиальная мобильность и Destination Management — Франция.',
     rights: 'Все права защищены',
-    terms: 'Условия', privacy: 'Конфиденциальность', cookies: 'Cookies',
+    terms: 'Правовая информация', privacy: 'Конфиденциальность', cookies: 'Cookies',
     contact: 'Контакты', address: '78 Av. des Champs-Élysées, 75008 Париж',
     pricingLink: 'Наши направления',
     meetGreetLink: 'Meet & Greeter',

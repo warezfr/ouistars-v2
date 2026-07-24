@@ -206,7 +206,7 @@ export const es: typeof fr = {
   footer: {
     tagline: 'Movilidad Premium & Destination Management — Francia.',
     rights: 'Todos los derechos reservados',
-    terms: 'Condiciones', privacy: 'Privacidad', cookies: 'Cookies',
+    terms: 'Aviso legal', privacy: 'Privacidad', cookies: 'Cookies',
     contact: 'Contacto', address: '78 Av. des Champs-Élysées, 75008 París',
     pricingLink: 'Nuestros destinos',
     meetGreetLink: 'Meet & Greeter',

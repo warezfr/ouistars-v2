@@ -102,7 +102,7 @@ export default function Footer({ onJoin }: Props) {
       <div className="os-container os-footer__bottom">
         <span>© {year} Oui Stars — {t.footer.rights}</span>
         <span className="os-footer__legal">
-          <a href="#">{t.footer.terms}</a><i>·</i><a href="#">{t.footer.privacy}</a><i>·</i><a href="#">{t.footer.cookies}</a>
+          <a href="/mentions-legales">{t.footer.terms}</a><i>·</i><a href="/confidentialite">{t.footer.privacy}</a><i>·</i><a href="/cookies">{t.footer.cookies}</a>
         </span>
       </div>
     </footer>
