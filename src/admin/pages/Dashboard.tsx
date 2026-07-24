@@ -26,7 +26,6 @@ export default function Dashboard() {
     { label: 'Chauffeurs actifs', value: '—' },
   ]);
   const [recent, setRecent] = useState<Recent[]>([]);
-  const [live, setLive] = useState(false);
   const [series, setSeries] = useState<Series[]>([]);
   const [byStatus, setByStatus] = useState<{ label: string; value: number }[]>([]);
   const [byChannel, setByChannel] = useState<{ label: string; value: number }[]>([]);
@@ -112,7 +111,7 @@ export default function Dashboard() {
           status: o.etg_status === 'cancelled' ? 'cancelled' : (o.workflow_status ?? 'pending'), source: 'ETG',
         });
       }
-      if (rec.length) { setRecent(rec); setLive(true); }
+      if (rec.length) setRecent(rec);
     })();
   }, []);
 
